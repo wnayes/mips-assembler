@@ -1,0 +1,3 @@
+export {
+  assemble
+} from "./assembler";
