@@ -49,6 +49,36 @@ For debugging, you can pass `{ text: true }` as the second argument to `assemble
 
 The bundled UMD module exports a `MIPSAssem` global.
 
+Features
+--------
+
+### Labels
+
+Labels should be on their own line. No instructions should be included on the same line.
+
+```
+main:
+   ...
+loop:
+   ...
+```
+
+### Directives
+
+| Directive | Description |
+|----------|-------------|
+| `.org RamAddress` | Sets the output pointer to the specified address. |
+| `.definelabel label,value` | Defines `label` with a given value, creating a symbol for it. |
+
+### Built-in functions
+
+These functions can be used in place of immediates, and can be passed symbols/labels instead of just immediates.
+
+| Function | Description |
+|----------|-------------|
+| `hi(val)` | High half of 32-bit value `val`, adjusted for sign extension of low half (MIPS) |
+| `lo(val)` | Sign-extended low half of 32-bit value `val` (MIPS) |
+
 Development
 -----------
 
