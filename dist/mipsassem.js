@@ -167,12 +167,10 @@ function assemble(input, opts) {
         if (opts.text)
             outStrs.push(line);
         // At this point, we should be able to parse the instruction.
-        console.log(line);
         var inst = Object(__WEBPACK_IMPORTED_MODULE_0_mips_inst__["parse"])(line);
         state.dataView.setUint32(state.outIndex, inst);
         state.outIndex += 4;
     });
-    console.log(state);
     if (opts.text)
         return outStrs;
     return state.buffer;
@@ -189,7 +187,7 @@ function _stripComments(input) {
             removalIndex = slashesIndex;
         else if (slashesIndex !== -1)
             removalIndex = Math.min(semicolonIndex, slashesIndex);
-        return line.substr(removalIndex);
+        return line.substr(0, removalIndex);
     });
 }
 /** Parses a LABEL: expression and adds it to the symbol table. */
@@ -2256,12 +2254,12 @@ function runFunction(value, state) {
     // Don't parse an immediate on the root call.
     var result = _runFunction(value, state, false);
     if (result !== null)
-        return "0x" + result.toString(16);
+        return "0x" + result.toString(16).toUpperCase();
     return null;
 }
 function _runFunction(value, state, doParseImmediate) {
-    var fnRegex = /^(\w+)\(([\(\),\w+]+)\)$/g;
-    var results = value.match(fnRegex);
+    var fnRegex = /^(\w+)\(([\(\),\w+]+)\)$/;
+    var results = fnRegex.exec(value);
     if (results === null) {
         var imm = null;
         if (doParseImmediate && (imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(value)) !== null) {

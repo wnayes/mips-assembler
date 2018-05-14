@@ -31,6 +31,36 @@ describe("Assembler", () => {
     ]);
   });
 
+  it("strips comments", () => {
+    expect(assemble(`
+      ; my initial comment
+      // Another one
+      .org 0x80004000
+      main: ;why not here?
+      ADDIU SP SP -32 ; Trailing an instruction
+      SW RA 24(SP)// store RA
+      loop:
+      JAL 0x80023456
+      NOP
+      BEQ V0 R0 loop
+      NOP
+      LW RA 24(SP)
+      JR RA
+      ADDIU SP SP 32
+      ; end comment
+    `, { text: true })).to.deep.equal([
+      "ADDIU SP SP -32",
+      "SW RA 24(SP)",
+      "JAL 0x80023456",
+      "NOP",
+      "BEQ V0 R0 -2",
+      "NOP",
+      "LW RA 24(SP)",
+      "JR RA",
+      "ADDIU SP SP 32",
+    ]);
+  });
+
   it("does definelabel", () => {
     expect(assemble(`
       .org 0x80004000

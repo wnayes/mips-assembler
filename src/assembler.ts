@@ -5,7 +5,7 @@ import { handleDirective, sizeOfDirective } from "./directives";
 import { runFunction } from "./functions";
 import { parseImmediate } from "./immediates";
 
-interface IAssembleOpts {
+export interface IAssembleOpts {
   text?: boolean;
 }
 
@@ -68,14 +68,11 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
       outStrs.push(line);
 
     // At this point, we should be able to parse the instruction.
-    console.log(line);
     const inst = parse(line);
     state.dataView.setUint32(state.outIndex, inst);
 
     state.outIndex += 4;
   });
-
-  console.log(state);
 
   if (opts.text)
     return outStrs;
@@ -97,7 +94,7 @@ function _stripComments(input: string[]): string[] {
     else if (slashesIndex !== -1)
       removalIndex = Math.min(semicolonIndex, slashesIndex);
 
-    return line.substr(removalIndex);
+    return line.substr(0, removalIndex);
   });
 }
 
