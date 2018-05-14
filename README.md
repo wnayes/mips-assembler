@@ -79,6 +79,10 @@ These functions can be used in place of immediates, and can be passed symbols/la
 | `hi(val)` | High half of 32-bit value `val`, adjusted for sign extension of low half (MIPS) |
 | `lo(val)` | Sign-extended low half of 32-bit value `val` (MIPS) |
 
+### Comments
+
+Comments can be specified with either `;` or `//`.
+
 Development
 -----------
 
