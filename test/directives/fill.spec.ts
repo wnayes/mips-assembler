@@ -41,6 +41,21 @@ describe(".fill", () => {
     ]);
   });
 
+  it("only the lowest 8 bits of value are inserted", () => {
+    expect(print(assemble(`
+      ADDU A0 A2 R0
+      .fill 3, 0x23230000
+      .fill 1, 0x5456200C
+      JR RA
+      NOP
+    `))).to.deep.equal([
+      "ADDU A0 A2 R0",
+      "SYSCALL",
+      "JR RA",
+      "NOP",
+    ]);
+  });
+
   it("throws an exception for negative fill length", () => {
     expect(() => {
       print(assemble(`

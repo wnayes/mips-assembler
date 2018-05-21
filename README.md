@@ -45,6 +45,8 @@ assemble(`
 
 The default return value is an ArrayBuffer.
 
+Passing `{ buffer: someArrayBuffer }` as the second argument will cause assembly to be performed on the given buffer, rather than creating a new buffer.
+
 For debugging, you can pass `{ text: true }` as the second argument to `assemble` and it will instead output the instructions in text format, similar to the format shown beside the ArrayBuffer example above.
 
 The bundled UMD module exports a `MIPSAssem` global.
@@ -66,9 +68,13 @@ loop:
 ### Directives
 
 | Directive | Description |
-|----------|-------------|
-| `.org RamAddress` | Sets the output pointer to the specified address. |
+|-----------|-------------|
+| `.align num` | Writes zeros into the output file until the output position is a multiple of `num`. `num` has to be a power of two. |
 | `.definelabel label,value` | Defines `label` with a given value, creating a symbol for it. |
+| `.fill length[,value]` | Inserts `length` amount of bytes of `value`. If `value` isn't specified, zeros are inserted. Only the lowest 8 bits of `value` are inserted. |
+| `.org RamAddress` | Adjusts the working memory location the assembly. This affects individual instructions, but not the locations where they are outputted. |
+| `.orga BufferOffset` | Sets the output pointer to the specified offset. This affects the location that subsequent instructions are written to, but doesn't affect individual instructions. |
+| `.skip length` | Skips `length` amount of bytes without overwriting them. |
 
 ### Built-in functions
 

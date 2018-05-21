@@ -42,7 +42,7 @@ export default function fill(state: IAssemblerState): boolean {
 
   if (state.currentPass === AssemblerPhase.secondPass) {
     for (let i = 0; i < length; i++)
-      state.dataView.setUint8(state.outIndex + i, value);
+      state.dataView.setInt8(state.outIndex + i, value);
   }
 
   state.outIndex += length;
