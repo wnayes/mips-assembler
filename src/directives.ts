@@ -6,6 +6,7 @@ import org from "./directives/org";
 import orga from "./directives/orga";
 import align from "./directives/align";
 import skip from "./directives/skip";
+import fill from "./directives/fill";
 
 function getDirectives() {
   return [
@@ -14,6 +15,7 @@ function getDirectives() {
     orga,
     align,
     skip,
+    fill,
   ];
 }
 

@@ -1,7 +1,7 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
 import { parseImmediate } from "../immediates";
 
-const regex = /^\.skip\s+(\w+)$/i;
+const regex = /^\.skip\s+([-\w]+)$/i;
 
 /**
  * .skip passes over a given amout of bytes without overwriting them.

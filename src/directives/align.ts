@@ -1,7 +1,7 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
 import { parseImmediate } from "../immediates";
 
-const alignRegex = /^\.align\s+(\w+)$/i;
+const alignRegex = /^\.align\s+([-\w]+)$/i;
 
 /**
  * .align pads zeroes until the output position is aligned
@@ -17,6 +17,10 @@ export default function align(state: IAssemblerState): boolean {
   const imm = parseImmediate(immString);
   if (imm === null)
     throw new Error(`Could not parse .align immediate ${immString}`);
+  if (imm % 2)
+    throw new Error(".align directive requires a power of two.");
+  if (imm < 0)
+    throw new Error(".align directive cannot align by a negative value.");
 
   while (state.outIndex % imm) {
     if (state.currentPass === AssemblerPhase.secondPass) {

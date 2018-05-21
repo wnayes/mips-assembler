@@ -2,6 +2,10 @@ export function parseImmediate(value: string): number | null {
   if (typeof value !== "string")
     return null;
 
+  let negative = value[0] === "-";
+  if (negative)
+    value = value.substr(1);
+
   let result;
   if (value[0] === "b" || value[0] === "0" && value[1] === "b")
     result = parseInt(value.substr(2), 2);
@@ -12,5 +16,11 @@ export function parseImmediate(value: string): number | null {
   else
     result = parseInt(value, 10);
 
-  return isNaN(result) ? null : result;
+  if (isNaN(result))
+    return null;
+
+  if (negative)
+    result = -result;
+
+  return result;
 }

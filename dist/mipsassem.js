@@ -82,6 +82,9 @@ return /******/ (function(modules) { // webpackBootstrap
 function parseImmediate(value) {
     if (typeof value !== "string")
         return null;
+    var negative = value[0] === "-";
+    if (negative)
+        value = value.substr(1);
     var result;
     if (value[0] === "b" || value[0] === "0" && value[1] === "b")
         result = parseInt(value.substr(2), 2);
@@ -91,7 +94,11 @@ function parseImmediate(value) {
         result = parseInt(value.substr(2), 16);
     else
         result = parseInt(value, 10);
-    return isNaN(result) ? null : result;
+    if (isNaN(result))
+        return null;
+    if (negative)
+        result = -result;
+    return result;
 }
 
 
@@ -129,7 +136,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mips_inst__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__immediates__ = __webpack_require__(0);
 
 
@@ -2224,6 +2231,8 @@ function _applyCasing(value, casing) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives_orga__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__directives_align__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__directives_skip__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__directives_fill__ = __webpack_require__(11);
+
 
 
 
@@ -2236,6 +2245,7 @@ function getDirectives() {
         __WEBPACK_IMPORTED_MODULE_2__directives_orga__["a" /* default */],
         __WEBPACK_IMPORTED_MODULE_3__directives_align__["a" /* default */],
         __WEBPACK_IMPORTED_MODULE_4__directives_skip__["a" /* default */],
+        __WEBPACK_IMPORTED_MODULE_5__directives_fill__["a" /* default */],
     ];
 }
 /**
@@ -2342,7 +2352,7 @@ function orga(state) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
 
 
-var alignRegex = /^\.align\s+(\w+)$/i;
+var alignRegex = /^\.align\s+([-\w]+)$/i;
 /**
  * .align pads zeroes until the output position is aligned
  * with the specified alignment.
@@ -2356,6 +2366,10 @@ function align(state) {
     var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(immString);
     if (imm === null)
         throw new Error("Could not parse .align immediate " + immString);
+    if (imm % 2)
+        throw new Error(".align directive requires a power of two.");
+    if (imm < 0)
+        throw new Error(".align directive cannot align by a negative value.");
     while (state.outIndex % imm) {
         if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
             state.dataView.setUint8(state.outIndex, 0);
@@ -2374,7 +2388,7 @@ function align(state) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = skip;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
 
-var regex = /^\.skip\s+(\w+)$/i;
+var regex = /^\.skip\s+([-\w]+)$/i;
 /**
  * .skip passes over a given amout of bytes without overwriting them.
  * @param state Current assembler state.
@@ -2396,6 +2410,59 @@ function skip(state) {
 
 /***/ }),
 /* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = fill;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
+
+
+var regexLength = /^\.fill\s+([-\w]+)$/i;
+var regexLengthValue = /^\.fill\s+([-\w]+),\s*([-\w]+)$/i;
+/**
+ * .fill length[,value]
+ * @param state Current assembler state.
+ */
+function fill(state) {
+    var lengthStr, length;
+    var valueStr, value;
+    var results = state.line.match(regexLength);
+    if (results) {
+        lengthStr = results[1];
+    }
+    else {
+        results = state.line.match(regexLengthValue);
+        if (results) {
+            lengthStr = results[1], valueStr = results[2];
+        }
+        else {
+            return false; // Neither regex matched.
+        }
+    }
+    length = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(lengthStr);
+    if (length === null)
+        throw new Error("Could not parse .fill length " + lengthStr);
+    if (length < 0)
+        throw new Error(".fill length must be positive.");
+    if (valueStr) {
+        value = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(valueStr);
+        if (value === null)
+            throw new Error("Could not parse .fill value " + valueStr);
+    }
+    else
+        value = 0;
+    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
+        for (var i = 0; i < length; i++)
+            state.dataView.setUint8(state.outIndex + i, value);
+    }
+    state.outIndex += length;
+    return true;
+}
+
+
+/***/ }),
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

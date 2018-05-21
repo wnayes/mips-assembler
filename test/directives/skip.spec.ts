@@ -32,14 +32,16 @@ describe(".skip", () => {
     ]);
   });
 
-  xit("throws an exception for negative skips", () => {
-    expect(print(assemble(`
-      ADDU A0 A2 R0
-      JR RA
-      NOP
-      .skip -12
-      LUI A0 0x3F
-      LH A0 0(V0)
-    `))).to.throw(".skip directive cannot skip a negative length.");
+  it("throws an exception for negative skips", () => {
+    expect(() => {
+      print(assemble(`
+        ADDU A0 A2 R0
+        JR RA
+        NOP
+        .skip -12
+        LUI A0 0x3F
+        LH A0 0(V0)
+      `));
+    }).to.throw(".skip directive cannot skip a negative length.");
   });
 });

@@ -5,13 +5,13 @@ import { print } from "mips-inst";
 
 import { assemble } from "../../src/assembler";
 
-describe(".align", () => {
-  it("writes zeroes to align the buffer", () => {
+describe(".fill", () => {
+  it("writes zeroes, by default, to the buffer", () => {
     expect(print(assemble(`
       ADDU A0 A2 R0
       JR RA
       NOP
-      .align 32
+      .fill 12
       LUI A0 0x3F
       LH A0 0(V0)
     `))).to.deep.equal([
@@ -21,45 +21,34 @@ describe(".align", () => {
       "NOP",
       "NOP",
       "NOP",
-      "NOP",
-      "NOP",
       "LUI A0 0x3F",
       "LH A0 0(V0)",
     ]);
   });
 
-  it("does nothing if already aligned", () => {
+  it("writes a given value to the buffer length times", () => {
     expect(print(assemble(`
       ADDU A0 A2 R0
-      .align 4
+      .fill 3, 0
+      .fill 1, 0xC
       JR RA
       NOP
     `))).to.deep.equal([
       "ADDU A0 A2 R0",
+      "SYSCALL",
       "JR RA",
       "NOP",
     ]);
   });
 
-  it("throws an exception for negative alignment", () => {
+  it("throws an exception for negative fill length", () => {
     expect(() => {
       print(assemble(`
         ADDU A0 A2 R0
-        .align -4
+        .fill -4
         JR RA
         NOP
       `));
-    }).to.throw(".align directive cannot align by a negative value.");
-  });
-
-  it("throws an exception for non-power-of-two alignment", () => {
-    expect(() => {
-      print(assemble(`
-        ADDU A0 A2 R0
-        .align 3
-        JR RA
-        NOP
-      `));
-    }).to.throw(".align directive requires a power of two.");
+    }).to.throw(".fill length must be positive.");
   });
 });
