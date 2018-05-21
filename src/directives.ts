@@ -1,18 +1,22 @@
 import { IAssemblerState } from "./types";
 import { parseImmediate } from "./immediates";
 
+import orga from "./directives/orga";
+
 export function handleDirective(line: string, state: IAssemblerState): void {
-  if (_orgDirective(line, state)
+  if (orga(line, state)
+    || _orgDirective(line, state)
     || _defineLabelDirective(line, state)
-  ) { return; }
+  ) return;
 
   throw new Error(`handleDirective: Unrecongized directive ${line}`);
 }
 
-export function sizeOfDirective(line: string): number {
+export function sizeOfDirective(line: string, state: IAssemblerState): number {
   const lowerCaseLine = line.toLowerCase();
-  if (lowerCaseLine.indexOf(".org") === 0) return 0;
   if (lowerCaseLine.indexOf(".definelabel") === 0) return 0;
+  if (lowerCaseLine.indexOf(".orga") === 0) return 0;
+  if (lowerCaseLine.indexOf(".org") === 0) return 0;
 
   throw new Error(`sizeOfDirective: Unrecongized directive ${line}`);
 }
