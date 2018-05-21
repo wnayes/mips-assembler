@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -100,10 +100,12 @@ function parseImmediate(value) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__assembler__ = __webpack_require__(2);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "assemble", function() { return __WEBPACK_IMPORTED_MODULE_0__assembler__["a"]; });
-
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AssemblerPhase; });
+var AssemblerPhase;
+(function (AssemblerPhase) {
+    AssemblerPhase[AssemblerPhase["firstPass"] = 0] = "firstPass";
+    AssemblerPhase[AssemblerPhase["secondPass"] = 1] = "secondPass";
+})(AssemblerPhase || (AssemblerPhase = {}));
 
 
 /***/ }),
@@ -111,12 +113,23 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__assembler__ = __webpack_require__(3);
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "assemble", function() { return __WEBPACK_IMPORTED_MODULE_0__assembler__["a"]; });
+
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = assemble;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mips_inst__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__immediates__ = __webpack_require__(0);
 
 
@@ -137,8 +150,7 @@ function assemble(input, opts) {
         state.line = line;
         if (line[0] === ".") {
             Object(__WEBPACK_IMPORTED_MODULE_2__directives__["a" /* handleDirective */])(state);
-            state.outIndex += Object(__WEBPACK_IMPORTED_MODULE_2__directives__["b" /* sizeOfDirective */])(state);
-            return true; // Leave directives
+            return true; // Keep directives for second pass.
         }
         if (_parseGlobalLabel(state)) {
             return false; // State was updated, can filter the label out.
@@ -156,7 +168,6 @@ function assemble(input, opts) {
         state.line = line;
         if (line[0] === ".") {
             Object(__WEBPACK_IMPORTED_MODULE_2__directives__["a" /* handleDirective */])(state);
-            state.outIndex += Object(__WEBPACK_IMPORTED_MODULE_2__directives__["b" /* sizeOfDirective */])(state);
             return;
         }
         // Apply any built-in functions, symbols.
@@ -265,7 +276,7 @@ function _ensureArray(input) {
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -2203,48 +2214,38 @@ function _applyCasing(value, casing) {
 });
 
 /***/ }),
-/* 4 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AssemblerPhase; });
-var AssemblerPhase;
-(function (AssemblerPhase) {
-    AssemblerPhase[AssemblerPhase["firstPass"] = 0] = "firstPass";
-    AssemblerPhase[AssemblerPhase["secondPass"] = 1] = "secondPass";
-})(AssemblerPhase || (AssemblerPhase = {}));
-
-
-/***/ }),
 /* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = handleDirective;
-/* harmony export (immutable) */ __webpack_exports__["b"] = sizeOfDirective;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__directives_definelabel__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__directives_org__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives_orga__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__directives_align__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__directives_skip__ = __webpack_require__(10);
 
 
 
-function handleDirective(state) {
-    if (Object(__WEBPACK_IMPORTED_MODULE_0__directives_definelabel__["a" /* default */])(state)
-        || Object(__WEBPACK_IMPORTED_MODULE_2__directives_orga__["a" /* default */])(state)
-        || Object(__WEBPACK_IMPORTED_MODULE_1__directives_org__["a" /* default */])(state)) {
-        return;
-    }
-    throw new Error("handleDirective: Unrecongized directive " + state.line);
+
+
+function getDirectives() {
+    return [
+        __WEBPACK_IMPORTED_MODULE_0__directives_definelabel__["a" /* default */],
+        __WEBPACK_IMPORTED_MODULE_1__directives_org__["a" /* default */],
+        __WEBPACK_IMPORTED_MODULE_2__directives_orga__["a" /* default */],
+        __WEBPACK_IMPORTED_MODULE_3__directives_align__["a" /* default */],
+        __WEBPACK_IMPORTED_MODULE_4__directives_skip__["a" /* default */],
+    ];
 }
-function sizeOfDirective(state) {
-    var lowerCaseLine = state.line.toLowerCase();
-    if (lowerCaseLine.indexOf(".definelabel") === 0)
-        return 0;
-    if (lowerCaseLine.indexOf(".orga") === 0)
-        return 0;
-    if (lowerCaseLine.indexOf(".org") === 0)
-        return 0;
-    throw new Error("sizeOfDirective: Unrecongized directive " + state.line);
+/**
+ * Runs a directive, which changes the assembler state.
+ * @param state Current assembler state.
+ */
+function handleDirective(state) {
+    if (getDirectives().some(function (directive) { return directive(state); }))
+        return;
+    throw new Error("handleDirective: Unrecongized directive " + state.line);
 }
 
 
@@ -2293,7 +2294,6 @@ var orgRegex = /^\.org\s+(\w+)$/i;
  * @param state Current assembler state.
  */
 function orga(state) {
-    var orgRegex = /^\.org\s+(\w+)$/i;
     var results = state.line.match(orgRegex);
     if (results === null)
         return false; // Not .org
@@ -2334,6 +2334,68 @@ function orga(state) {
 
 /***/ }),
 /* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = align;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
+
+
+var alignRegex = /^\.align\s+(\w+)$/i;
+/**
+ * .align pads zeroes until the output position is aligned
+ * with the specified alignment.
+ * @param state Current assembler state.
+ */
+function align(state) {
+    var results = state.line.match(alignRegex);
+    if (results === null)
+        return false; // Not .align
+    var immString = results[1];
+    var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(immString);
+    if (imm === null)
+        throw new Error("Could not parse .align immediate " + immString);
+    while (state.outIndex % imm) {
+        if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
+            state.dataView.setUint8(state.outIndex, 0);
+        }
+        state.outIndex++;
+    }
+    return true;
+}
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = skip;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
+
+var regex = /^\.skip\s+(\w+)$/i;
+/**
+ * .skip passes over a given amout of bytes without overwriting them.
+ * @param state Current assembler state.
+ */
+function skip(state) {
+    var results = state.line.match(regex);
+    if (results === null)
+        return false;
+    var immString = results[1];
+    var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(immString);
+    if (imm === null)
+        throw new Error("Could not parse .skip immediate " + immString);
+    if (imm < 0)
+        throw new Error(".skip directive cannot skip a negative length.");
+    state.outIndex += imm;
+    return true;
+}
+
+
+/***/ }),
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

@@ -4,23 +4,26 @@ import { parseImmediate } from "./immediates";
 import definelabel from "./directives/definelabel";
 import org from "./directives/org";
 import orga from "./directives/orga";
+import align from "./directives/align";
+import skip from "./directives/skip";
 
-export function handleDirective(state: IAssemblerState): void {
-  if (definelabel(state)
-    || orga(state)
-    || org(state)
-  ) {
-    return;
-  }
-
-  throw new Error(`handleDirective: Unrecongized directive ${state.line}`);
+function getDirectives() {
+  return [
+    definelabel,
+    org,
+    orga,
+    align,
+    skip,
+  ];
 }
 
-export function sizeOfDirective(state: IAssemblerState): number {
-  const lowerCaseLine = state.line.toLowerCase();
-  if (lowerCaseLine.indexOf(".definelabel") === 0) return 0;
-  if (lowerCaseLine.indexOf(".orga") === 0) return 0;
-  if (lowerCaseLine.indexOf(".org") === 0) return 0;
+/**
+ * Runs a directive, which changes the assembler state.
+ * @param state Current assembler state.
+ */
+export function handleDirective(state: IAssemblerState): void {
+  if (getDirectives().some(directive => directive(state)))
+    return;
 
-  throw new Error(`sizeOfDirective: Unrecongized directive ${state.line}`);
+  throw new Error(`handleDirective: Unrecongized directive ${state.line}`);
 }

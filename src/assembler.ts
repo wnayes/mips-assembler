@@ -1,7 +1,7 @@
 import { parse, print } from "mips-inst";
 
 import { IAssemblerState, AssemblerPhase } from "./types";
-import { handleDirective, sizeOfDirective } from "./directives";
+import { handleDirective } from "./directives";
 import { runFunction } from "./functions";
 import { parseImmediate } from "./immediates";
 
@@ -43,8 +43,7 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
 
     if (line[0] === ".") {
       handleDirective(state);
-      state.outIndex += sizeOfDirective(state);
-      return true; // Leave directives
+      return true; // Keep directives for second pass.
     }
 
     if (_parseGlobalLabel(state)) {
@@ -68,7 +67,6 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
 
     if (line[0] === ".") {
       handleDirective(state);
-      state.outIndex += sizeOfDirective(state);
       return;
     }
 

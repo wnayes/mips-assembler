@@ -8,7 +8,6 @@ const orgRegex = /^\.org\s+(\w+)$/i;
  * @param state Current assembler state.
  */
 export default function orga(state: IAssemblerState): boolean {
-  const orgRegex = /^\.org\s+(\w+)$/i;
   const results = state.line.match(orgRegex);
   if (results === null)
     return false; // Not .org
