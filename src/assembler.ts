@@ -1,6 +1,6 @@
 import { parse, print } from "mips-inst";
 
-import { IAssemblerState } from "./types";
+import { IAssemblerState, AssemblerPhase } from "./types";
 import { handleDirective, sizeOfDirective } from "./directives";
 import { runFunction } from "./functions";
 import { parseImmediate } from "./immediates";
@@ -39,13 +39,15 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
 
   // First pass, calculate label positions.
   arr = arr.filter(line => {
+    state.line = line;
+
     if (line[0] === ".") {
-      handleDirective(line, state);
-      state.outIndex += sizeOfDirective(line, state);
+      handleDirective(state);
+      state.outIndex += sizeOfDirective(state);
       return true; // Leave directives
     }
 
-    if (_parseGlobalLabel(line, state)) {
+    if (_parseGlobalLabel(state)) {
       return false; // State was updated, can filter the label out.
     }
 
@@ -58,12 +60,15 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
 
   state.memPos = 0;
   state.outIndex = 0;
+  state.currentPass = AssemblerPhase.secondPass;
 
   // Second pass, assemble!
   arr.forEach(line => {
+    state.line = line;
+
     if (line[0] === ".") {
-      handleDirective(line, state);
-      state.outIndex += sizeOfDirective(line, state);
+      handleDirective(state);
+      state.outIndex += sizeOfDirective(state);
       return;
     }
 
@@ -114,9 +119,9 @@ function _stripComments(input: string[]): string[] {
 }
 
 /** Parses a LABEL: expression and adds it to the symbol table. */
-function _parseGlobalLabel(line: string, state: IAssemblerState): boolean {
+function _parseGlobalLabel(state: IAssemblerState): boolean {
   const labelRegex = /^(\w+)\:\s*$/;
-  const results = line.match(labelRegex);
+  const results = state.line.match(labelRegex);
   if (results === null)
     return false; // Not a label.
 
@@ -172,9 +177,11 @@ function _makeNewAssemblerState(): IAssemblerState {
   return {
     buffer: null,
     dataView: null,
+    line: "",
     memPos: 0,
     outIndex: 0,
     symbols: Object.create(null),
+    currentPass: AssemblerPhase.firstPass,
   };
 }
 

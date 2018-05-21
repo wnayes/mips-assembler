@@ -114,9 +114,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (immutable) */ __webpack_exports__["a"] = assemble;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mips_inst__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__directives__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__functions__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__immediates__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__immediates__ = __webpack_require__(0);
+
 
 
 
@@ -132,32 +134,35 @@ function assemble(input, opts) {
     var outStrs = [];
     // First pass, calculate label positions.
     arr = arr.filter(function (line) {
+        state.line = line;
         if (line[0] === ".") {
-            Object(__WEBPACK_IMPORTED_MODULE_1__directives__["a" /* handleDirective */])(line, state);
-            state.outIndex += Object(__WEBPACK_IMPORTED_MODULE_1__directives__["b" /* sizeOfDirective */])(line);
+            Object(__WEBPACK_IMPORTED_MODULE_2__directives__["a" /* handleDirective */])(state);
+            state.outIndex += Object(__WEBPACK_IMPORTED_MODULE_2__directives__["b" /* sizeOfDirective */])(state);
             return true; // Leave directives
         }
-        if (_parseGlobalLabel(line, state)) {
+        if (_parseGlobalLabel(state)) {
             return false; // State was updated, can filter the label out.
         }
         state.outIndex += 4; // Well, this better be a typical instruction!
         return true;
     });
-    state.buffer = new ArrayBuffer(state.outIndex);
+    state.buffer = opts.buffer || new ArrayBuffer(state.outIndex);
     state.dataView = new DataView(state.buffer);
     state.memPos = 0;
     state.outIndex = 0;
+    state.currentPass = __WEBPACK_IMPORTED_MODULE_1__types__["a" /* AssemblerPhase */].secondPass;
     // Second pass, assemble!
     arr.forEach(function (line) {
+        state.line = line;
         if (line[0] === ".") {
-            Object(__WEBPACK_IMPORTED_MODULE_1__directives__["a" /* handleDirective */])(line, state);
-            state.outIndex += Object(__WEBPACK_IMPORTED_MODULE_1__directives__["b" /* sizeOfDirective */])(line);
+            Object(__WEBPACK_IMPORTED_MODULE_2__directives__["a" /* handleDirective */])(state);
+            state.outIndex += Object(__WEBPACK_IMPORTED_MODULE_2__directives__["b" /* sizeOfDirective */])(state);
             return;
         }
         // Apply any built-in functions, symbols.
         var instPieces = line.split(/[,\s]+/g);
         if (instPieces.length) {
-            var lastPiece = Object(__WEBPACK_IMPORTED_MODULE_2__functions__["a" /* runFunction */])(instPieces[instPieces.length - 1], state);
+            var lastPiece = Object(__WEBPACK_IMPORTED_MODULE_3__functions__["a" /* runFunction */])(instPieces[instPieces.length - 1], state);
             if (lastPiece !== null) {
                 lastPiece = _fixBranch(instPieces[0], lastPiece, state);
                 instPieces[instPieces.length - 1] = lastPiece;
@@ -191,9 +196,9 @@ function _stripComments(input) {
     });
 }
 /** Parses a LABEL: expression and adds it to the symbol table. */
-function _parseGlobalLabel(line, state) {
+function _parseGlobalLabel(state) {
     var labelRegex = /^(\w+)\:\s*$/;
-    var results = line.match(labelRegex);
+    var results = state.line.match(labelRegex);
     if (results === null)
         return false; // Not a label.
     var name = results[1];
@@ -203,7 +208,7 @@ function _parseGlobalLabel(line, state) {
 /** Transforms branches from absolute to relative. */
 function _fixBranch(inst, offset, state) {
     if (_instIsBranch(inst)) {
-        var imm = Object(__WEBPACK_IMPORTED_MODULE_3__immediates__["a" /* parseImmediate */])(offset); // Should definitely succeed.
+        var imm = Object(__WEBPACK_IMPORTED_MODULE_4__immediates__["a" /* parseImmediate */])(offset); // Should definitely succeed.
         var memOffset = state.memPos + state.outIndex;
         var diff = (imm - memOffset) / 4;
         return diff.toString(); // base 10 ok
@@ -243,9 +248,11 @@ function _makeNewAssemblerState() {
     return {
         buffer: null,
         dataView: null,
+        line: "",
         memPos: 0,
         outIndex: 0,
         symbols: Object.create(null),
+        currentPass: __WEBPACK_IMPORTED_MODULE_1__types__["a" /* AssemblerPhase */].firstPass,
     };
 }
 function _ensureArray(input) {
@@ -1933,7 +1940,7 @@ function isFloatReg(entry) {
  * With the `intermediate` option, this can also be used as a convenient base
  * for a disassembler. The object output with `intermediate` can be manipulated
  * prior to calling `print` with it again.
- * @param {Number|Array|Object} inst MIPS instruction, or intermediate object format.
+ * @param {Number|Array|ArrayBuffer|DataView|Object} inst MIPS instruction, or intermediate object format.
  * @param {Object} opts Behavior options
  * @param {String} opts.casing "toUpperCase" (default), "toLowerCase"
  * @param {Boolean} opts.commas True to separate values by commas
@@ -1950,6 +1957,16 @@ function print(inst, opts) {
 
   if (Array.isArray(inst))
     return inst.map(i => _print(i, opts));
+
+  const isArrayBuffer = inst instanceof ArrayBuffer;
+  if (isArrayBuffer || inst instanceof DataView) {
+    const dataView = isArrayBuffer ? new DataView(inst) : inst;
+    const result = [];
+    for (let i = 0; i < dataView.byteLength; i += 4) {
+      result.push(_print(dataView.getUint32(i), opts));
+    }
+    return result;
+  }
 
   const inputType = typeof inst;
   if (inputType === "number" || inputType === "object")
@@ -2190,41 +2207,62 @@ function _applyCasing(value, casing) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AssemblerPhase; });
+var AssemblerPhase;
+(function (AssemblerPhase) {
+    AssemblerPhase[AssemblerPhase["firstPass"] = 0] = "firstPass";
+    AssemblerPhase[AssemblerPhase["secondPass"] = 1] = "secondPass";
+})(AssemblerPhase || (AssemblerPhase = {}));
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = handleDirective;
 /* harmony export (immutable) */ __webpack_exports__["b"] = sizeOfDirective;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__directives_definelabel__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__directives_org__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives_orga__ = __webpack_require__(8);
 
-function handleDirective(line, state) {
-    if (_orgDirective(line, state)
-        || _defineLabelDirective(line, state)) {
+
+
+function handleDirective(state) {
+    if (Object(__WEBPACK_IMPORTED_MODULE_0__directives_definelabel__["a" /* default */])(state)
+        || Object(__WEBPACK_IMPORTED_MODULE_2__directives_orga__["a" /* default */])(state)
+        || Object(__WEBPACK_IMPORTED_MODULE_1__directives_org__["a" /* default */])(state)) {
         return;
     }
-    throw new Error("handleDirective: Unrecongized directive " + line);
+    throw new Error("handleDirective: Unrecongized directive " + state.line);
 }
-function sizeOfDirective(line) {
-    var lowerCaseLine = line.toLowerCase();
-    if (lowerCaseLine.indexOf(".org") === 0)
-        return 0;
+function sizeOfDirective(state) {
+    var lowerCaseLine = state.line.toLowerCase();
     if (lowerCaseLine.indexOf(".definelabel") === 0)
         return 0;
-    throw new Error("sizeOfDirective: Unrecongized directive " + line);
+    if (lowerCaseLine.indexOf(".orga") === 0)
+        return 0;
+    if (lowerCaseLine.indexOf(".org") === 0)
+        return 0;
+    throw new Error("sizeOfDirective: Unrecongized directive " + state.line);
 }
-function _orgDirective(line, state) {
-    var orgRegex = /^\.org\s+(\w+)$/i;
-    var results = line.match(orgRegex);
-    if (results === null)
-        return false; // Not .org
-    var loc = results[1];
-    var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(loc);
-    if (imm === null)
-        throw new Error("Could not parse .org immediate " + loc);
-    state.memPos = imm >>> 0; // Better be 32-bit
-    return true;
-}
-/** Parses .definelabel and adds the symbol */
-function _defineLabelDirective(line, state) {
-    var defineLabelRegex = /^\.definelabel\s+(\w+)[\s,]+(\w+)$/i;
-    var results = line.match(defineLabelRegex);
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = definelabel;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
+
+var defineLabelRegex = /^\.definelabel\s+(\w+)[\s,]+(\w+)$/i;
+/**
+ * .definelabel adds a new symbol.
+ * @param state Current assembler state.
+ */
+function definelabel(state) {
+    var results = state.line.match(defineLabelRegex);
     if (results === null)
         return false; // Not .definelabel
     var name = results[1], value = results[2];
@@ -2242,7 +2280,60 @@ function _defineLabelDirective(line, state) {
 
 
 /***/ }),
-/* 5 */
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = orga;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
+
+var orgRegex = /^\.org\s+(\w+)$/i;
+/**
+ * .org changes the effective memory position.
+ * @param state Current assembler state.
+ */
+function orga(state) {
+    var orgRegex = /^\.org\s+(\w+)$/i;
+    var results = state.line.match(orgRegex);
+    if (results === null)
+        return false; // Not .org
+    var loc = results[1];
+    var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(loc);
+    if (imm === null)
+        throw new Error("Could not parse .org immediate " + loc);
+    state.memPos = imm >>> 0; // Better be 32-bit
+    return true;
+}
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = orga;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
+
+var orgaRegex = /^\.orga\s+(\w+)$/i;
+/**
+ * .orga updates the current output buffer index.
+ * @param state Current assembler state.
+ */
+function orga(state) {
+    var results = state.line.match(orgaRegex);
+    if (results === null)
+        return false; // Not .orga
+    var loc = results[1];
+    var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(loc);
+    if (imm === null)
+        throw new Error("Could not parse .orga immediate " + loc);
+    state.outIndex = imm >>> 0; // Better be 32-bit
+    return true;
+}
+
+
+/***/ }),
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2260,7 +2351,7 @@ function runFunction(value, state) {
 function _runFunction(value, state, doParseImmediate) {
     var fnRegex = /^(\w+)\(([\(\),\w+]+)\)$/;
     var results = fnRegex.exec(value);
-    if (results === null) {
+    if (results === null) { // Not a function
         var imm = null;
         if (doParseImmediate && (imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(value)) !== null) {
             return imm;

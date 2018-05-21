@@ -1,22 +1,23 @@
 import { IAssemblerState } from "../types";
 import { parseImmediate } from "../immediates";
 
-const orgaRegex = /^\.orga\s+(\w+)$/i;
+const orgRegex = /^\.org\s+(\w+)$/i;
 
 /**
- * .orga updates the current output buffer index.
+ * .org changes the effective memory position.
  * @param state Current assembler state.
  */
 export default function orga(state: IAssemblerState): boolean {
-  const results = state.line.match(orgaRegex);
+  const orgRegex = /^\.org\s+(\w+)$/i;
+  const results = state.line.match(orgRegex);
   if (results === null)
-    return false; // Not .orga
+    return false; // Not .org
 
   const [, loc] = results;
   const imm = parseImmediate(loc);
   if (imm === null)
-    throw new Error(`Could not parse .orga immediate ${loc}`);
+    throw new Error(`Could not parse .org immediate ${loc}`);
 
-  state.outIndex = imm >>> 0; // Better be 32-bit
+  state.memPos = imm >>> 0; // Better be 32-bit
   return true;
 }

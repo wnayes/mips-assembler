@@ -1,9 +1,17 @@
+export enum AssemblerPhase {
+  firstPass,
+  secondPass
+}
+
 export interface IAssemblerState {
   /** Output buffer. */
   buffer: ArrayBuffer;
 
   /** DataView against the buffer. */
   dataView: DataView;
+
+  /** Current line being assembled. */
+  line: string;
 
   /** Memory address output position. Adjusted by .org directive. */
   memPos: number;
@@ -13,4 +21,6 @@ export interface IAssemblerState {
 
   /** Symbol table. Populated by .definelabel directives. */
   symbols: { [name: string]: number };
+
+  currentPass: AssemblerPhase;
 }
