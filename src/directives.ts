@@ -7,6 +7,8 @@ import orga from "./directives/orga";
 import align from "./directives/align";
 import skip from "./directives/skip";
 import fill from "./directives/fill";
+import ascii from "./directives/ascii";
+import byte from "./directives/byte";
 
 function getDirectives() {
   return [
@@ -16,6 +18,8 @@ function getDirectives() {
     align,
     skip,
     fill,
+    ascii,
+    byte,
   ];
 }
 

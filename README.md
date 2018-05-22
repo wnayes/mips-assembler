@@ -69,7 +69,10 @@ loop:
 
 | Directive | Description |
 |-----------|-------------|
+| `.ascii value[,...]` | Writes a sequence of characters or bytes. Each parameter can be any expression that evaluates to an integer or a string. If it evaluates to an integer, only the lowest 8 bits are inserted. If it evaluates to a string, every character is inserted as a byte. |
+| `.asciiz value[,...]` | Like `.ascii` but a single null terminator is inserted after the values. |
 | `.align num` | Writes zeros into the output file until the output position is a multiple of `num`. `num` has to be a power of two. |
+| `.byte value[,...]`<br/>`.db value[,...]` | Writes a sequence of bytes. Only the lowest 8 bits are inserted. |
 | `.definelabel label,value` | Defines `label` with a given value, creating a symbol for it. |
 | `.fill length[,value]` | Inserts `length` amount of bytes of `value`. If `value` isn't specified, zeros are inserted. Only the lowest 8 bits of `value` are inserted. |
 | `.org RamAddress` | Adjusts the working memory location the assembly. This affects individual instructions, but not the locations where they are outputted. |
