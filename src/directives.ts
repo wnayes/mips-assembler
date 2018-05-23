@@ -9,6 +9,8 @@ import skip from "./directives/skip";
 import fill from "./directives/fill";
 import ascii from "./directives/ascii";
 import byte from "./directives/byte";
+import halfword from "./directives/halfword";
+import word from "./directives/word";
 
 function getDirectives() {
   return [
@@ -20,6 +22,8 @@ function getDirectives() {
     fill,
     ascii,
     byte,
+    halfword,
+    word,
   ];
 }
 

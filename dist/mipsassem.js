@@ -136,7 +136,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mips_inst__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__immediates__ = __webpack_require__(0);
 
 
@@ -2234,6 +2234,10 @@ function _applyCasing(value, casing) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__directives_fill__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__directives_ascii__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__directives_byte__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__directives_halfword__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__directives_word__ = __webpack_require__(15);
+
+
 
 
 
@@ -2252,6 +2256,8 @@ function getDirectives() {
         __WEBPACK_IMPORTED_MODULE_5__directives_fill__["a" /* default */],
         __WEBPACK_IMPORTED_MODULE_6__directives_ascii__["a" /* default */],
         __WEBPACK_IMPORTED_MODULE_7__directives_byte__["a" /* default */],
+        __WEBPACK_IMPORTED_MODULE_8__directives_halfword__["a" /* default */],
+        __WEBPACK_IMPORTED_MODULE_9__directives_word__["a" /* default */],
     ];
 }
 /**
@@ -2576,8 +2582,12 @@ function ascii(state) {
     if (appendZero)
         numbers.push(0); // Add NULL byte.
     if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-        for (var i = 0; i < numbers.length; i++)
-            state.dataView.setInt8(state.outIndex + i, numbers[i]);
+        for (var i = 0; i < numbers.length; i++) {
+            if (numbers[i] < 0)
+                state.dataView.setInt8(state.outIndex + i, numbers[i]);
+            else
+                state.dataView.setUint8(state.outIndex + i, numbers[i]);
+        }
     }
     state.outIndex += numbers.length;
     return true;
@@ -2619,8 +2629,12 @@ function byte(state) {
         return imm;
     });
     if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-        for (var i = 0; i < numbers.length; i++)
-            state.dataView.setInt8(state.outIndex + i, numbers[i]);
+        for (var i = 0; i < numbers.length; i++) {
+            if (numbers[i] < 0)
+                state.dataView.setInt8(state.outIndex + i, numbers[i]);
+            else
+                state.dataView.setUint8(state.outIndex + i, numbers[i]);
+        }
     }
     state.outIndex += numbers.length;
     return true;
@@ -2629,6 +2643,102 @@ function byte(state) {
 
 /***/ }),
 /* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = halfword;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
+
+
+var regexHalfword = /^\.halfword\s+([,-\w\s]+)$/i;
+var regexDh = /^\.dh\s+([,-\w\s]+)$/i;
+/**
+ * Writes 16-bit values.
+ * .halfword value[,...]
+ * .dh value[,...]
+ * @param state Current assembler state.
+ */
+function halfword(state) {
+    var results = state.line.match(regexHalfword);
+    if (!results) {
+        results = state.line.match(regexDh);
+        if (!results)
+            return false;
+    }
+    var halfwordsString = results[1];
+    var pieces = halfwordsString.split(",")
+        .map(function (s) { return s.trim(); })
+        .filter(function (s) { return !!s; });
+    var numbers = pieces.map(function (s) {
+        var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(s);
+        if (imm === null)
+            throw new Error("Could not parse .halfword immediate " + s);
+        return imm;
+    });
+    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
+        for (var i = 0; i < numbers.length; i++) {
+            if (numbers[i] < 0)
+                state.dataView.setInt16(state.outIndex + (i * 2), numbers[i]);
+            else
+                state.dataView.setUint16(state.outIndex + (i * 2), numbers[i]);
+        }
+    }
+    state.outIndex += 2 * numbers.length;
+    return true;
+}
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = word;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
+
+
+var regexWord = /^\.word\s+([,-\w\s]+)$/i;
+var regexDw = /^\.dw\s+([,-\w\s]+)$/i;
+/**
+ * Writes 32-bit values.
+ * .word value[,...]
+ * .dw value[,...]
+ * @param state Current assembler state.
+ */
+function word(state) {
+    var results = state.line.match(regexWord);
+    if (!results) {
+        results = state.line.match(regexDw);
+        if (!results)
+            return false;
+    }
+    var wordsString = results[1];
+    var pieces = wordsString.split(",")
+        .map(function (s) { return s.trim(); })
+        .filter(function (s) { return !!s; });
+    var numbers = pieces.map(function (s) {
+        var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(s);
+        if (imm === null)
+            throw new Error("Could not parse .word immediate " + s);
+        return imm;
+    });
+    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
+        for (var i = 0; i < numbers.length; i++) {
+            if (numbers[i] < 0)
+                state.dataView.setInt32(state.outIndex + (i * 4), numbers[i]);
+            else
+                state.dataView.setUint32(state.outIndex + (i * 4), numbers[i]);
+        }
+    }
+    state.outIndex += 4 * numbers.length;
+    return true;
+}
+
+
+/***/ }),
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

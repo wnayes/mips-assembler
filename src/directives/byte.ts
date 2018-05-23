@@ -29,8 +29,12 @@ export default function byte(state: IAssemblerState): boolean {
   });
 
   if (state.currentPass === AssemblerPhase.secondPass) {
-    for (let i = 0; i < numbers.length; i++)
-      state.dataView.setInt8(state.outIndex + i, numbers[i]);
+    for (let i = 0; i < numbers.length; i++) {
+      if (numbers[i] < 0)
+        state.dataView.setInt8(state.outIndex + i, numbers[i]);
+      else
+        state.dataView.setUint8(state.outIndex + i, numbers[i]);
+    }
   }
 
   state.outIndex += numbers.length;

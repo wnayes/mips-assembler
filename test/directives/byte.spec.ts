@@ -81,5 +81,29 @@ aliases.forEach(alias => {
         "LH A0 0(V0)",
       ]);
     });
+
+    it("preserves signed numbers", () => {
+      const buffer = new ArrayBuffer(3);
+      const dataView = new DataView(buffer);
+      assemble(`
+        .${alias} -1, -0xA, -127
+      `, { buffer });
+
+      expect(dataView.getInt8(0)).to.equal(-1);
+      expect(dataView.getInt8(1)).to.equal(-10);
+      expect(dataView.getInt8(2)).to.equal(-127);
+    });
+
+    it("preserves unsigned numbers", () => {
+      const buffer = new ArrayBuffer(3);
+      const dataView = new DataView(buffer);
+      assemble(`
+        .${alias} 128, 255, 256
+      `, { buffer });
+
+      expect(dataView.getUint8(0)).to.equal(128);
+      expect(dataView.getUint8(1)).to.equal(255);
+      expect(dataView.getUint8(2)).to.equal(0);
+    });
   });
 });
