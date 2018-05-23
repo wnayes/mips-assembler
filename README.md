@@ -75,6 +75,7 @@ loop:
 | `.byte value[,...]`<br/>`.db value[,...]` | Writes a sequence of bytes. Only the lowest 8 bits are inserted. |
 | `.definelabel label,value` | Defines `label` with a given value, creating a symbol for it. |
 | `.fill length[,value]` | Inserts `length` amount of bytes of `value`. If `value` isn't specified, zeros are inserted. Only the lowest 8 bits of `value` are inserted. |
+| `.float value[,...]` | Writes a sequence of single-precision floats. |
 | `.halfword value[,...]`<br/>`.dh value[,...]` | Writes a sequence of 16-bit values. Only the lowest 16 bits are inserted. |
 | `.org RamAddress` | Adjusts the working memory location the assembly. This affects individual instructions, but not the locations where they are outputted. |
 | `.orga BufferOffset` | Sets the output pointer to the specified offset. This affects the location that subsequent instructions are written to, but doesn't affect individual instructions. |

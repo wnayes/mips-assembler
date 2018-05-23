@@ -11,6 +11,7 @@ import ascii from "./directives/ascii";
 import byte from "./directives/byte";
 import halfword from "./directives/halfword";
 import word from "./directives/word";
+import float from "./directives/float";
 
 function getDirectives() {
   return [
@@ -24,6 +25,7 @@ function getDirectives() {
     byte,
     halfword,
     word,
+    float,
   ];
 }
 

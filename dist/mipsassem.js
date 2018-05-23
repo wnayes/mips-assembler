@@ -136,7 +136,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mips_inst__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__immediates__ = __webpack_require__(0);
 
 
@@ -2236,6 +2236,8 @@ function _applyCasing(value, casing) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__directives_byte__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__directives_halfword__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__directives_word__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__directives_float__ = __webpack_require__(16);
+
 
 
 
@@ -2258,6 +2260,7 @@ function getDirectives() {
         __WEBPACK_IMPORTED_MODULE_7__directives_byte__["a" /* default */],
         __WEBPACK_IMPORTED_MODULE_8__directives_halfword__["a" /* default */],
         __WEBPACK_IMPORTED_MODULE_9__directives_word__["a" /* default */],
+        __WEBPACK_IMPORTED_MODULE_10__directives_float__["a" /* default */],
     ];
 }
 /**
@@ -2739,6 +2742,45 @@ function word(state) {
 
 /***/ }),
 /* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = word;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
+
+var regexFloat = /^\.float\s+([,-\.\w\s]+)$/i;
+/**
+ * Writes 32-bit float values.
+ * .float value[,...]
+ * @param state Current assembler state.
+ */
+function word(state) {
+    var results = state.line.match(regexFloat);
+    if (!results) {
+        return false;
+    }
+    var valuesString = results[1];
+    var pieces = valuesString.split(",")
+        .map(function (s) { return s.trim(); })
+        .filter(function (s) { return !!s; });
+    var numbers = pieces.map(function (s) {
+        var imm = parseFloat(s);
+        if (imm === null)
+            throw new Error("Could not parse .float immediate " + s);
+        return imm;
+    });
+    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
+        for (var i = 0; i < numbers.length; i++) {
+            state.dataView.setFloat32(state.outIndex + (i * 4), numbers[i]);
+        }
+    }
+    state.outIndex += 4 * numbers.length;
+    return true;
+}
+
+
+/***/ }),
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
