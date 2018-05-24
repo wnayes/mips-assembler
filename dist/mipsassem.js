@@ -228,7 +228,7 @@ function _fixBranch(inst, offset, state) {
     if (_instIsBranch(inst)) {
         var imm = Object(__WEBPACK_IMPORTED_MODULE_4__immediates__["a" /* parseImmediate */])(offset); // Should definitely succeed.
         var memOffset = state.memPos + state.outIndex;
-        var diff = (imm - memOffset) / 4;
+        var diff = ((imm - memOffset) / 4) - 1;
         return diff.toString(); // base 10 ok
     }
     return offset; // Leave as is.

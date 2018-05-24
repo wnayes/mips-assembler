@@ -23,11 +23,50 @@ describe("Assembler", () => {
       "SW RA 24(SP)",
       "JAL 0x80023456",
       "NOP",
-      "BEQ V0 R0 -2",
+      "BEQ V0 R0 -3",
       "NOP",
       "LW RA 24(SP)",
       "JR RA",
       "ADDIU SP SP 32",
+    ]);
+  });
+
+  it("does branch forward", () => {
+    expect(assemble(`
+      .org 0x80004000
+      main:
+      ADDIU SP SP -32
+      SW RA 24(SP)
+      NOP
+      BEQ V0 R0 skip
+      JAL 0x80023456
+      NOP
+      skip:
+      LW RA 24(SP)
+      JR RA
+      ADDIU SP SP 32
+    `, { text: true })).to.deep.equal([
+      "ADDIU SP SP -32",
+      "SW RA 24(SP)",
+      "NOP",
+      "BEQ V0 R0 2",
+      "JAL 0x80023456",
+      "NOP",
+      "LW RA 24(SP)",
+      "JR RA",
+      "ADDIU SP SP 32",
+    ]);
+  });
+
+  it("does infinite loop", () => {
+    expect(assemble(`
+      .org 0x80004000
+      main:
+      BEQ R0 R0 main
+      NOP
+    `, { text: true })).to.deep.equal([
+      "BEQ R0 R0 -1",
+      "NOP",
     ]);
   });
 
@@ -53,7 +92,7 @@ describe("Assembler", () => {
       "SW RA 24(SP)",
       "JAL 0x80023456",
       "NOP",
-      "BEQ V0 R0 -2",
+      "BEQ V0 R0 -3",
       "NOP",
       "LW RA 24(SP)",
       "JR RA",

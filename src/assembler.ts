@@ -133,7 +133,7 @@ function _fixBranch(inst: string, offset: string, state: IAssemblerState): strin
   if (_instIsBranch(inst)) {
     const imm = parseImmediate(offset); // Should definitely succeed.
     const memOffset = state.memPos + state.outIndex;
-    const diff = (imm - memOffset) / 4;
+    const diff = ((imm - memOffset) / 4) - 1;
     return diff.toString(); // base 10 ok
   }
 
