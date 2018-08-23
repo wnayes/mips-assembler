@@ -56,13 +56,25 @@ Features
 
 ### Labels
 
-Labels should be on their own line. No instructions should be included on the same line.
+Labels can be used to reference locations by name.
 
 ```
 main:
-   ...
+    ADDIU SP SP -32
+    ...
 loop:
-   ...
+    JAL 0x80023456
+    ...
+```
+
+They can be on their own line, or on the same line as other instructions or labels. Labels can contain letters, numbers, underscores, `?` or `!`.
+
+```
+main:
+main2: start: ADDIU SP SP -32
+    ...
+loop?!: JAL 0x80023456
+    ...
 ```
 
 ### Directives

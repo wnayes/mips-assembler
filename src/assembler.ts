@@ -38,21 +38,29 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
   const outStrs: string[] = [];
 
   // First pass, calculate label positions.
-  arr = arr.filter(line => {
+  arr = arr.map(line => {
     state.line = line;
 
     if (line[0] === ".") {
       handleDirective(state);
-      return true; // Keep directives for second pass.
+      return line; // Keep directives for second pass.
     }
 
-    if (_parseGlobalLabel(state)) {
-      return false; // State was updated, can filter the label out.
+    let parsedLabel: string | boolean;
+    while (parsedLabel = _parseGlobalLabel(state)) {
+      state.line = line = line.substr(parsedLabel.length + 1).trim();
     }
 
-    state.outIndex += 4; // Well, this better be a typical instruction!
-    return true;
+    // If !line, then only labels were on the line.
+    if (line) {
+      state.outIndex += 4;
+    }
+
+    return line;
   });
+
+  // Re-filter out empty lines.
+  arr = arr.filter(Boolean);
 
   state.buffer = opts.buffer || new ArrayBuffer(state.outIndex);
   state.dataView = new DataView(state.buffer);
@@ -117,15 +125,15 @@ function _stripComments(input: string[]): string[] {
 }
 
 /** Parses a LABEL: expression and adds it to the symbol table. */
-function _parseGlobalLabel(state: IAssemblerState): boolean {
-  const labelRegex = /^(\w+)\:\s*$/;
+function _parseGlobalLabel(state: IAssemblerState): string | false {
+  const labelRegex = /^([\w\?\!]+)\:/;
   const results = state.line.match(labelRegex);
   if (results === null)
     return false; // Not a label.
 
   const [, name] = results;
   state.symbols[name] = (state.memPos + state.outIndex) >>> 0;
-  return true;
+  return name;
 }
 
 /** Transforms branches from absolute to relative. */

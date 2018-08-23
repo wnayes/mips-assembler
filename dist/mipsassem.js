@@ -153,18 +153,24 @@ function assemble(input, opts) {
     var state = _makeNewAssemblerState();
     var outStrs = [];
     // First pass, calculate label positions.
-    arr = arr.filter(function (line) {
+    arr = arr.map(function (line) {
         state.line = line;
         if (line[0] === ".") {
             Object(__WEBPACK_IMPORTED_MODULE_2__directives__["a" /* handleDirective */])(state);
-            return true; // Keep directives for second pass.
+            return line; // Keep directives for second pass.
         }
-        if (_parseGlobalLabel(state)) {
-            return false; // State was updated, can filter the label out.
+        var parsedLabel;
+        while (parsedLabel = _parseGlobalLabel(state)) {
+            state.line = line = line.substr(parsedLabel.length + 1).trim();
         }
-        state.outIndex += 4; // Well, this better be a typical instruction!
-        return true;
+        // If !line, then only labels were on the line.
+        if (line) {
+            state.outIndex += 4;
+        }
+        return line;
     });
+    // Re-filter out empty lines.
+    arr = arr.filter(Boolean);
     state.buffer = opts.buffer || new ArrayBuffer(state.outIndex);
     state.dataView = new DataView(state.buffer);
     state.memPos = 0;
@@ -215,13 +221,13 @@ function _stripComments(input) {
 }
 /** Parses a LABEL: expression and adds it to the symbol table. */
 function _parseGlobalLabel(state) {
-    var labelRegex = /^(\w+)\:\s*$/;
+    var labelRegex = /^([\w\?\!]+)\:/;
     var results = state.line.match(labelRegex);
     if (results === null)
         return false; // Not a label.
     var name = results[1];
     state.symbols[name] = (state.memPos + state.outIndex) >>> 0;
-    return true;
+    return name;
 }
 /** Transforms branches from absolute to relative. */
 function _fixBranch(inst, offset, state) {

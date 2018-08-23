@@ -3,6 +3,7 @@ import { expect } from "chai";
 
 import { assemble } from "../../src/assembler";
 
+// TODO: setFloat32/getFloat32 causes some precision issues in comparisons.
 xdescribe(".float", () => {
   it("writes the given 32-bit floats to the buffer", () => {
     const buffer = new ArrayBuffer(8);

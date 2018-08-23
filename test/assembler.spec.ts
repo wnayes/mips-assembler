@@ -133,4 +133,165 @@ describe("Assembler", () => {
       "ADDIU A0 A0 0xC456",
     ]);
   });
+
+  describe("labels", () => {
+    it("handles labels on the same line as instructions", () => {
+      expect(assemble(`
+        .org 0x80004000
+        main:ADDIU SP SP -32
+        SW RA 24(SP)
+        loop: JAL 0x80023456
+        NOP
+        BEQ V0 R0 loop
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -32",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 32",
+      ]);
+    });
+
+    it("handles multiple labels on the same line", () => {
+      expect(assemble(`
+        .org 0x80004000
+        main:start:ADDIU SP SP -32
+        SW RA 24(SP)
+        loop: repeat:
+        JAL 0x80023456
+        NOP
+        BEQ V0 R0 loop
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -32",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 32",
+      ]);
+    });
+
+    it("handles ending labels", () => {
+      expect(assemble(`
+        .org 0x80004000
+        main:
+        ADDIU SP SP -32
+        SW RA 24(SP)
+        loop: JAL 0x80023456
+        NOP
+        BEQ V0 R0 loop
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+        end:
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -32",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 32",
+      ]);
+    });
+
+    it("handles '?'", () => {
+      expect(assemble(`
+        .org 0x80004000
+        main:
+        ADDIU SP SP -32
+        SW RA 24(SP)
+        loop?: JAL 0x80023456
+        NOP
+        BEQ V0 R0 loop?
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+        end:
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -32",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 32",
+      ]);
+    });
+
+    it("handles '!'", () => {
+      expect(assemble(`
+        .org 0x80004000
+        main:
+        ADDIU SP SP -32
+        SW RA 24(SP)
+        loop!: JAL 0x80023456
+        NOP
+        BEQ V0 R0 loop!
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+        end:
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -32",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 32",
+      ]);
+    });
+
+    it("handles underscores", () => {
+      expect(assemble(`
+        .org 0x80004000
+        main_2:
+        ADDIU SP SP -32
+        SW RA 24(SP)
+        __loop: JAL 0x80023456
+        NOP
+        BEQ V0 R0 __loop
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+        end:
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -32",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 32",
+      ]);
+    });
+  });
 });

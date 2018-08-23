@@ -1,5 +1,4 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
-import { parseImmediate } from "../immediates";
 
 const regexFloat = /^\.float\s+([,-\.\w\s]+)$/i;
 
