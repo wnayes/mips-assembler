@@ -5,12 +5,12 @@
   "main": "dist/mipsassem.js",
   "scripts": {
     "build": "webpack --config webpack.dev.config.js & webpack --config webpack.prod.config.js",
-    "test": "cross-env TS_NODE_COMPILER_OPTIONS='{ \"module\": \"commonjs\" }' mocha -r ts-node/register test/*.spec.ts test/*/*.spec.ts"
+    "test": "cross-env TS_NODE_COMPILER_OPTIONS='{ \"module\": \"commonjs\" }' mocha --require ts-node/register test/*.spec.ts test/*/*.spec.ts"
   },
   "author": "Will Nayes",
   "license": "MIT",
   "dependencies": {
-    "mips-inst": "^1.4.1"
+    "mips-inst": "^2.2.0"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",

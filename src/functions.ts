@@ -12,7 +12,7 @@ export function runFunction(value: string, state: IAssemblerState): string {
 }
 
 function _runFunction(value: string, state: IAssemblerState, doParseImmediate: boolean): number | null {
-  const fnRegex = /^(\w+)\(([\(\),\w+]+)\)$/;
+  const fnRegex = /^(\w+)\(([\(\),\w]*)\)$/;
   const results = fnRegex.exec(value);
   if (results === null) { // Not a function
     let imm = null;
@@ -39,24 +39,30 @@ function _runFunction(value: string, state: IAssemblerState, doParseImmediate: b
     }
 
     // TODO: Doesn't support nested calls, multiple arguments.
-    return fns[fn].call(fns[fn], _runFunction(args, state, true));
+    return fns[fn](state, _runFunction(args, state, true));
   }
 }
 
 interface IAssemblerFunction {
-  (value: number): number;
+  (state: IAssemblerState, value: number): number;
 }
 
-const fns: { [fnName: string]: IAssemblerFunction } = {
-  hi: function(value: number): number {
-    let lower = value & 0x0000FFFF;
-    let upper = value >>> 16;
-    if (lower & 0x8000)
-      upper += 1;
-    return upper;
-  },
+/** Built-in functions */
+const fns: { [fnName: string]: IAssemblerFunction } = Object.create(null);
 
-  lo: function(value: number): number {
-    return value & 0x0000FFFF;
-  },
+fns.hi = function(state: IAssemblerState, value: number): number {
+  let lower = value & 0x0000FFFF;
+  let upper = value >>> 16;
+  if (lower & 0x8000)
+    upper += 1;
+  return upper;
+};
+
+fns.lo = function(state: IAssemblerState, value: number): number {
+  return value & 0x0000FFFF;
+};
+
+/** Current memory address */
+fns.org = function(state: IAssemblerState, value: number): number {
+  return state.memPos + state.outIndex;
 };

@@ -1532,9 +1532,9 @@ minizlib@^1.1.0:
   dependencies:
     minipass "^2.2.1"
 
-mips-inst@^1.4.1:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/mips-inst/-/mips-inst-1.4.2.tgz#bf968339c6d248e73dae650413df82093e343563"
+mips-inst@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/mips-inst/-/mips-inst-2.2.0.tgz#fd798a0f987eaaf5da61880dbbe9c34f22dc40f6"
 
 mississippi@^2.0.0:
   version "2.0.0"

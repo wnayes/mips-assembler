@@ -76,6 +76,7 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     state.line = line;
 
     if (line[0] === ".") {
+      line = evaluateExpressionsOnCurrentLine(state);
       handleDirective(state);
       return;
     }
@@ -87,16 +88,7 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     }
 
     // Apply any built-in functions, symbols.
-    const instPieces = line.split(/[,\s]+/g);
-    if (instPieces.length) {
-      let lastPiece = runFunction(instPieces[instPieces.length - 1], state);
-      if (lastPiece !== null) {
-        lastPiece = _fixBranch(instPieces[0], lastPiece, state);
-
-        instPieces[instPieces.length - 1] = lastPiece;
-        line = instPieces.join(" ");
-      }
-    }
+    line = evaluateExpressionsOnCurrentLine(state);
 
     if (opts.text)
       outStrs.push(line);
@@ -112,6 +104,20 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     return outStrs;
 
   return state.buffer;
+}
+
+function evaluateExpressionsOnCurrentLine(state: IAssemblerState) {
+  let line = state.line;
+  const instPieces = line.split(/[,\s]+/g);
+  if (instPieces.length > 1) {
+    let lastPiece = runFunction(instPieces[instPieces.length - 1], state);
+    if (lastPiece !== null) {
+      lastPiece = _fixBranch(instPieces[0], lastPiece, state);
+      instPieces[instPieces.length - 1] = lastPiece;
+      line = state.line = instPieces.join(" ");
+    }
+  }
+  return line;
 }
 
 /** Strips single line ; or // comments. */

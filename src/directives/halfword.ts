@@ -1,8 +1,8 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
 import { parseImmediate } from "../immediates";
 
-const regexHalfword = /^\.halfword\s+([,-\w\s]+)$/i;
-const regexDh = /^\.dh\s+([,-\w\s]+)$/i;
+const regexHalfword = /^\.halfword\s+([,-\w\s\(\)]+)$/i;
+const regexDh = /^\.dh\s+([,-\w\s\(\)]+)$/i;
 
 /**
  * Writes 16-bit values.
@@ -22,14 +22,15 @@ export default function halfword(state: IAssemblerState): boolean {
   const pieces = halfwordsString.split(",")
     .map(s => s.trim())
     .filter(s => !!s);
-  const numbers = pieces.map(s => {
-    let imm = parseImmediate(s);
-    if (imm === null)
-      throw new Error(`Could not parse .halfword immediate ${s}`);
-    return imm;
-  });
 
   if (state.currentPass === AssemblerPhase.secondPass) {
+    const numbers = pieces.map(s => {
+      let imm = parseImmediate(s);
+      if (imm === null)
+        throw new Error(`Could not parse .halfword immediate ${s}`);
+      return imm;
+    });
+
     for (let i = 0; i < numbers.length; i++) {
       if (numbers[i] < 0)
         state.dataView.setInt16(state.outIndex + (i * 2), numbers[i]);
@@ -38,7 +39,7 @@ export default function halfword(state: IAssemblerState): boolean {
     }
   }
 
-  state.outIndex += 2 * numbers.length;
+  state.outIndex += 2 * pieces.length;
 
   return true;
 }

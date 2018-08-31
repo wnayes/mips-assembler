@@ -1,8 +1,8 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
 import { parseImmediate } from "../immediates";
 
-const regexWord = /^\.word\s+([,-\w\s]+)$/i;
-const regexDw = /^\.dw\s+([,-\w\s]+)$/i;
+const regexWord = /^\.word\s+([,-\w\s\(\)]+)$/i;
+const regexDw = /^\.dw\s+([,-\w\s\(\)]+)$/i;
 
 /**
  * Writes 32-bit values.
@@ -22,14 +22,15 @@ export default function word(state: IAssemblerState): boolean {
   const pieces = wordsString.split(",")
     .map(s => s.trim())
     .filter(s => !!s);
-  const numbers = pieces.map(s => {
-    let imm = parseImmediate(s);
-    if (imm === null)
-      throw new Error(`Could not parse .word immediate ${s}`);
-    return imm;
-  });
 
   if (state.currentPass === AssemblerPhase.secondPass) {
+    const numbers = pieces.map(s => {
+      let imm = parseImmediate(s);
+      if (imm === null)
+        throw new Error(`Could not parse .word immediate ${s}`);
+      return imm;
+    });
+
     for (let i = 0; i < numbers.length; i++) {
       if (numbers[i] < 0)
         state.dataView.setInt32(state.outIndex + (i * 4), numbers[i]);
@@ -38,7 +39,7 @@ export default function word(state: IAssemblerState): boolean {
     }
   }
 
-  state.outIndex += 4 * numbers.length;
+  state.outIndex += 4 * pieces.length;
 
   return true;
 }
