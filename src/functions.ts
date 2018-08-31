@@ -1,5 +1,6 @@
 import { IAssemblerState } from "./types";
 import { parseImmediate } from "./immediates";
+import { getSymbolValue } from "./symbols";
 
 /** Runs any built-in functions, and also resolves symbols. */
 export function runFunction(value: string, state: IAssemblerState): string {
@@ -18,8 +19,9 @@ function _runFunction(value: string, state: IAssemblerState, doParseImmediate: b
     if (doParseImmediate && (imm = parseImmediate(value)) !== null) {
       return imm;
     }
-    if (state.symbols[value] !== undefined) {
-      return state.symbols[value];
+    const symbolValue = getSymbolValue(state, value);
+    if (symbolValue !== null) {
+      return symbolValue;
     }
 
     return null;
@@ -28,8 +30,10 @@ function _runFunction(value: string, state: IAssemblerState, doParseImmediate: b
     const [, fn, args] = results;
     if (!fns[fn]) {
       // Did a symbol label accidentally look like a function?
-      if (state.symbols[fn] !== undefined)
-        return state.symbols[fn];
+      const symbolValue = getSymbolValue(state, fn);
+      if (symbolValue !== null) {
+        return symbolValue;
+      }
 
       return null; // Might have been something like 0x10(V0)
     }
@@ -39,7 +43,11 @@ function _runFunction(value: string, state: IAssemblerState, doParseImmediate: b
   }
 }
 
-const fns: { [fnName: string]: Function } = {
+interface IAssemblerFunction {
+  (value: number): number;
+}
+
+const fns: { [fnName: string]: IAssemblerFunction } = {
   hi: function(value: number): number {
     let lower = value & 0x0000FFFF;
     let upper = value >>> 16;

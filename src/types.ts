@@ -22,5 +22,18 @@ export interface IAssemblerState {
   /** Symbol table. Populated by .definelabel directives. */
   symbols: { [name: string]: number };
 
+  /** Symbol table of values */
+  symbolsByValue: { [value: number]: string };
+
+  /** The last global label that was passed during the assembly. */
+  currentLabel: string | null;
+
+  /** Symbol table for local labels. */
+  localSymbols: {
+    [globalLabelName: string]: {
+      [localLabelName: string]: number
+    }
+  }
+
   currentPass: AssemblerPhase;
 }

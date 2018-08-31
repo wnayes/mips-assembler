@@ -4,6 +4,8 @@ import { IAssemblerState, AssemblerPhase } from "./types";
 import { handleDirective } from "./directives";
 import { runFunction } from "./functions";
 import { parseImmediate } from "./immediates";
+import { parseGlobalLabel } from "./labels";
+import { getSymbolByValue } from "./symbols";
 
 /**
  * Optional parameters used to configure assembly.
@@ -47,7 +49,7 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     }
 
     let parsedLabel: string | boolean;
-    while (parsedLabel = _parseGlobalLabel(state)) {
+    while (parsedLabel = parseGlobalLabel(state)) {
       state.line = line = line.substr(parsedLabel.length + 1).trim();
     }
 
@@ -76,6 +78,12 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     if (line[0] === ".") {
       handleDirective(state);
       return;
+    }
+
+    // Start a new "area" if we hit a global symbol boundary.
+    const globalSymbol = getSymbolByValue(state, state.memPos + state.outIndex);
+    if (globalSymbol !== null) {
+      state.currentLabel = globalSymbol;
     }
 
     // Apply any built-in functions, symbols.
@@ -122,18 +130,6 @@ function _stripComments(input: string[]): string[] {
 
     return line.substr(0, removalIndex);
   });
-}
-
-/** Parses a LABEL: expression and adds it to the symbol table. */
-function _parseGlobalLabel(state: IAssemblerState): string | false {
-  const labelRegex = /^([\w\?\!]+)\:/;
-  const results = state.line.match(labelRegex);
-  if (results === null)
-    return false; // Not a label.
-
-  const [, name] = results;
-  state.symbols[name] = (state.memPos + state.outIndex) >>> 0;
-  return name;
 }
 
 /** Transforms branches from absolute to relative. */
@@ -187,6 +183,9 @@ function _makeNewAssemblerState(): IAssemblerState {
     memPos: 0,
     outIndex: 0,
     symbols: Object.create(null),
+    symbolsByValue: Object.create(null),
+    currentLabel: null,
+    localSymbols: Object.create(null),
     currentPass: AssemblerPhase.firstPass,
   };
 }

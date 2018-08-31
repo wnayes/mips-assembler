@@ -3,7 +3,7 @@ mips-assembler
 
 Simple MIPS IV assembler for JavaScript.
 
-The features that are included were made compatible with [armips](https://github.com/Kingcom/armips), though `armips` is much more sophisticated.
+The features that are included are compatible with [armips](https://github.com/Kingcom/armips), though `armips` is much more sophisticated.
 
 Usage
 -----
@@ -56,7 +56,7 @@ Features
 
 ### Labels
 
-Labels can be used to reference locations by name.
+Labels can be used to reference locations by name. Labels are global by default.
 
 ```
 main:
@@ -75,6 +75,18 @@ main2: start: ADDIU SP SP -32
     ...
 loop?!: JAL 0x80023456
     ...
+```
+
+If a label starts with `@@`, it is a local label and only can be defined and used in the area between the two nearest global labels.
+
+```
+; The example from armips...
+GlobalLabel:       ; This is a global label
+@@LocalLabel:      ; This is a local label, it is only
+                   ; valid until the next global one
+OtherGlobalLabel:  ; this will terminate the area where
+                   ; @@LocalLabel can be used
+j @@LocalLabel     ; as a result, this will cause an error
 ```
 
 ### Directives

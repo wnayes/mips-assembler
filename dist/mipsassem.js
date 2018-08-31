@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -120,10 +120,60 @@ var AssemblerPhase;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__assembler__ = __webpack_require__(3);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "assemble", function() { return __WEBPACK_IMPORTED_MODULE_0__assembler__["a"]; });
+/* harmony export (immutable) */ __webpack_exports__["b"] = addSymbol;
+/* harmony export (immutable) */ __webpack_exports__["a"] = addLocalSymbol;
+/* harmony export (immutable) */ __webpack_exports__["d"] = getSymbolValue;
+/* harmony export (immutable) */ __webpack_exports__["c"] = getSymbolByValue;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__labels__ = __webpack_require__(3);
 
+/**
+ * Adds a symbol to the symbol table.
+ * @param state Assembler state
+ * @param name Symbol name
+ * @param value Symbol value
+ */
+function addSymbol(state, name, value) {
+    state.symbols[name] = value;
+    state.symbolsByValue[value] = name;
+}
+/**
+ * Adds a local symbol to the symbol table.
+ * @param state Assembler state
+ * @param name Local symbol name
+ * @param value Local symbol value
+ *
+ * Assumes !!state.currentLabel
+ */
+function addLocalSymbol(state, name, value) {
+    var localTable = state.localSymbols[state.currentLabel];
+    if (!localTable) {
+        localTable = state.localSymbols[state.currentLabel] = Object.create(null);
+    }
+    localTable[name] = value;
+}
+/**
+ * Retrieves a symbol by name, global or local.
+ */
+function getSymbolValue(state, name) {
+    if (Object(__WEBPACK_IMPORTED_MODULE_0__labels__["a" /* isLocalLabel */])(name)) {
+        if (!state.currentLabel) {
+            throw new Error("Local label " + name + " cannot be referenced in the current scope");
+        }
+        var localTable = state.localSymbols[state.currentLabel];
+        if (localTable) {
+            return localTable[name] || null;
+        }
+        return null;
+    }
+    return state.symbols[name] || null;
+}
+/**
+ * Retrieves a symbol by value from the symbol table.
+ * Does not retrieve local labels.
+ */
+function getSymbolByValue(state, value) {
+    return state.symbolsByValue[value] || null;
+}
 
 
 /***/ }),
@@ -131,13 +181,69 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["b"] = parseGlobalLabel;
+/* harmony export (immutable) */ __webpack_exports__["a"] = isLocalLabel;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__symbols__ = __webpack_require__(2);
+
+/**
+ * Parses a LABEL: expression and adds it to the symbol table.
+ * Examples of valid labels:
+ *    basicLabel:    excited!Label!:    mystery?Label?:
+ *    @@localLabel:  12345:             !?!:
+ */
+function parseGlobalLabel(state) {
+    var labelRegex = /^((?:@@)?[\w\?\!]+)\:/;
+    var results = state.line.match(labelRegex);
+    if (results === null)
+        return false; // Not a label.
+    var name = results[1];
+    if (isLocalLabel(name)) {
+        if (!state.currentLabel) {
+            throw new Error("Local label " + name + " (starts with @@) cannot be used before a global label");
+        }
+        Object(__WEBPACK_IMPORTED_MODULE_0__symbols__["a" /* addLocalSymbol */])(state, name, getLabelValueFromState(state));
+    }
+    else {
+        state.currentLabel = name;
+        Object(__WEBPACK_IMPORTED_MODULE_0__symbols__["b" /* addSymbol */])(state, name, getLabelValueFromState(state));
+    }
+    return name;
+}
+function isLocalLabel(name) {
+    return name.indexOf("@@") === 0;
+}
+function getLabelValueFromState(state) {
+    return (state.memPos + state.outIndex) >>> 0;
+}
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__assembler__ = __webpack_require__(5);
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "assemble", function() { return __WEBPACK_IMPORTED_MODULE_0__assembler__["a"]; });
+
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = assemble;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mips_inst__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__immediates__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__labels__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__symbols__ = __webpack_require__(2);
+
+
 
 
 
@@ -160,7 +266,7 @@ function assemble(input, opts) {
             return line; // Keep directives for second pass.
         }
         var parsedLabel;
-        while (parsedLabel = _parseGlobalLabel(state)) {
+        while (parsedLabel = Object(__WEBPACK_IMPORTED_MODULE_5__labels__["b" /* parseGlobalLabel */])(state)) {
             state.line = line = line.substr(parsedLabel.length + 1).trim();
         }
         // If !line, then only labels were on the line.
@@ -182,6 +288,11 @@ function assemble(input, opts) {
         if (line[0] === ".") {
             Object(__WEBPACK_IMPORTED_MODULE_2__directives__["a" /* handleDirective */])(state);
             return;
+        }
+        // Start a new "area" if we hit a global symbol boundary.
+        var globalSymbol = Object(__WEBPACK_IMPORTED_MODULE_6__symbols__["c" /* getSymbolByValue */])(state, state.memPos + state.outIndex);
+        if (globalSymbol !== null) {
+            state.currentLabel = globalSymbol;
         }
         // Apply any built-in functions, symbols.
         var instPieces = line.split(/[,\s]+/g);
@@ -218,16 +329,6 @@ function _stripComments(input) {
             removalIndex = Math.min(semicolonIndex, slashesIndex);
         return line.substr(0, removalIndex);
     });
-}
-/** Parses a LABEL: expression and adds it to the symbol table. */
-function _parseGlobalLabel(state) {
-    var labelRegex = /^([\w\?\!]+)\:/;
-    var results = state.line.match(labelRegex);
-    if (results === null)
-        return false; // Not a label.
-    var name = results[1];
-    state.symbols[name] = (state.memPos + state.outIndex) >>> 0;
-    return name;
 }
 /** Transforms branches from absolute to relative. */
 function _fixBranch(inst, offset, state) {
@@ -276,6 +377,9 @@ function _makeNewAssemblerState() {
         memPos: 0,
         outIndex: 0,
         symbols: Object.create(null),
+        symbolsByValue: Object.create(null),
+        currentLabel: null,
+        localSymbols: Object.create(null),
         currentPass: __WEBPACK_IMPORTED_MODULE_1__types__["a" /* AssemblerPhase */].firstPass,
     };
 }
@@ -289,7 +393,7 @@ function _ensureArray(input) {
 
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -2227,22 +2331,22 @@ function _applyCasing(value, casing) {
 });
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = handleDirective;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__directives_definelabel__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__directives_org__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives_orga__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__directives_align__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__directives_skip__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__directives_fill__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__directives_ascii__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__directives_byte__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__directives_halfword__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__directives_word__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__directives_float__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__directives_definelabel__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__directives_org__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives_orga__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__directives_align__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__directives_skip__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__directives_fill__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__directives_ascii__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__directives_byte__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__directives_halfword__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__directives_word__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__directives_float__ = __webpack_require__(18);
 
 
 
@@ -2281,12 +2385,14 @@ function handleDirective(state) {
 
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = definelabel;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__symbols__ = __webpack_require__(2);
+
 
 var defineLabelRegex = /^\.definelabel\s+(\w+)[\s,]+(\w+)$/i;
 /**
@@ -2300,19 +2406,20 @@ function definelabel(state) {
     var name = results[1], value = results[2];
     var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(value);
     if (imm === null) {
-        if (!state.symbols[value])
+        var symbolValue = Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["d" /* getSymbolValue */])(state, value);
+        if (symbolValue === null)
             throw new Error(".definelabel value must be numeric or an alias to another label");
-        state.symbols[name] = state.symbols[value]; // Alias
+        Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["b" /* addSymbol */])(state, name, symbolValue); // Alias
     }
     else {
-        state.symbols[name] = imm;
+        Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["b" /* addSymbol */])(state, name, imm);
     }
     return true; // Symbol added
 }
 
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2338,7 +2445,7 @@ function orga(state) {
 
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2364,7 +2471,7 @@ function orga(state) {
 
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2402,7 +2509,7 @@ function align(state) {
 
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2430,7 +2537,7 @@ function skip(state) {
 
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2483,7 +2590,7 @@ function fill(state) {
 
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2604,7 +2711,7 @@ function ascii(state) {
 
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2651,7 +2758,7 @@ function byte(state) {
 
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2699,7 +2806,7 @@ function halfword(state) {
 
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2747,7 +2854,7 @@ function word(state) {
 
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2786,12 +2893,14 @@ function word(state) {
 
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = runFunction;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__symbols__ = __webpack_require__(2);
+
 
 /** Runs any built-in functions, and also resolves symbols. */
 function runFunction(value, state) {
@@ -2809,8 +2918,9 @@ function _runFunction(value, state, doParseImmediate) {
         if (doParseImmediate && (imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(value)) !== null) {
             return imm;
         }
-        if (state.symbols[value] !== undefined) {
-            return state.symbols[value];
+        var symbolValue = Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["d" /* getSymbolValue */])(state, value);
+        if (symbolValue !== null) {
+            return symbolValue;
         }
         return null;
     }
@@ -2818,8 +2928,10 @@ function _runFunction(value, state, doParseImmediate) {
         var fn = results[1], args = results[2];
         if (!fns[fn]) {
             // Did a symbol label accidentally look like a function?
-            if (state.symbols[fn] !== undefined)
-                return state.symbols[fn];
+            var symbolValue = Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["d" /* getSymbolValue */])(state, fn);
+            if (symbolValue !== null) {
+                return symbolValue;
+            }
             return null; // Might have been something like 0x10(V0)
         }
         // TODO: Doesn't support nested calls, multiple arguments.

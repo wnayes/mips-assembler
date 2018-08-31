@@ -294,4 +294,77 @@ describe("Assembler", () => {
       ]);
     });
   });
+
+  describe("local labels", () => {
+    it("handles local labels", () => {
+      expect(assemble(`
+        .org 0x80004000
+        main_2:
+        ADDIU SP SP -32
+        SW RA 24(SP)
+        @@loop: JAL 0x80023456
+        NOP
+        BEQ V0 R0 @@loop
+        NOP
+        exit:
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+        end:
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -32",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 32",
+      ]);
+    });
+
+    it("throws an error if local labels are used in an invalid area", () => {
+      expect(() => {
+        assemble(`
+        .org 0x80004000
+        main_2:
+        ADDIU SP SP -32
+        SW RA 24(SP)
+        @@loop: JAL 0x80023456
+        NOP
+        BEQ V0 R0 @@loop
+        NOP
+        exit:
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+        BEQ R0 R0 @@loop ; cannot be used in the exit region
+        end:
+      `, { text: true });
+      }).to.throw();
+    });
+
+    it("throws an error if local labels are used before any global label", () => {
+      expect(() => {
+        assemble(`
+        .org 0x80004000
+        @@localstart:
+        main_2:
+        ADDIU SP SP -32
+        SW RA 24(SP)
+        @@loop: JAL 0x80023456
+        NOP
+        BEQ V0 R0 @@loop
+        NOP
+        exit:
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 32
+        BEQ R0 R0 @@loop ; cannot be used in the exit region
+        end:
+      `, { text: true });
+      }).to.throw("Local label @@localstart (starts with @@) cannot be used before a global label");
+    });
+  });
 });

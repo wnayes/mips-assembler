@@ -1,5 +1,6 @@
 import { IAssemblerState } from "../types";
 import { parseImmediate } from "../immediates";
+import { addSymbol, getSymbolValue } from "../symbols";
 
 const defineLabelRegex = /^\.definelabel\s+(\w+)[\s,]+(\w+)$/i;
 
@@ -16,13 +17,14 @@ export default function definelabel(state: IAssemblerState): boolean {
 
   const imm = parseImmediate(value);
   if (imm === null) {
-    if (!state.symbols[value])
+    const symbolValue = getSymbolValue(state, value);
+    if (symbolValue === null)
       throw new Error(".definelabel value must be numeric or an alias to another label");
 
-    state.symbols[name] = state.symbols[value]; // Alias
+    addSymbol(state, name, symbolValue); // Alias
   }
   else {
-    state.symbols[name] = imm;
+    addSymbol(state, name, imm);
   }
 
   return true; // Symbol added
