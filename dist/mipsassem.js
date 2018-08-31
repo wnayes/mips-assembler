@@ -7,7 +7,7 @@
 		exports["MIPSAssem"] = factory();
 	else
 		root["MIPSAssem"] = factory();
-})(typeof self !== 'undefined' ? self : this, function() {
+})(window, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -46,12 +46,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
+/******/ 	};
+/******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -69,2889 +89,336 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
 /******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
-/******/ })
-/************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = parseImmediate;
-function parseImmediate(value) {
-    if (typeof value !== "string")
-        return null;
-    var negative = value[0] === "-";
-    if (negative)
-        value = value.substr(1);
-    var result;
-    if (value[0] === "b" || value[0] === "0" && value[1] === "b")
-        result = parseInt(value.substr(2), 2);
-    else if (value[0] === "o" || value[0] === "0" && value[1] === "o")
-        result = parseInt(value.substr(2), 8);
-    else if (value[0] === "x" || value[0] === "0" && value[1] === "x")
-        result = parseInt(value.substr(2), 16);
-    else
-        result = parseInt(value, 10);
-    if (isNaN(result))
-        return null;
-    if (negative)
-        result = -result;
-    return result;
-}
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AssemblerPhase; });
-var AssemblerPhase;
-(function (AssemblerPhase) {
-    AssemblerPhase[AssemblerPhase["firstPass"] = 0] = "firstPass";
-    AssemblerPhase[AssemblerPhase["secondPass"] = 1] = "secondPass";
-})(AssemblerPhase || (AssemblerPhase = {}));
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["b"] = addSymbol;
-/* harmony export (immutable) */ __webpack_exports__["a"] = addLocalSymbol;
-/* harmony export (immutable) */ __webpack_exports__["d"] = getSymbolValue;
-/* harmony export (immutable) */ __webpack_exports__["c"] = getSymbolByValue;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__labels__ = __webpack_require__(3);
-
-/**
- * Adds a symbol to the symbol table.
- * @param state Assembler state
- * @param name Symbol name
- * @param value Symbol value
- */
-function addSymbol(state, name, value) {
-    state.symbols[name] = value;
-    state.symbolsByValue[value] = name;
-}
-/**
- * Adds a local symbol to the symbol table.
- * @param state Assembler state
- * @param name Local symbol name
- * @param value Local symbol value
- *
- * Assumes !!state.currentLabel
- */
-function addLocalSymbol(state, name, value) {
-    var localTable = state.localSymbols[state.currentLabel];
-    if (!localTable) {
-        localTable = state.localSymbols[state.currentLabel] = Object.create(null);
-    }
-    localTable[name] = value;
-}
-/**
- * Retrieves a symbol by name, global or local.
- */
-function getSymbolValue(state, name) {
-    if (Object(__WEBPACK_IMPORTED_MODULE_0__labels__["a" /* isLocalLabel */])(name)) {
-        if (!state.currentLabel) {
-            throw new Error("Local label " + name + " cannot be referenced in the current scope");
-        }
-        var localTable = state.localSymbols[state.currentLabel];
-        if (localTable) {
-            return localTable[name] || null;
-        }
-        return null;
-    }
-    return state.symbols[name] || null;
-}
-/**
- * Retrieves a symbol by value from the symbol table.
- * Does not retrieve local labels.
- */
-function getSymbolByValue(state, value) {
-    return state.symbolsByValue[value] || null;
-}
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["b"] = parseGlobalLabel;
-/* harmony export (immutable) */ __webpack_exports__["a"] = isLocalLabel;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__symbols__ = __webpack_require__(2);
-
-/**
- * Parses a LABEL: expression and adds it to the symbol table.
- * Examples of valid labels:
- *    basicLabel:    excited!Label!:    mystery?Label?:
- *    @@localLabel:  12345:             !?!:
- */
-function parseGlobalLabel(state) {
-    var labelRegex = /^((?:@@)?[\w\?\!]+)\:/;
-    var results = state.line.match(labelRegex);
-    if (results === null)
-        return false; // Not a label.
-    var name = results[1];
-    if (isLocalLabel(name)) {
-        if (!state.currentLabel) {
-            throw new Error("Local label " + name + " (starts with @@) cannot be used before a global label");
-        }
-        Object(__WEBPACK_IMPORTED_MODULE_0__symbols__["a" /* addLocalSymbol */])(state, name, getLabelValueFromState(state));
-    }
-    else {
-        state.currentLabel = name;
-        Object(__WEBPACK_IMPORTED_MODULE_0__symbols__["b" /* addSymbol */])(state, name, getLabelValueFromState(state));
-    }
-    return name;
-}
-function isLocalLabel(name) {
-    return name.indexOf("@@") === 0;
-}
-function getLabelValueFromState(state) {
-    return (state.memPos + state.outIndex) >>> 0;
-}
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__assembler__ = __webpack_require__(5);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "assemble", function() { return __WEBPACK_IMPORTED_MODULE_0__assembler__["a"]; });
-
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = assemble;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mips_inst___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mips_inst__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__functions__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__immediates__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__labels__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__symbols__ = __webpack_require__(2);
-
-
-
-
-
-
-
-function assemble(input, opts) {
-    opts = opts || {};
-    var arr = _ensureArray(input);
-    arr = arr.filter(function (s) { return typeof s === "string"; });
-    arr = _stripComments(arr);
-    arr = arr.map(function (s) { return s.trim(); });
-    arr = arr.filter(Boolean);
-    var state = _makeNewAssemblerState();
-    var outStrs = [];
-    // First pass, calculate label positions.
-    arr = arr.map(function (line) {
-        state.line = line;
-        if (line[0] === ".") {
-            Object(__WEBPACK_IMPORTED_MODULE_2__directives__["a" /* handleDirective */])(state);
-            return line; // Keep directives for second pass.
-        }
-        var parsedLabel;
-        while (parsedLabel = Object(__WEBPACK_IMPORTED_MODULE_5__labels__["b" /* parseGlobalLabel */])(state)) {
-            state.line = line = line.substr(parsedLabel.length + 1).trim();
-        }
-        // If !line, then only labels were on the line.
-        if (line) {
-            state.outIndex += 4;
-        }
-        return line;
-    });
-    // Re-filter out empty lines.
-    arr = arr.filter(Boolean);
-    state.buffer = opts.buffer || new ArrayBuffer(state.outIndex);
-    state.dataView = new DataView(state.buffer);
-    state.memPos = 0;
-    state.outIndex = 0;
-    state.currentPass = __WEBPACK_IMPORTED_MODULE_1__types__["a" /* AssemblerPhase */].secondPass;
-    // Second pass, assemble!
-    arr.forEach(function (line) {
-        state.line = line;
-        if (line[0] === ".") {
-            Object(__WEBPACK_IMPORTED_MODULE_2__directives__["a" /* handleDirective */])(state);
-            return;
-        }
-        // Start a new "area" if we hit a global symbol boundary.
-        var globalSymbol = Object(__WEBPACK_IMPORTED_MODULE_6__symbols__["c" /* getSymbolByValue */])(state, state.memPos + state.outIndex);
-        if (globalSymbol !== null) {
-            state.currentLabel = globalSymbol;
-        }
-        // Apply any built-in functions, symbols.
-        var instPieces = line.split(/[,\s]+/g);
-        if (instPieces.length) {
-            var lastPiece = Object(__WEBPACK_IMPORTED_MODULE_3__functions__["a" /* runFunction */])(instPieces[instPieces.length - 1], state);
-            if (lastPiece !== null) {
-                lastPiece = _fixBranch(instPieces[0], lastPiece, state);
-                instPieces[instPieces.length - 1] = lastPiece;
-                line = instPieces.join(" ");
-            }
-        }
-        if (opts.text)
-            outStrs.push(line);
-        // At this point, we should be able to parse the instruction.
-        var inst = Object(__WEBPACK_IMPORTED_MODULE_0_mips_inst__["parse"])(line);
-        state.dataView.setUint32(state.outIndex, inst);
-        state.outIndex += 4;
-    });
-    if (opts.text)
-        return outStrs;
-    return state.buffer;
-}
-/** Strips single line ; or // comments. */
-function _stripComments(input) {
-    return input.map(function (line) {
-        var semicolonIndex = line.indexOf(";");
-        var slashesIndex = line.indexOf("//");
-        if (semicolonIndex === -1 && slashesIndex === -1)
-            return line; // No comments
-        var removalIndex = semicolonIndex;
-        if (removalIndex === -1)
-            removalIndex = slashesIndex;
-        else if (slashesIndex !== -1)
-            removalIndex = Math.min(semicolonIndex, slashesIndex);
-        return line.substr(0, removalIndex);
-    });
-}
-/** Transforms branches from absolute to relative. */
-function _fixBranch(inst, offset, state) {
-    if (_instIsBranch(inst)) {
-        var imm = Object(__WEBPACK_IMPORTED_MODULE_4__immediates__["a" /* parseImmediate */])(offset); // Should definitely succeed.
-        var memOffset = state.memPos + state.outIndex;
-        var diff = ((imm - memOffset) / 4) - 1;
-        return diff.toString(); // base 10 ok
-    }
-    return offset; // Leave as is.
-}
-function _instIsBranch(inst) {
-    inst = inst.toLowerCase();
-    if (inst[0] !== "b")
-        return false;
-    switch (inst) {
-        case "bc1f":
-        case "bc1fl":
-        case "bc1t":
-        case "bc1tl":
-        case "beq":
-        case "beql":
-        case "bgez":
-        case "bgezal":
-        case "bgezall":
-        case "bgezl":
-        case "bgtz":
-        case "bgtzl":
-        case "blez":
-        case "blezl":
-        case "bltz":
-        case "bltzal":
-        case "bltzall":
-        case "bltzl":
-        case "bne":
-        case "bnel":
-            return true;
-    }
-    return false;
-}
-function _makeNewAssemblerState() {
-    return {
-        buffer: null,
-        dataView: null,
-        line: "",
-        memPos: 0,
-        outIndex: 0,
-        symbols: Object.create(null),
-        symbolsByValue: Object.create(null),
-        currentLabel: null,
-        localSymbols: Object.create(null),
-        currentPass: __WEBPACK_IMPORTED_MODULE_1__types__["a" /* AssemblerPhase */].firstPass,
-    };
-}
-function _ensureArray(input) {
-    if (typeof input === "string")
-        return input.split(/\r?\n/);
-    if (!Array.isArray(input))
-        throw new Error("Input must be a string or array of strings");
-    return input;
-}
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-(function webpackUniversalModuleDefinition(root, factory) {
-	if(true)
-		module.exports = factory();
-	else if(typeof define === 'function' && define.amd)
-		define([], factory);
-	else if(typeof exports === 'object')
-		exports["MIPSInst"] = factory();
-	else
-		root["MIPSInst"] = factory();
-})(this, function() {
-return /******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-/******/
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-/******/
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-/******/
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/
-/******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-/******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-/******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
-/******/ 		}
-/******/ 	};
-/******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-/******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/index.ts");
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
+/******/ ({
+
+/***/ "./node_modules/mips-inst/src/bitstrings.js":
+/*!**************************************************!*\
+  !*** ./node_modules/mips-inst/src/bitstrings.js ***!
+  \**************************************************/
+/*! exports provided: isBinaryLiteral, compareBits, makeBitMaskFromString, makeBitMask, padBitString */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["h"] = getRegBits;
-/* harmony export (immutable) */ __webpack_exports__["i"] = getRegName;
-/* harmony export (immutable) */ __webpack_exports__["c"] = getFloatRegName;
-/* harmony export (immutable) */ __webpack_exports__["f"] = getFmtBits;
-/* harmony export (immutable) */ __webpack_exports__["g"] = getFmtName;
-/* harmony export (immutable) */ __webpack_exports__["d"] = getFmt3Bits;
-/* harmony export (immutable) */ __webpack_exports__["e"] = getFmt3Name;
-/* harmony export (immutable) */ __webpack_exports__["k"] = isFmtString;
-/* harmony export (immutable) */ __webpack_exports__["a"] = getCondBits;
-/* harmony export (immutable) */ __webpack_exports__["b"] = getCondName;
-/* harmony export (immutable) */ __webpack_exports__["j"] = isCondString;
-const regs = {
-  r0: 0,
-  zero: 0,
-  at: 1,
-  v0: 2,
-  v1: 3,
-  a0: 4,
-  a1: 5,
-  a2: 6,
-  a3: 7,
-  t0: 8,
-  t1: 9,
-  t2: 10,
-  t3: 11,
-  t4: 12,
-  t5: 13,
-  t6: 14,
-  t7: 15,
-  s0: 16,
-  s1: 17,
-  s2: 18,
-  s3: 19,
-  s4: 20,
-  s5: 21,
-  s6: 22,
-  s7: 23,
-  t8: 24,
-  t9: 25,
-  k0: 26,
-  k1: 27,
-  gp: 28,
-  sp: 29,
-  fp: 30,
-  ra: 31
-};
-
-function getRegBits(reg) {
-  if (!reg)
-    return undefined;
-  return regs[reg.toLowerCase()];
-}
-
-function getRegName(bits) {
-  for (let name in regs) {
-    if (regs[name] === bits)
-      return name;
-  }
-  return "";
-}
-
-function getFloatRegName(bits) {
-  if (typeof bits !== "number")
-    throw new Error("getFloatRegName encountered non-number");
-
-  return "F" + bits;
-}
-
-const fmts = {
-  S: 16,
-  D: 17,
-  W: 20,
-  L: 21,
-};
-
-function getFmtBits(fmtStr) {
-  return fmts[fmtStr.toUpperCase()];
-}
-
-function getFmtName(bits) {
-  for (let name in fmts) {
-    if (fmts[name] === bits)
-      return name;
-  }
-  return "";
-}
-
-const fmt3s = {
-  S: 0,
-  D: 1,
-  W: 4,
-  L: 5,
-};
-
-function getFmt3Bits(fmtStr) {
-  return fmt3s[fmtStr.toUpperCase()];
-}
-
-function getFmt3Name(bits) {
-  for (let name in fmt3s) {
-    if (fmt3s[name] === bits)
-      return name;
-  }
-  return "";
-}
-
-function isFmtString(fmtStr) {
-  return fmts.hasOwnProperty(fmtStr.toUpperCase()) || fmt3s.hasOwnProperty(fmtStr.toUpperCase());
-}
-
-const conds = {
-  F: 0,
-  UN: 1,
-  EQ: 2,
-  UEQ: 3,
-  OLT: 4,
-  ULT: 5,
-  OLE: 6,
-  ULE: 7,
-  SF: 8,
-  NGLE: 9,
-  SEQ: 10,
-  NGL: 11,
-  LT: 12,
-  NGE: 13,
-  LE: 14,
-  NGT: 15,
-};
-
-function getCondBits(condStr) {
-  return conds[condStr.toUpperCase()];
-}
-
-function getCondName(bits) {
-  for (let name in conds) {
-    if (conds[name] === bits)
-      return name;
-  }
-  return "";
-}
-
-function isCondString(condStr) {
-  return conds.hasOwnProperty(condStr.toUpperCase());
-}
-
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"isBinaryLiteral\", function() { return isBinaryLiteral; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"compareBits\", function() { return compareBits; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"makeBitMaskFromString\", function() { return makeBitMaskFromString; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"makeBitMask\", function() { return makeBitMask; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"padBitString\", function() { return padBitString; });\nfunction isBinaryLiteral(str) {\n  return str[0] === \"0\" || str[0] === \"1\"; // Checking first char is enough for now\n}\n\nfunction compareBits(number, bitString, bitOffset) {\n  let shifted = (number >>> bitOffset) & makeBitMask(bitString.length);\n  let mask = makeBitMaskFromString(bitString);\n  return shifted === mask;\n}\n\nfunction makeBitMaskFromString(bitString) {\n  let mask = 0;\n  for (var i = 0; i < bitString.length; i++) {\n    let bit = bitString[i] === \"1\" ? 1 : 0;\n    mask <<= 1;\n    mask = mask | bit;\n  }\n  return mask;\n}\n\nfunction makeBitMask(len) {\n  if (len <= 0)\n    throw new Error(`makeBitMask cannot make mask of length ${len}`);\n\n  let mask = 1;\n  while (--len) {\n    mask <<= 1;\n    mask = mask | 1;\n  }\n  return mask;\n}\n\nfunction padBitString(str, minLen) {\n  while (str.length < minLen) {\n    str = \"0\" + str;\n  }\n  return str;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./node_modules/mips-inst/src/bitstrings.js?");
 
 /***/ }),
-/* 1 */
+
+/***/ "./node_modules/mips-inst/src/immediates.js":
+/*!**************************************************!*\
+  !*** ./node_modules/mips-inst/src/immediates.js ***!
+  \**************************************************/
+/*! exports provided: parseImmediate, formatImmediate, makeInt16, getImmFormatDetails */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["c"] = parseImmediate;
-/* unused harmony export formatImmediate */
-/* harmony export (immutable) */ __webpack_exports__["b"] = makeInt16;
-/* harmony export (immutable) */ __webpack_exports__["a"] = getImmFormatDetails;
-function parseImmediate(immArr, maxBits, signed, shift) {
-  let [neg, base, num] = immArr;
-  base = base.toLowerCase();
-
-  let value;
-  if (base === "b")
-    value = parseInt(num, 2);
-  else if (base === "o")
-    value = parseInt(num, 8);
-  else if (base === "x")
-    value = parseInt(num, 16);
-  else
-    value = parseInt(num, 10);
-
-  if (shift) {
-    value >>>= shift;
-  }
-
-  if (maxBits === 16) {
-    if (signed) {
-      value = makeInt16(value);
-    }
-  }
-
-  if (neg)
-    value = -value;
-
-  return value;
-}
-
-function formatImmediate(value, maxBits) {
-  if (maxBits === 16) {
-    value = (new Uint16Array([value]))[0];
-  }
-
-  return value;
-}
-
-function makeInt16(value) {
-  return (new Int16Array([value]))[0];
-}
-
-function getImmFormatDetails(formatVal) {
-  // Remove optional indicator
-  if (formatVal[formatVal.length - 1] === "?")
-    formatVal = formatVal.substring(0, formatVal.length - 1);
-
-  if (formatVal.indexOf("int") === -1) {
-    if (formatVal.substr(0, 2) === "cc") {
-      return {
-        signed: false,
-        bits: 4,
-        shift: false,
-      };
-    }
-
-    return null; // Not an immediate
-  }
-
-  let shift = 0;
-  const shiftIndex = formatVal.indexOf("shift");
-  if (shiftIndex > 0)
-    shift = formatVal.substr(shiftIndex).match(/\d+/g);
-
-  return {
-    signed: formatVal[0] !== "u",
-    bits: parseInt(formatVal.match(/\d+/g)),
-    shift: shift,
-  };
-}
-
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"parseImmediate\", function() { return parseImmediate; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"formatImmediate\", function() { return formatImmediate; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"makeInt16\", function() { return makeInt16; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getImmFormatDetails\", function() { return getImmFormatDetails; });\nfunction parseImmediate(immArr, maxBits, signed, shift) {\n  let [neg, base, num] = immArr;\n  base = base.toLowerCase();\n\n  let value;\n  if (base === \"b\")\n    value = parseInt(num, 2);\n  else if (base === \"o\")\n    value = parseInt(num, 8);\n  else if (base === \"x\")\n    value = parseInt(num, 16);\n  else\n    value = parseInt(num, 10);\n\n  if (shift) {\n    value >>>= shift;\n  }\n\n  if (maxBits === 16) {\n    if (signed) {\n      value = makeInt16(value);\n    }\n  }\n\n  if (neg)\n    value = -value;\n\n  return value;\n}\n\nfunction formatImmediate(value, maxBits) {\n  if (maxBits === 16) {\n    value = (new Uint16Array([value]))[0];\n  }\n\n  return value;\n}\n\nfunction makeInt16(value) {\n  return (new Int16Array([value]))[0];\n}\n\nfunction getImmFormatDetails(formatVal) {\n  // Remove optional indicator\n  if (formatVal[formatVal.length - 1] === \"?\")\n    formatVal = formatVal.substring(0, formatVal.length - 1);\n\n  if (formatVal.indexOf(\"int\") === -1) {\n    if (formatVal.substr(0, 2) === \"cc\") {\n      return {\n        signed: false,\n        bits: 4,\n        shift: false,\n      };\n    }\n\n    return null; // Not an immediate\n  }\n\n  let shift = 0;\n  const shiftIndex = formatVal.indexOf(\"shift\");\n  if (shiftIndex > 0)\n    shift = formatVal.substr(shiftIndex).match(/\\d+/g);\n\n  return {\n    signed: formatVal[0] !== \"u\",\n    bits: parseInt(formatVal.match(/\\d+/g)),\n    shift: shift,\n  };\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./node_modules/mips-inst/src/immediates.js?");
 
 /***/ }),
-/* 2 */
+
+/***/ "./node_modules/mips-inst/src/index.js":
+/*!*********************************************!*\
+  !*** ./node_modules/mips-inst/src/index.js ***!
+  \*********************************************/
+/*! exports provided: parse, print */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["b"] = isBinaryLiteral;
-/* harmony export (immutable) */ __webpack_exports__["a"] = compareBits;
-/* harmony export (immutable) */ __webpack_exports__["d"] = makeBitMaskFromString;
-/* harmony export (immutable) */ __webpack_exports__["c"] = makeBitMask;
-/* harmony export (immutable) */ __webpack_exports__["e"] = padBitString;
-function isBinaryLiteral(str) {
-  return str[0] === "0" || str[0] === "1"; // Checking first char is enough for now
-}
-
-function compareBits(number, bitString, bitOffset) {
-  let shifted = (number >>> bitOffset) & makeBitMask(bitString.length);
-  let mask = makeBitMaskFromString(bitString);
-  return shifted === mask;
-}
-
-function makeBitMaskFromString(bitString) {
-  let mask = 0;
-  for (var i = 0; i < bitString.length; i++) {
-    let bit = bitString[i] === "1" ? 1 : 0;
-    mask <<= 1;
-    mask = mask | bit;
-  }
-  return mask;
-}
-
-function makeBitMask(len) {
-  if (len <= 0)
-    throw new Error(`makeBitMask cannot make mask of length ${len}`);
-
-  let mask = 1;
-  while (--len) {
-    mask <<= 1;
-    mask = mask | 1;
-  }
-  return mask;
-}
-
-function padBitString(str, minLen) {
-  while (str.length < minLen) {
-    str = "0" + str;
-  }
-  return str;
-}
-
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _parse__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./parse */ \"./node_modules/mips-inst/src/parse.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"parse\", function() { return _parse__WEBPACK_IMPORTED_MODULE_0__[\"parse\"]; });\n\n/* harmony import */ var _print__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./print */ \"./node_modules/mips-inst/src/print.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"print\", function() { return _print__WEBPACK_IMPORTED_MODULE_1__[\"print\"]; });\n\n\n\n\n\n\n//# sourceURL=webpack://MIPSAssem/./node_modules/mips-inst/src/index.js?");
 
 /***/ }),
-/* 3 */
+
+/***/ "./node_modules/mips-inst/src/opcodes.js":
+/*!***********************************************!*\
+  !*** ./node_modules/mips-inst/src/opcodes.js ***!
+  \***********************************************/
+/*! exports provided: getOpcodeDetails, getValueBitLength, findMatch */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["b"] = getOpcodeDetails;
-/* harmony export (immutable) */ __webpack_exports__["c"] = getValueBitLength;
-/* harmony export (immutable) */ __webpack_exports__["a"] = findMatch;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__regs__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__bitstrings__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__immediates__ = __webpack_require__(1);
-
-
-
-
-const rs = "rs";
-const rt = "rt";
-const rd = "rd";
-const fs = "fs";
-const ft = "ft";
-const fd = "fd";
-const fr = "fr";
-const sa = "uint5";
-const uint5 = "uint5";
-const uint10 = "uint10";
-const int16 = "int16";
-const uint16 = "uint16";
-const uint20 = "uint20";
-const uint26 = "uint26";
-const uint26shift2 = "uint26shift2";
-const cc = "cc";
-const cond = "cond";
-const fmt = "fmt";
-const fmt3 = "fmt3";
-
-function getOpcodeDetails(opcode) {
-  return opcodeDetails[opcode.toLowerCase()];
-}
-
-function getValueBitLength(str) {
-  if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["b" /* isBinaryLiteral */](str))
-    return str.length;
-
-  str = str.replace("?", "");
-  switch (str) {
-    case "cc":
-    case "fmt3":
-      return 3;
-
-    case "cond":
-      return 4;
-
-    case "rs":
-    case "rt":
-    case "rd":
-    case "fs":
-    case "ft":
-    case "fd":
-    case "fr":
-    case "sa":
-    case "fmt":
-      return 5;
-  }
-
-  const immDetails = __WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */](str);
-  if (immDetails) {
-    return immDetails.bits;
-  }
-
-  throw new Error(`Unrecongized format value: ${str}`);
-}
-
-// returns name
-function findMatch(inst) {
-  let bestMatch = "";
-  let bestMatchScore = 0;
-  for (let opName in opcodeDetails) {
-    const format = opcodeDetails[opName].format;
-    const fmts = opcodeDetails[opName].fmts;
-    const score = formatMatches(inst, format, fmts);
-    if (score > bestMatchScore) {
-      bestMatch = opName;
-      bestMatchScore = score;
-    }
-  }
-
-  return bestMatch;
-}
-
-// Returns number of literal bits matched, if the overall format matches.
-function formatMatches(number, format, fmts) {
-  let score = 0;
-  let tempScore;
-  let bitOffset = 0;
-  for (let i = format.length - 1; i >= 0; i--) {
-    let bitLength;
-    let piece = format[i];
-    if (Array.isArray(piece)) {
-      let matchedOne = false;
-      for (let j = 0; j < piece.length; j++) {
-        tempScore = checkPiece(piece[j], number, bitOffset, fmts);
-        if (tempScore >= 0) {
-          matchedOne = true;
-          score += tempScore;
-          bitLength = getValueBitLength(piece[j]);
-          break; // j
-        }
-      }
-      if (!matchedOne)
-        return 0;
-    }
-    else {
-      tempScore = checkPiece(piece, number, bitOffset, fmts);
-      if (tempScore >= 0) {
-        score += tempScore;
-        bitLength = getValueBitLength(piece);
-      }
-      else {
-        return 0;
-      }
-    }
-
-    bitOffset += bitLength;
-  }
-
-  return score;
-}
-
-function checkPiece(piece, number, bitOffset, fmts) {
-  if (!__WEBPACK_IMPORTED_MODULE_1__bitstrings__["b" /* isBinaryLiteral */](piece)) {
-    if (piece === fmt) {
-      for (let i = 0; i < fmts.length; i++) {
-        let fmtBitString = __WEBPACK_IMPORTED_MODULE_1__bitstrings__["e" /* padBitString */](__WEBPACK_IMPORTED_MODULE_0__regs__["f" /* getFmtBits */](fmts[i]).toString(2), 5);
-        if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, fmtBitString, bitOffset))
-          return fmtBitString.length;
-      }
-      return -1;
-    }
-
-    if (piece === fmt3) {
-      for (let i = 0; i < fmts.length; i++) {
-        let fmtBitString = __WEBPACK_IMPORTED_MODULE_1__bitstrings__["e" /* padBitString */](__WEBPACK_IMPORTED_MODULE_0__regs__["d" /* getFmt3Bits */](fmts[i]).toString(2), 3);
-        if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, fmtBitString, bitOffset))
-          return fmtBitString.length;
-      }
-      return -1;
-    }
-
-    return 0; // non-literal contributes nothing
-  }
-
-  if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, piece, bitOffset))
-    return piece.length;
-
-  return -1;
-}
-
-const opcodeDetails = {
-  "abs.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "000101"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  add: {
-    format: ["000000", rs, rt, rd, "00000100000"],
-    display: [rd, rs, rt],
-  },
-  "add.fmt": {
-    format: ["010001", fmt, ft, fs, fd, "000000"],
-    fmts: ["S", "D"],
-    display: [fd, fs, ft],
-  },
-  addi: {
-    format: ["001000", rs, rt, int16],
-    display: [rt, rs, int16],
-  },
-  addiu: {
-    format: ["001001", rs, rt, uint16],
-    display: [rt, rs, uint16],
-  },
-  addu: {
-    format: ["000000", rs, rt, rd, "00000100001"],
-    display: [rd, rs, rt],
-  },
-  and: {
-    format: ["000000", rs, rt, rd, "00000100100"],
-    display: [rd, rs, rt],
-  },
-  andi: {
-    format: ["001100", rs, rt, uint16],
-    display: [rt, rs, uint16],
-  },
-  bc1f: {
-    format: ["010001", "01000", [cc, "000"], "00", int16], // TODO shifting?
-    display: ["cc?", int16], // offset
-  },
-  bc1fl: {
-    format: ["010001", "01000", [cc, "000"], "10", int16],
-    display: ["cc?", int16], // offset
-  },
-  bc1t: {
-    format: ["010001", "01000", [cc, "000"], "01", int16],
-    display: ["cc?", int16], // offset
-  },
-  bc1tl: {
-    format: ["010001", "01000", [cc, "000"], "11", int16],
-    display: ["cc?", int16], // offset
-  },
-  beq: {
-    format: ["000100", rs, rt, uint16],
-    display: [rs, rt, uint16], // offset
-  },
-  beql: {
-    format: ["010100", rs, rt, uint16],
-    display: [rs, rt, uint16], // offset
-  },
-  bgez: {
-    format: ["000001", rs, "00001", uint16],
-    display: [rs, uint16], // offset
-  },
-  bgezal: {
-    format: ["000001", rs, "10001", uint16],
-    display: [rs, uint16], // offset
-  },
-  bgezall: {
-    format: ["000001", rs, "10011", uint16],
-    display: [rs, uint16], // offset
-  },
-  bgezl: {
-    format: ["000001", rs, "00011", uint16],
-    display: [rs, uint16], // offset
-  },
-  bgtz: {
-    format: ["000111", rs, "00000", uint16],
-    display: [rs, uint16], // offset
-  },
-  bgtzl: {
-    format: ["010111", rs, "00000", uint16],
-    display: [rs, uint16], // offset
-  },
-  blez: {
-    format: ["000110", rs, "00000", uint16],
-    display: [rs, uint16], // offset
-  },
-  blezl: {
-    format: ["010110", rs, "00000", uint16],
-    display: [rs, uint16], // offset
-  },
-  bltz: {
-    format: ["000001", rs, "00000", uint16],
-    display: [rs, uint16], // offset
-  },
-  bltzal: {
-    format: ["000001", rs, "10000", uint16],
-    display: [rs, uint16], // offset
-  },
-  bltzall: {
-    format: ["000001", rs, "10010", uint16],
-    display: [rs, uint16], // offset
-  },
-  bltzl: {
-    format: ["000001", rs, "00010", uint16],
-    display: [rs, uint16], // offset
-  },
-  bne: {
-    format: ["000101", rs, rt, uint16],
-    display: [rs, rt, uint16], // offset
-  },
-  bnel: {
-    format: ["010101", rs, rt, uint16],
-    display: [rs, rt, uint16], // offset
-  },
-  break: {
-    format: ["000000", [uint20, "00000000000000000000"], "001101"],
-    display: [],
-  },
-  "c.cond.fmt": {
-    format: ["010001", fmt, ft, fs, [cc, "000"], "00", "11", cond],
-    fmts: ["S", "D"],
-    display: ["cc?", fs, ft],
-  },
-  "ceil.l.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001010"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  "ceil.w.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001110"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  cfc1: {
-    format: ["010001", "00010", rt, fs, "00000000000"],
-    display: [rt, fs],
-  },
-  ctc1: {
-    format: ["010001", "00110", rt, fs, "00000000000"],
-    display: [rt, fs],
-  },
-  cop0: {
-    format: ["010000", uint26],
-    display: [uint26], // cop_fun
-  },
-  cop1: {
-    format: ["010001", uint26],
-    display: [uint26], // cop_fun
-  },
-  cop2: {
-    format: ["010010", uint26],
-    display: [uint26], // cop_fun
-  },
-  cop3: {
-    format: ["010011", uint26],
-    display: [uint26], // cop_fun
-  },
-  "cvt.d.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "100001"],
-    fmts: ["S", "W", "L"],
-    display: [fd, fs],
-  },
-  "cvt.l.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "100101"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  "cvt.s.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "100000"],
-    fmts: ["D", "W", "L"],
-    display: [fd, fs],
-  },
-  "cvt.w.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "100100"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  dadd: {
-    format: ["000000", rs, rt, rd, "00000101100"],
-    display: [rd, rs, rt],
-  },
-  daddi: {
-    format: ["011000", rs, rt, int16],
-    display: [rt, rs, int16],
-  },
-  daddiu: {
-    format: ["011001", rs, rt, uint16],
-    display: [rt, rs, uint16],
-  },
-  daddu: {
-    format: ["000000", rs, rt, rd, "00000101101"],
-    display: [rd, rs, rt],
-  },
-  ddiv: {
-    format: ["000000", rs, rt, "0000000000011110"],
-    display: [rs, rt],
-  },
-  ddivu: {
-    format: ["000000", rs, rt, "0000000000011111"],
-    display: [rs, rt],
-  },
-  div: {
-    format: ["000000", rs, rt, "0000000000011010"],
-    display: [rs, rt],
-  },
-  "div.fmt": {
-    format: ["010001", fmt, ft, fs, fd, "000011"],
-    fmts: ["S", "D"],
-    display: [fd, fs, ft],
-  },
-  divu: {
-    format: ["000000", rs, rt, "0000000000011011"],
-    display: [rs, rt],
-  },
-  dmfc1: {
-    format: ["010001", "00001", rt, fs, "00000000000"],
-    display: [rt, fs],
-  },
-  dmult: {
-    format: ["000000", rs, rt, "0000000000011100"],
-    display: [rs, rt],
-  },
-  dmultu: {
-    format: ["000000", rs, rt, "0000000000011101"],
-    display: [rs, rt],
-  },
-  dmtc1: {
-    format: ["010001", "00101", rt, fs, "00000000000"],
-    display: [rt, fs],
-  },
-  dsll: {
-    format: ["00000000000", rt, rd, sa, "111000"],
-    display: [rd, rt, sa],
-  },
-  dsll32: {
-    format: ["00000000000", rt, rd, sa, "111100"],
-    display: [rd, rt, sa],
-  },
-  dsllv: {
-    format: ["000000", rs, rt, rd, "00000010100"],
-    display: [rd, rt, rs],
-  },
-  dsra: {
-    format: ["00000000000", rt, rd, sa, "111011"],
-    display: [rd, rt, sa],
-  },
-  dsra32: {
-    format: ["00000000000", rt, rd, sa, "111111"],
-    display: [rd, rt, sa],
-  },
-  dsrav: {
-    format: ["000000", rs, rt, rd, "00000010111"],
-    display: [rd, rt, rs],
-  },
-  dsrl: {
-    format: ["00000000000", rt, rd, sa, "111010"],
-    display: [rd, rt, sa],
-  },
-  dsrl32: {
-    format: ["00000000000", rt, rd, sa, "111110"],
-    display: [rd, rt, sa],
-  },
-  dsrlv: {
-    format: ["000000", rs, rt, rd, "00000010110"],
-    display: [rd, rt, rs],
-  },
-  dsub: {
-    format: ["000000", rs, rt, rd, "00000101110"],
-    display: [rd, rs, rt],
-  },
-  dsubu: {
-    format: ["000000", rs, rt, rd, "00000101111"],
-    display: [rd, rs, rt],
-  },
-  "floor.l.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001011"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  "floor.w.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001111"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  j: {
-    format: ["000010", uint26shift2],
-    display: [uint26shift2],
-  },
-  jal: {
-    format: ["000011", uint26shift2],
-    display: [uint26shift2],
-  },
-  jalr: {
-    format: ["000000", rs, "00000", [rd, "11111"], "00000", "001001"],
-    display: ["rd?", rs],
-  },
-  jr: {
-    format: ["000000", rs, "000000000000000", "001000"],
-    display: [rs],
-  },
-  lb: {
-    format: ["100000", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lbu: {
-    format: ["100100", rs, rt, uint16],
-    display: [rt, uint16, "(", rs, ")"], // offset
-  },
-  ld: {
-    format: ["110111", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  ldc1: {
-    format: ["110101", rs, ft, int16],
-    display: [ft, int16, "(", rs, ")"], // offset
-  },
-  ldc2: {
-    format: ["110110", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  ldl: {
-    format: ["011010", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  ldr: {
-    format: ["011011", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  ldxc1: {
-    format: ["010011", rs, rt, "00000", fd, "000001"],
-    display: [fd, rt, "(", rs, ")"], // offset
-  },
-  lh: {
-    format: ["100001", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lhu: {
-    format: ["100101", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  ll: {
-    format: ["110000", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lld: {
-    format: ["110100", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lui: {
-    format: ["001111", "00000", rt, uint16],
-    display: [rt, uint16],
-  },
-  lw: {
-    format: ["100011", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lwc1: {
-    format: ["110001", rs, ft, int16],
-    display: [ft, int16, "(", rs, ")"], // offset
-  },
-  lwc2: {
-    format: ["110010", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lwc3: {
-    format: ["110011" ,rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lwl: {
-    format: ["100010", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lwr: {
-    format: ["100110", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lwu: {
-    format: ["100111", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  lwxc1: {
-    format: ["010011", rs, rt, "00000", fd, "000000"],
-    display: [fd, rt, "(", rs, ")"],
-  },
-  "madd.fmt": {
-    format: ["010011", fr, ft, fs, fd, "100", fmt3],
-    fmts: ["S", "D"],
-    display: [fd, fr, fs, ft],
-  },
-  mfc1: {
-    format: ["010001", "00000", rt, fs, "00000000000"],
-    display: [rt, fs],
-  },
-  mfhi: {
-    format: ["000000", "0000000000", rd, "00000", "010000"],
-    display: [rd],
-  },
-  mflo: {
-    format: ["000000", "0000000000", rd, "00000", "010010"],
-    display: [rd],
-  },
-  "mov.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "000110"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  movf: {
-    format: ["000000", rs, cc, "00", rd, "00000", "000001"],
-    display: [rd, rs, cc],
-  },
-  "movf.fmt": {
-    format: ["010001", fmt, cc, "00", fs, fd, "010001"],
-    fmts: ["S", "D"],
-    display: [fd, fs, cc],
-  },
-  movn: {
-    format: ["000000", rs, rt, rd, "00000", "001011"],
-    display: [rd, rs, rt],
-  },
-  "movn.fmt": {
-    format: ["010001", fmt, rt, fs, fd, "010011"],
-    fmts: ["S", "D"],
-    display: [fd, fs, rt],
-  },
-  movt: {
-    format: ["000000", rs, cc, "01", rd, "00000", "000001"],
-    display: [rd, rs, cc],
-  },
-  "movt.fmt": {
-    format: ["010001", fmt, cc, "01", fs, fd, "010001"],
-    fmts: ["S", "D"],
-    display: [fd, fs, cc],
-  },
-  movz: {
-    format: ["000000", rs, rt, rd, "00000", "001010"],
-    display: [rd, rs, rt],
-  },
-  "movz.fmt": {
-    format: ["010001", fmt, rt, fs, fd, "010010"],
-    fmts: ["S", "D"],
-    display: [fd, fs, rt],
-  },
-  "msub.fmt": {
-    format: ["010011", fr, ft, fs, fd, "101", fmt3],
-    fmts: ["S", "D"],
-    display: [fd, fr, fs, ft],
-  },
-  mtc1: {
-    format: ["010001", "00100", rt, fs, "00000000000"],
-    display: [rt, fs],
-  },
-  mthi: {
-    format: ["000000", rs, "000000000000000", "010001"],
-    display: [rs],
-  },
-  mtlo: {
-    format: ["000000", rs, "000000000000000", "010011"],
-    display: [rs],
-  },
-  "mul.fmt": {
-    format: ["010001", fmt, ft, fs, fd, "000010"],
-    fmts: ["S", "D"],
-    display: [fd, fs, ft],
-  },
-  mult: {
-    format: ["000000", rs, rt, "0000000000", "011000"],
-    display: [rs, rt],
-  },
-  multu: {
-    format: ["000000", rs, rt, "0000000000", "011001"],
-    display: [rs, rt],
-  },
-  "neg.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "000111"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  "nmadd.fmt": {
-    format: ["010011", fr, ft, fs, fd, "110", fmt3],
-    fmts: ["S", "D"],
-    display: [fd, fr, fs, ft],
-  },
-  "nmsub.fmt": {
-    format: ["010011", fr, ft, fs, fd, "111", fmt3],
-    fmts: ["S", "D"],
-    display: [fd, fr, fs, ft],
-  },
-  nop: {
-    format: ["00000000000000000000000000000000"],
-    display: [],
-  },
-  nor: {
-    format: ["000000", rs, rt, rd, "00000", "100111"],
-    display: [rd, rs, rt],
-  },
-  or: {
-    format: ["000000", rs, rt, rd, "00000", "100101"],
-    display: [rd, rs, rt],
-  },
-  ori: {
-    format: ["001101", rs, rt, uint16],
-    display: [rt, rs, uint16],
-  },
-  pref: {
-    format: ["110011", rs, uint5, int16],
-    display: [uint5, int16, "(", rs, ")"], // hint, offset, base
-  },
-  prefx: {
-    format: ["010011", rs, rt, uint5, "00000", "001111"],
-    display: [uint5, rt, "(", rs, ")"], // hint, index, base
-  },
-  "recip.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "010101"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  "round.l.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001000"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  "round.w.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001100"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  "rsqrt.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "010110"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  sb: {
-    format: ["101000", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  sc: {
-    format: ["111000", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  scd: {
-    format: ["111100", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  sd: {
-    format: ["111111", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  sdc1: {
-    format: ["111101", rs, ft, int16],
-    display: [ft, int16, "(", rs, ")"], // offset
-  },
-  sdc2: {
-    format: ["111110", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  sdl: {
-    format: ["101100", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  sdr: {
-    format: ["101101", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  sdxc1: {
-    format: ["010011", rs, uint5, fs, "00000", "001001"],
-    display: [fs, uint5, "(", rs, ")"],
-  },
-  sh: {
-    format: ["101001", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"], // offset
-  },
-  sll: {
-    format: ["000000", "00000", rt, rd, sa, "000000"],
-    display: [rd, rt, sa],
-  },
-  sllv: {
-    format: ["000000", rs, rt, rd, "00000", "000100"],
-    display: [rd, rt, rs],
-  },
-  slt: {
-    format: ["000000", rs, rt, rd, "00000", "101010"],
-    display: [rd, rs, rt],
-  },
-  slti: {
-    format: ["001010", rs, rt, int16],
-    display: [rt, rs, int16],
-  },
-  sltiu: {
-    format: ["001011", rs, rt, uint16],
-    display: [rt, rs, uint16],
-  },
-  sltu: {
-    format: ["000000", rs, rt, rd, "00000", "101011"],
-    display: [rd, rs, rt],
-  },
-  "sqrt.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "000100"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  sra: {
-    format: ["000000", "00000", rt, rd, sa, "000011"],
-    display: [rd, rt, sa],
-  },
-  srav: {
-    format: ["000000", rs, rt, rd, "00000", "000111"],
-    display: [rd, rt, rs],
-  },
-  srl: {
-    format: ["000000", "00000", rt, rd, sa, "000010"],
-    display: [rd, rt, sa],
-  },
-  srlv: {
-    format: ["000000", rs, rt, rd, "00000", "000110"],
-    display: [rd, rt, rs],
-  },
-  sub: {
-    format: ["000000", rs, rt, rd, "00000", "100010"],
-    display: [rd, rs, rt],
-  },
-  "sub.fmt": {
-    format: ["010001", fmt, ft, fs, fd, "000001"],
-    fmts: ["S", "D"],
-    display: [fd, fs, ft],
-  },
-  subu: {
-    format: ["000000", rs, rt, rd, "00000", "100011"],
-    display: [rd, rs, rt],
-  },
-  sw: {
-    format: ["101011", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"],
-  },
-  swc1: {
-    format: ["111001", rs, ft, int16],
-    display: [ft, int16, "(", rs, ")"],
-  },
-  swc2: {
-    format: ["111010", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"],
-  },
-  swc3: {
-    format: ["111011", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"],
-  },
-  swl: {
-    format: ["101010", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"],
-  },
-  swr: {
-    format: ["101110", rs, rt, int16],
-    display: [rt, int16, "(", rs, ")"],
-  },
-  swxc1: {
-    format: ["010011", rs, uint5, fs, "00000", "001000"],
-    display: [fs, uint5, "(", rs, ")"],
-  },
-  sync: {
-    format: ["000000", "000000000000000", "00000", "001111"],
-    display: [],
-  },
-  syscall: {
-    format: ["000000", [uint20, "00000000000000000000"], "001100"],
-    display: [],
-  },
-  teq: {
-    format: ["000000", rs, rt, uint10, "110100"],
-    display: [rs, rt],
-  },
-  teqi: {
-    format: ["000001", rs, "01100", int16],
-    display: [rs, int16],
-  },
-  tge: {
-    format: ["000000", rs, rt, uint10, "110000"],
-    display: [rs, rt],
-  },
-  tgei: {
-    format: ["000001", rs, "01000", int16],
-    display: [rs, int16],
-  },
-  tgeiu: {
-    format: ["000001", rs, "01001", uint16],
-    display: [rs, uint16],
-  },
-  tgeu: {
-    format: ["000000", rs, rt, uint10, "110001"],
-    display: [rs, rt],
-  },
-  tlt: {
-    format: ["000000", rs, rt, uint10, "110010"],
-    display: [rs, rt],
-  },
-  tlti: {
-    format: ["000001", rs, "01010", int16],
-    display: [rs, int16],
-  },
-  tltiu: {
-    format: ["000001", rs, "01011", uint16],
-    display: [rs, uint16],
-  },
-  tltu: {
-    format: ["000000", rs, rt, uint10, "110011"],
-    display: [rs, rt],
-  },
-  tne: {
-    format: ["000000", rs, rt, uint10, "110110"],
-    display: [rs, rt],
-  },
-  tnei: {
-    format: ["000001", rs, "01110", int16],
-    display: [rs, int16],
-  },
-  "trunc.l.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001001"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  "trunc.w.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001101"],
-    fmts: ["S", "D"],
-    display: [fd, fs],
-  },
-  xor: {
-    format: ["000000", rs, rt, rd, "00000", "100110"],
-    display: [rd, rs, rt],
-  },
-  xori: {
-    format: ["001110", rs, rt, uint16],
-    display: [rt, rs, uint16],
-  },
-};
-
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getOpcodeDetails\", function() { return getOpcodeDetails; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getValueBitLength\", function() { return getValueBitLength; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"findMatch\", function() { return findMatch; });\n/* harmony import */ var _regs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./regs */ \"./node_modules/mips-inst/src/regs.js\");\n/* harmony import */ var _bitstrings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bitstrings */ \"./node_modules/mips-inst/src/bitstrings.js\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./immediates */ \"./node_modules/mips-inst/src/immediates.js\");\n\n\n\n\nconst rs = \"rs\";\nconst rt = \"rt\";\nconst rd = \"rd\";\nconst fs = \"fs\";\nconst ft = \"ft\";\nconst fd = \"fd\";\nconst fr = \"fr\";\nconst sa = \"uint5\";\nconst uint5 = \"uint5\";\nconst uint10 = \"uint10\";\nconst int16 = \"int16\";\nconst uint16 = \"uint16\";\nconst uint20 = \"uint20\";\nconst uint26 = \"uint26\";\nconst uint26shift2 = \"uint26shift2\";\nconst cc = \"cc\";\nconst cond = \"cond\";\nconst fmt = \"fmt\";\nconst fmt3 = \"fmt3\";\n\nfunction getOpcodeDetails(opcode) {\n  return opcodeDetails[opcode.toLowerCase()];\n}\n\nfunction getValueBitLength(str) {\n  if (Object(_bitstrings__WEBPACK_IMPORTED_MODULE_1__[\"isBinaryLiteral\"])(str))\n    return str.length;\n\n  str = str.replace(\"?\", \"\");\n  switch (str) {\n    case \"cc\":\n    case \"fmt3\":\n      return 3;\n\n    case \"cond\":\n      return 4;\n\n    case \"rs\":\n    case \"rt\":\n    case \"rd\":\n    case \"fs\":\n    case \"ft\":\n    case \"fd\":\n    case \"fr\":\n    case \"sa\":\n    case \"fmt\":\n      return 5;\n  }\n\n  const immDetails = Object(_immediates__WEBPACK_IMPORTED_MODULE_2__[\"getImmFormatDetails\"])(str);\n  if (immDetails) {\n    return immDetails.bits;\n  }\n\n  throw new Error(`Unrecongized format value: ${str}`);\n}\n\n// returns name\nfunction findMatch(inst) {\n  let bestMatch = \"\";\n  let bestMatchScore = 0;\n  for (let opName in opcodeDetails) {\n    const format = opcodeDetails[opName].format;\n    const fmts = opcodeDetails[opName].fmts;\n    const score = formatMatches(inst, format, fmts);\n    if (score > bestMatchScore) {\n      bestMatch = opName;\n      bestMatchScore = score;\n    }\n  }\n\n  return bestMatch;\n}\n\n// Returns number of literal bits matched, if the overall format matches.\nfunction formatMatches(number, format, fmts) {\n  let score = 0;\n  let tempScore;\n  let bitOffset = 0;\n  for (let i = format.length - 1; i >= 0; i--) {\n    let bitLength;\n    let piece = format[i];\n    if (Array.isArray(piece)) {\n      let matchedOne = false;\n      for (let j = 0; j < piece.length; j++) {\n        tempScore = checkPiece(piece[j], number, bitOffset, fmts);\n        if (tempScore >= 0) {\n          matchedOne = true;\n          score += tempScore;\n          bitLength = getValueBitLength(piece[j]);\n          break; // j\n        }\n      }\n      if (!matchedOne)\n        return 0;\n    }\n    else {\n      tempScore = checkPiece(piece, number, bitOffset, fmts);\n      if (tempScore >= 0) {\n        score += tempScore;\n        bitLength = getValueBitLength(piece);\n      }\n      else {\n        return 0;\n      }\n    }\n\n    bitOffset += bitLength;\n  }\n\n  return score;\n}\n\nfunction checkPiece(piece, number, bitOffset, fmts) {\n  if (!Object(_bitstrings__WEBPACK_IMPORTED_MODULE_1__[\"isBinaryLiteral\"])(piece)) {\n    if (piece === fmt) {\n      for (let i = 0; i < fmts.length; i++) {\n        let fmtBitString = Object(_bitstrings__WEBPACK_IMPORTED_MODULE_1__[\"padBitString\"])(Object(_regs__WEBPACK_IMPORTED_MODULE_0__[\"getFmtBits\"])(fmts[i]).toString(2), 5);\n        if (Object(_bitstrings__WEBPACK_IMPORTED_MODULE_1__[\"compareBits\"])(number, fmtBitString, bitOffset))\n          return fmtBitString.length;\n      }\n      return -1;\n    }\n\n    if (piece === fmt3) {\n      for (let i = 0; i < fmts.length; i++) {\n        let fmtBitString = Object(_bitstrings__WEBPACK_IMPORTED_MODULE_1__[\"padBitString\"])(Object(_regs__WEBPACK_IMPORTED_MODULE_0__[\"getFmt3Bits\"])(fmts[i]).toString(2), 3);\n        if (Object(_bitstrings__WEBPACK_IMPORTED_MODULE_1__[\"compareBits\"])(number, fmtBitString, bitOffset))\n          return fmtBitString.length;\n      }\n      return -1;\n    }\n\n    return 0; // non-literal contributes nothing\n  }\n\n  if (Object(_bitstrings__WEBPACK_IMPORTED_MODULE_1__[\"compareBits\"])(number, piece, bitOffset))\n    return piece.length;\n\n  return -1;\n}\n\nconst opcodeDetails = {\n  \"abs.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"000101\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  add: {\n    format: [\"000000\", rs, rt, rd, \"00000100000\"],\n    display: [rd, rs, rt],\n  },\n  \"add.fmt\": {\n    format: [\"010001\", fmt, ft, fs, fd, \"000000\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs, ft],\n  },\n  addi: {\n    format: [\"001000\", rs, rt, int16],\n    display: [rt, rs, int16],\n  },\n  addiu: {\n    format: [\"001001\", rs, rt, uint16],\n    display: [rt, rs, uint16],\n  },\n  addu: {\n    format: [\"000000\", rs, rt, rd, \"00000100001\"],\n    display: [rd, rs, rt],\n  },\n  and: {\n    format: [\"000000\", rs, rt, rd, \"00000100100\"],\n    display: [rd, rs, rt],\n  },\n  andi: {\n    format: [\"001100\", rs, rt, uint16],\n    display: [rt, rs, uint16],\n  },\n  bc1f: {\n    format: [\"010001\", \"01000\", [cc, \"000\"], \"00\", int16], // TODO shifting?\n    display: [\"cc?\", int16], // offset\n  },\n  bc1fl: {\n    format: [\"010001\", \"01000\", [cc, \"000\"], \"10\", int16],\n    display: [\"cc?\", int16], // offset\n  },\n  bc1t: {\n    format: [\"010001\", \"01000\", [cc, \"000\"], \"01\", int16],\n    display: [\"cc?\", int16], // offset\n  },\n  bc1tl: {\n    format: [\"010001\", \"01000\", [cc, \"000\"], \"11\", int16],\n    display: [\"cc?\", int16], // offset\n  },\n  beq: {\n    format: [\"000100\", rs, rt, uint16],\n    display: [rs, rt, uint16], // offset\n  },\n  beql: {\n    format: [\"010100\", rs, rt, uint16],\n    display: [rs, rt, uint16], // offset\n  },\n  bgez: {\n    format: [\"000001\", rs, \"00001\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bgezal: {\n    format: [\"000001\", rs, \"10001\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bgezall: {\n    format: [\"000001\", rs, \"10011\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bgezl: {\n    format: [\"000001\", rs, \"00011\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bgtz: {\n    format: [\"000111\", rs, \"00000\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bgtzl: {\n    format: [\"010111\", rs, \"00000\", uint16],\n    display: [rs, uint16], // offset\n  },\n  blez: {\n    format: [\"000110\", rs, \"00000\", uint16],\n    display: [rs, uint16], // offset\n  },\n  blezl: {\n    format: [\"010110\", rs, \"00000\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bltz: {\n    format: [\"000001\", rs, \"00000\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bltzal: {\n    format: [\"000001\", rs, \"10000\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bltzall: {\n    format: [\"000001\", rs, \"10010\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bltzl: {\n    format: [\"000001\", rs, \"00010\", uint16],\n    display: [rs, uint16], // offset\n  },\n  bne: {\n    format: [\"000101\", rs, rt, uint16],\n    display: [rs, rt, uint16], // offset\n  },\n  bnel: {\n    format: [\"010101\", rs, rt, uint16],\n    display: [rs, rt, uint16], // offset\n  },\n  break: {\n    format: [\"000000\", [uint20, \"00000000000000000000\"], \"001101\"],\n    display: [],\n  },\n  \"c.cond.fmt\": {\n    format: [\"010001\", fmt, ft, fs, [cc, \"000\"], \"00\", \"11\", cond],\n    fmts: [\"S\", \"D\"],\n    display: [\"cc?\", fs, ft],\n  },\n  \"ceil.l.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"001010\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  \"ceil.w.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"001110\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  cfc1: {\n    format: [\"010001\", \"00010\", rt, fs, \"00000000000\"],\n    display: [rt, fs],\n  },\n  ctc1: {\n    format: [\"010001\", \"00110\", rt, fs, \"00000000000\"],\n    display: [rt, fs],\n  },\n  cop0: {\n    format: [\"010000\", uint26],\n    display: [uint26], // cop_fun\n  },\n  cop1: {\n    format: [\"010001\", uint26],\n    display: [uint26], // cop_fun\n  },\n  cop2: {\n    format: [\"010010\", uint26],\n    display: [uint26], // cop_fun\n  },\n  cop3: {\n    format: [\"010011\", uint26],\n    display: [uint26], // cop_fun\n  },\n  \"cvt.d.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"100001\"],\n    fmts: [\"S\", \"W\", \"L\"],\n    display: [fd, fs],\n  },\n  \"cvt.l.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"100101\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  \"cvt.s.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"100000\"],\n    fmts: [\"D\", \"W\", \"L\"],\n    display: [fd, fs],\n  },\n  \"cvt.w.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"100100\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  dadd: {\n    format: [\"000000\", rs, rt, rd, \"00000101100\"],\n    display: [rd, rs, rt],\n  },\n  daddi: {\n    format: [\"011000\", rs, rt, int16],\n    display: [rt, rs, int16],\n  },\n  daddiu: {\n    format: [\"011001\", rs, rt, uint16],\n    display: [rt, rs, uint16],\n  },\n  daddu: {\n    format: [\"000000\", rs, rt, rd, \"00000101101\"],\n    display: [rd, rs, rt],\n  },\n  ddiv: {\n    format: [\"000000\", rs, rt, \"0000000000011110\"],\n    display: [rs, rt],\n  },\n  ddivu: {\n    format: [\"000000\", rs, rt, \"0000000000011111\"],\n    display: [rs, rt],\n  },\n  div: {\n    format: [\"000000\", rs, rt, \"0000000000011010\"],\n    display: [rs, rt],\n  },\n  \"div.fmt\": {\n    format: [\"010001\", fmt, ft, fs, fd, \"000011\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs, ft],\n  },\n  divu: {\n    format: [\"000000\", rs, rt, \"0000000000011011\"],\n    display: [rs, rt],\n  },\n  dmfc1: {\n    format: [\"010001\", \"00001\", rt, fs, \"00000000000\"],\n    display: [rt, fs],\n  },\n  dmult: {\n    format: [\"000000\", rs, rt, \"0000000000011100\"],\n    display: [rs, rt],\n  },\n  dmultu: {\n    format: [\"000000\", rs, rt, \"0000000000011101\"],\n    display: [rs, rt],\n  },\n  dmtc1: {\n    format: [\"010001\", \"00101\", rt, fs, \"00000000000\"],\n    display: [rt, fs],\n  },\n  dsll: {\n    format: [\"00000000000\", rt, rd, sa, \"111000\"],\n    display: [rd, rt, sa],\n  },\n  dsll32: {\n    format: [\"00000000000\", rt, rd, sa, \"111100\"],\n    display: [rd, rt, sa],\n  },\n  dsllv: {\n    format: [\"000000\", rs, rt, rd, \"00000010100\"],\n    display: [rd, rt, rs],\n  },\n  dsra: {\n    format: [\"00000000000\", rt, rd, sa, \"111011\"],\n    display: [rd, rt, sa],\n  },\n  dsra32: {\n    format: [\"00000000000\", rt, rd, sa, \"111111\"],\n    display: [rd, rt, sa],\n  },\n  dsrav: {\n    format: [\"000000\", rs, rt, rd, \"00000010111\"],\n    display: [rd, rt, rs],\n  },\n  dsrl: {\n    format: [\"00000000000\", rt, rd, sa, \"111010\"],\n    display: [rd, rt, sa],\n  },\n  dsrl32: {\n    format: [\"00000000000\", rt, rd, sa, \"111110\"],\n    display: [rd, rt, sa],\n  },\n  dsrlv: {\n    format: [\"000000\", rs, rt, rd, \"00000010110\"],\n    display: [rd, rt, rs],\n  },\n  dsub: {\n    format: [\"000000\", rs, rt, rd, \"00000101110\"],\n    display: [rd, rs, rt],\n  },\n  dsubu: {\n    format: [\"000000\", rs, rt, rd, \"00000101111\"],\n    display: [rd, rs, rt],\n  },\n  \"floor.l.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"001011\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  \"floor.w.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"001111\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  j: {\n    format: [\"000010\", uint26shift2],\n    display: [uint26shift2],\n  },\n  jal: {\n    format: [\"000011\", uint26shift2],\n    display: [uint26shift2],\n  },\n  jalr: {\n    format: [\"000000\", rs, \"00000\", [rd, \"11111\"], \"00000\", \"001001\"],\n    display: [\"rd?\", rs],\n  },\n  jr: {\n    format: [\"000000\", rs, \"000000000000000\", \"001000\"],\n    display: [rs],\n  },\n  lb: {\n    format: [\"100000\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lbu: {\n    format: [\"100100\", rs, rt, uint16],\n    display: [rt, uint16, \"(\", rs, \")\"], // offset\n  },\n  ld: {\n    format: [\"110111\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  ldc1: {\n    format: [\"110101\", rs, ft, int16],\n    display: [ft, int16, \"(\", rs, \")\"], // offset\n  },\n  ldc2: {\n    format: [\"110110\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  ldl: {\n    format: [\"011010\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  ldr: {\n    format: [\"011011\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  ldxc1: {\n    format: [\"010011\", rs, rt, \"00000\", fd, \"000001\"],\n    display: [fd, rt, \"(\", rs, \")\"], // offset\n  },\n  lh: {\n    format: [\"100001\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lhu: {\n    format: [\"100101\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  ll: {\n    format: [\"110000\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lld: {\n    format: [\"110100\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lui: {\n    format: [\"001111\", \"00000\", rt, uint16],\n    display: [rt, uint16],\n  },\n  lw: {\n    format: [\"100011\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lwc1: {\n    format: [\"110001\", rs, ft, int16],\n    display: [ft, int16, \"(\", rs, \")\"], // offset\n  },\n  lwc2: {\n    format: [\"110010\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lwc3: {\n    format: [\"110011\" ,rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lwl: {\n    format: [\"100010\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lwr: {\n    format: [\"100110\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lwu: {\n    format: [\"100111\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  lwxc1: {\n    format: [\"010011\", rs, rt, \"00000\", fd, \"000000\"],\n    display: [fd, rt, \"(\", rs, \")\"],\n  },\n  \"madd.fmt\": {\n    format: [\"010011\", fr, ft, fs, fd, \"100\", fmt3],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fr, fs, ft],\n  },\n  mfc1: {\n    format: [\"010001\", \"00000\", rt, fs, \"00000000000\"],\n    display: [rt, fs],\n  },\n  mfhi: {\n    format: [\"000000\", \"0000000000\", rd, \"00000\", \"010000\"],\n    display: [rd],\n  },\n  mflo: {\n    format: [\"000000\", \"0000000000\", rd, \"00000\", \"010010\"],\n    display: [rd],\n  },\n  \"mov.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"000110\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  movf: {\n    format: [\"000000\", rs, cc, \"00\", rd, \"00000\", \"000001\"],\n    display: [rd, rs, cc],\n  },\n  \"movf.fmt\": {\n    format: [\"010001\", fmt, cc, \"00\", fs, fd, \"010001\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs, cc],\n  },\n  movn: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"001011\"],\n    display: [rd, rs, rt],\n  },\n  \"movn.fmt\": {\n    format: [\"010001\", fmt, rt, fs, fd, \"010011\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs, rt],\n  },\n  movt: {\n    format: [\"000000\", rs, cc, \"01\", rd, \"00000\", \"000001\"],\n    display: [rd, rs, cc],\n  },\n  \"movt.fmt\": {\n    format: [\"010001\", fmt, cc, \"01\", fs, fd, \"010001\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs, cc],\n  },\n  movz: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"001010\"],\n    display: [rd, rs, rt],\n  },\n  \"movz.fmt\": {\n    format: [\"010001\", fmt, rt, fs, fd, \"010010\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs, rt],\n  },\n  \"msub.fmt\": {\n    format: [\"010011\", fr, ft, fs, fd, \"101\", fmt3],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fr, fs, ft],\n  },\n  mtc1: {\n    format: [\"010001\", \"00100\", rt, fs, \"00000000000\"],\n    display: [rt, fs],\n  },\n  mthi: {\n    format: [\"000000\", rs, \"000000000000000\", \"010001\"],\n    display: [rs],\n  },\n  mtlo: {\n    format: [\"000000\", rs, \"000000000000000\", \"010011\"],\n    display: [rs],\n  },\n  \"mul.fmt\": {\n    format: [\"010001\", fmt, ft, fs, fd, \"000010\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs, ft],\n  },\n  mult: {\n    format: [\"000000\", rs, rt, \"0000000000\", \"011000\"],\n    display: [rs, rt],\n  },\n  multu: {\n    format: [\"000000\", rs, rt, \"0000000000\", \"011001\"],\n    display: [rs, rt],\n  },\n  \"neg.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"000111\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  \"nmadd.fmt\": {\n    format: [\"010011\", fr, ft, fs, fd, \"110\", fmt3],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fr, fs, ft],\n  },\n  \"nmsub.fmt\": {\n    format: [\"010011\", fr, ft, fs, fd, \"111\", fmt3],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fr, fs, ft],\n  },\n  nop: {\n    format: [\"00000000000000000000000000000000\"],\n    display: [],\n  },\n  nor: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"100111\"],\n    display: [rd, rs, rt],\n  },\n  or: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"100101\"],\n    display: [rd, rs, rt],\n  },\n  ori: {\n    format: [\"001101\", rs, rt, uint16],\n    display: [rt, rs, uint16],\n  },\n  pref: {\n    format: [\"110011\", rs, uint5, int16],\n    display: [uint5, int16, \"(\", rs, \")\"], // hint, offset, base\n  },\n  prefx: {\n    format: [\"010011\", rs, rt, uint5, \"00000\", \"001111\"],\n    display: [uint5, rt, \"(\", rs, \")\"], // hint, index, base\n  },\n  \"recip.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"010101\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  \"round.l.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"001000\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  \"round.w.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"001100\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  \"rsqrt.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"010110\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  sb: {\n    format: [\"101000\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  sc: {\n    format: [\"111000\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  scd: {\n    format: [\"111100\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  sd: {\n    format: [\"111111\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  sdc1: {\n    format: [\"111101\", rs, ft, int16],\n    display: [ft, int16, \"(\", rs, \")\"], // offset\n  },\n  sdc2: {\n    format: [\"111110\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  sdl: {\n    format: [\"101100\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  sdr: {\n    format: [\"101101\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  sdxc1: {\n    format: [\"010011\", rs, uint5, fs, \"00000\", \"001001\"],\n    display: [fs, uint5, \"(\", rs, \")\"],\n  },\n  sh: {\n    format: [\"101001\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"], // offset\n  },\n  sll: {\n    format: [\"000000\", \"00000\", rt, rd, sa, \"000000\"],\n    display: [rd, rt, sa],\n  },\n  sllv: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"000100\"],\n    display: [rd, rt, rs],\n  },\n  slt: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"101010\"],\n    display: [rd, rs, rt],\n  },\n  slti: {\n    format: [\"001010\", rs, rt, int16],\n    display: [rt, rs, int16],\n  },\n  sltiu: {\n    format: [\"001011\", rs, rt, uint16],\n    display: [rt, rs, uint16],\n  },\n  sltu: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"101011\"],\n    display: [rd, rs, rt],\n  },\n  \"sqrt.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"000100\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  sra: {\n    format: [\"000000\", \"00000\", rt, rd, sa, \"000011\"],\n    display: [rd, rt, sa],\n  },\n  srav: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"000111\"],\n    display: [rd, rt, rs],\n  },\n  srl: {\n    format: [\"000000\", \"00000\", rt, rd, sa, \"000010\"],\n    display: [rd, rt, sa],\n  },\n  srlv: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"000110\"],\n    display: [rd, rt, rs],\n  },\n  sub: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"100010\"],\n    display: [rd, rs, rt],\n  },\n  \"sub.fmt\": {\n    format: [\"010001\", fmt, ft, fs, fd, \"000001\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs, ft],\n  },\n  subu: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"100011\"],\n    display: [rd, rs, rt],\n  },\n  sw: {\n    format: [\"101011\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"],\n  },\n  swc1: {\n    format: [\"111001\", rs, ft, int16],\n    display: [ft, int16, \"(\", rs, \")\"],\n  },\n  swc2: {\n    format: [\"111010\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"],\n  },\n  swc3: {\n    format: [\"111011\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"],\n  },\n  swl: {\n    format: [\"101010\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"],\n  },\n  swr: {\n    format: [\"101110\", rs, rt, int16],\n    display: [rt, int16, \"(\", rs, \")\"],\n  },\n  swxc1: {\n    format: [\"010011\", rs, uint5, fs, \"00000\", \"001000\"],\n    display: [fs, uint5, \"(\", rs, \")\"],\n  },\n  sync: {\n    format: [\"000000\", \"000000000000000\", \"00000\", \"001111\"],\n    display: [],\n  },\n  syscall: {\n    format: [\"000000\", [uint20, \"00000000000000000000\"], \"001100\"],\n    display: [],\n  },\n  teq: {\n    format: [\"000000\", rs, rt, uint10, \"110100\"],\n    display: [rs, rt],\n  },\n  teqi: {\n    format: [\"000001\", rs, \"01100\", int16],\n    display: [rs, int16],\n  },\n  tge: {\n    format: [\"000000\", rs, rt, uint10, \"110000\"],\n    display: [rs, rt],\n  },\n  tgei: {\n    format: [\"000001\", rs, \"01000\", int16],\n    display: [rs, int16],\n  },\n  tgeiu: {\n    format: [\"000001\", rs, \"01001\", uint16],\n    display: [rs, uint16],\n  },\n  tgeu: {\n    format: [\"000000\", rs, rt, uint10, \"110001\"],\n    display: [rs, rt],\n  },\n  tlt: {\n    format: [\"000000\", rs, rt, uint10, \"110010\"],\n    display: [rs, rt],\n  },\n  tlti: {\n    format: [\"000001\", rs, \"01010\", int16],\n    display: [rs, int16],\n  },\n  tltiu: {\n    format: [\"000001\", rs, \"01011\", uint16],\n    display: [rs, uint16],\n  },\n  tltu: {\n    format: [\"000000\", rs, rt, uint10, \"110011\"],\n    display: [rs, rt],\n  },\n  tne: {\n    format: [\"000000\", rs, rt, uint10, \"110110\"],\n    display: [rs, rt],\n  },\n  tnei: {\n    format: [\"000001\", rs, \"01110\", int16],\n    display: [rs, int16],\n  },\n  \"trunc.l.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"001001\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  \"trunc.w.fmt\": {\n    format: [\"010001\", fmt, \"00000\", fs, fd, \"001101\"],\n    fmts: [\"S\", \"D\"],\n    display: [fd, fs],\n  },\n  xor: {\n    format: [\"000000\", rs, rt, rd, \"00000\", \"100110\"],\n    display: [rd, rs, rt],\n  },\n  xori: {\n    format: [\"001110\", rs, rt, uint16],\n    display: [rt, rs, uint16],\n  },\n};\n\n\n//# sourceURL=webpack://MIPSAssem/./node_modules/mips-inst/src/opcodes.js?");
 
 /***/ }),
-/* 4 */
+
+/***/ "./node_modules/mips-inst/src/parse.js":
+/*!*********************************************!*\
+  !*** ./node_modules/mips-inst/src/parse.js ***!
+  \*********************************************/
+/*! exports provided: parse */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__parse__ = __webpack_require__(5);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "parse", function() { return __WEBPACK_IMPORTED_MODULE_0__parse__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__print__ = __webpack_require__(7);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "print", function() { return __WEBPACK_IMPORTED_MODULE_1__print__["a"]; });
-
-
-
-
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"parse\", function() { return parse; });\n/* harmony import */ var _opcodes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./opcodes */ \"./node_modules/mips-inst/src/opcodes.js\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./immediates */ \"./node_modules/mips-inst/src/immediates.js\");\n/* harmony import */ var _regs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./regs */ \"./node_modules/mips-inst/src/regs.js\");\n/* harmony import */ var _regex__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./regex */ \"./node_modules/mips-inst/src/regex.js\");\n/* harmony import */ var _bitstrings__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./bitstrings */ \"./node_modules/mips-inst/src/bitstrings.js\");\n\n\n\n\n\n\n/**\n * Parses a string MIPS instruction, returning numeric machine code.\n *\n * With the `intermediate` option, this can also be used as a convenient base\n * for an assembler. The object output with `intermediate` can be manipulated\n * prior to calling `parse` with it again.\n * @param {String|Array|Object} value MIPS instruction, or intermediate object format.\n * @param {Object} opts Behavior options\n * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a number\n * @returns {Number|Array|Object} Returns a numeric representation of the given\n * MIPS instruction string.\n * If multiple values are given (array) then multiple values are returned.\n * When the `intermediate` option is passed, the return type is an object.\n */\nfunction parse(value, opts) {\n  opts = _getFinalOpts(opts);\n\n  if (Array.isArray(value)) {\n    return value.map(s => _parse(s, opts));\n  }\n  if (typeof value === \"object\") {\n    return _parse(value, opts);\n  }\n  if (typeof value === \"string\") {\n    const values = value.split(/\\r?\\n/).filter(v => !!(v.trim()));\n    if (values.length === 1)\n      return _parse(values[0], opts);\n    else\n      return values.map(s => _parse(s, opts));\n  }\n\n  throw new Error(\"Unexpected input to parse. Pass a string or array of strings.\");\n}\n\nfunction _getFinalOpts(givenOpts) {\n  return Object.assign({\n    intermediate: false,\n  }, givenOpts);\n}\n\nfunction _parse(value, opts) {\n  let opcode, opcodeObj, values;\n  if (typeof value === \"string\") {\n    opcode = _regex__WEBPACK_IMPORTED_MODULE_3__[\"getOpcode\"](value);\n    if (!opcode)\n      throw new Error(`Could not parse opcode from ${value}`);\n\n    opcodeObj = Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"getOpcodeDetails\"])(opcode);\n\n    values = _parseValues(opcode, opcodeObj, value);\n  }\n  else if (typeof value === \"object\") {\n    opcode = _regex__WEBPACK_IMPORTED_MODULE_3__[\"getOpcode\"](value.op);\n    if (!opcode)\n      throw new Error(\"Object input to parse did not contain 'op'\");\n\n    opcodeObj = Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"getOpcodeDetails\"])(opcode);\n    values = value;\n  }\n\n  if (!opcodeObj)\n    throw new Error(`Opcode ${opcode} was not recognized`);\n\n  if (opts.intermediate)\n    return values;\n\n  return bitsFromFormat(opcodeObj.format, values);\n}\n\nfunction _parseValues(opcode, opcodeObj, value) {\n  let regex = _regex__WEBPACK_IMPORTED_MODULE_3__[\"makeRegexForOpcode\"](opcodeObj);\n  let match = regex.exec(value);\n  if (!match)\n    throw `Could not parse instruction: ${value}`;\n\n  let values = {\n    op: opcode\n  };\n\n  if (opcode.indexOf(\".fmt\") !== -1 || opcode.indexOf(\".cond\") !== -1) {\n    determineOpcodeValues(match[1], opcode, opcodeObj.fmts, opcodeObj.format, values);\n  }\n\n  const display = opcodeObj.display;\n  let matchIndex = 2; // 0 is whole match, 1 is opcode - skip both\n  for (let i = 0; i < display.length; i++, matchIndex++) {\n    const parsedVal = match[matchIndex];\n    let displayEntry = display[i];\n\n    const optional = displayEntry.endsWith(\"?\");\n    displayEntry = displayEntry.replace(\"?\", \"\");\n\n    switch (displayEntry) {\n      case \"(\":\n      case \")\":\n        matchIndex--; // Eh\n        continue;\n\n      case \"rs\":\n      case \"rd\":\n      case \"rt\": {\n        const tryReg = Object(_regs__WEBPACK_IMPORTED_MODULE_2__[\"getRegBits\"])(parsedVal);\n        if (tryReg === undefined) {\n          if (optional)\n            continue;\n\n          throw new Error(`Unrecognized ${displayEntry} register ${parsedVal}`);\n        }\n        values[displayEntry] = tryReg;\n        continue;\n      }\n\n      case \"fs\":\n      case \"ft\":\n      case \"fd\":\n      case \"fr\":\n        values[displayEntry] = parseInt(parsedVal);\n        if (isNaN(values[displayEntry]))\n          throw new Error(`Unrecognized ${displayEntry} register ${parsedVal}`);\n        continue;\n    }\n\n    const immDetails = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"getImmFormatDetails\"])(displayEntry);\n    if (immDetails) {\n      let value;\n      const immPieces = [match[matchIndex], match[matchIndex + 1], match[matchIndex + 2]];\n\n      if (!optional || immPieces[2]) {\n        value = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(immPieces, immDetails.bits, immDetails.signed, immDetails.shift);\n        values[displayEntry] = value;\n      }\n\n      matchIndex += 2;\n\n      continue;\n    }\n\n    throw `Unrecognized opcode display entry ${displayEntry}`;\n  }\n\n  return values;\n}\n\nfunction bitsFromFormat(format, values) {\n  let output = 0;\n  let bitOffset = 0;\n  for (let i = 0; i < format.length; i++) {\n    let writeResult;\n    let piece = format[i];\n    let bitLength = Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"getValueBitLength\"])(Array.isArray(piece) ? piece[0] : piece);\n    output = (output << bitLength) >>> 0;\n    if (Array.isArray(piece)) {\n      for (let j = 0; j < piece.length; j++) {\n        writeResult = writeBitsForPiece(piece[j], output, values);\n        if (writeResult.wrote) {\n          output = writeResult.output;\n          break; // j\n        }\n      }\n    }\n    else {\n      writeResult = writeBitsForPiece(piece, output, values);\n      if (writeResult.wrote) {\n        output = writeResult.output;\n      }\n    }\n\n    bitOffset += bitLength;\n  }\n\n  if (bitOffset != 32)\n    throw new Error(\"Incorrect number of bits written for format \" + format);\n\n  return output;\n}\n\nfunction writeBitsForPiece(piece, output, values) {\n  let wrote = false;\n  if (Object(_bitstrings__WEBPACK_IMPORTED_MODULE_4__[\"isBinaryLiteral\"])(piece)) {\n    output |= Object(_bitstrings__WEBPACK_IMPORTED_MODULE_4__[\"makeBitMaskFromString\"])(piece);\n    wrote = true;\n  }\n  else if (values[piece] !== undefined) {\n    let value = values[piece] & Object(_bitstrings__WEBPACK_IMPORTED_MODULE_4__[\"makeBitMask\"])(Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"getValueBitLength\"])(piece));\n    wrote = true;\n    output |= value;\n  }\n\n  return {\n    wrote: wrote,\n    output: output >>> 0,\n  };\n}\n\nfunction determineOpcodeValues(givenOpcode, genericOpcode, allowedFormats, format, values) {\n  const givenPieces = givenOpcode.split(\".\");\n  const genericPieces = genericOpcode.split(\".\");\n  if (givenPieces.length !== genericPieces.length)\n    throw `Given opcode ${givenOpcode} does not have all pieces (${genericOpcode})`;\n\n  for (let i = 0; i < genericPieces.length; i++) {\n    const genericPiece = genericPieces[i];\n\n    if (genericPiece === \"fmt\" || genericPiece === \"ftm3\") {\n      if (allowedFormats.indexOf(givenPieces[i]) === -1)\n        throw `Format ${givenPieces[i]} is not allowed for ${genericPiece}. Allowed values are ${allowedFormats}`;\n\n      if (genericPiece === \"fmt\")\n        values[\"fmt\"] = Object(_regs__WEBPACK_IMPORTED_MODULE_2__[\"getFmtBits\"])(givenPieces[i]);\n      else if (genericPiece === \"fmt3\")\n        values[\"fmt3\"] = Object(_regs__WEBPACK_IMPORTED_MODULE_2__[\"getFmt3Bits\"])(givenPieces[i]);\n    }\n\n    if (genericPiece === \"cond\")\n      values[\"cond\"] = Object(_regs__WEBPACK_IMPORTED_MODULE_2__[\"getCondBits\"])(givenPieces[i]);\n  }\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./node_modules/mips-inst/src/parse.js?");
 
 /***/ }),
-/* 5 */
+
+/***/ "./node_modules/mips-inst/src/print.js":
+/*!*********************************************!*\
+  !*** ./node_modules/mips-inst/src/print.js ***!
+  \*********************************************/
+/*! exports provided: print */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = parse;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__regs__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__regex__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__bitstrings__ = __webpack_require__(2);
-
-
-
-
-
-
-/**
- * Parses a string MIPS instruction, returning numeric machine code.
- *
- * With the `intermediate` option, this can also be used as a convenient base
- * for an assembler. The object output with `intermediate` can be manipulated
- * prior to calling `parse` with it again.
- * @param {String|Array|Object} value MIPS instruction, or intermediate object format.
- * @param {Object} opts Behavior options
- * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a number
- * @returns {Number|Array|Object} Returns a numeric representation of the given
- * MIPS instruction string.
- * If multiple values are given (array) then multiple values are returned.
- * When the `intermediate` option is passed, the return type is an object.
- */
-function parse(value, opts) {
-  opts = _getFinalOpts(opts);
-
-  if (Array.isArray(value)) {
-    return value.map(s => _parse(s, opts));
-  }
-  if (typeof value === "object") {
-    return _parse(value, opts);
-  }
-  if (typeof value === "string") {
-    const values = value.split(/\r?\n/).filter(v => !!(v.trim()));
-    if (values.length === 1)
-      return _parse(values[0], opts);
-    else
-      return values.map(s => _parse(s, opts));
-  }
-
-  throw new Error("Unexpected input to parse. Pass a string or array of strings.");
-}
-
-function _getFinalOpts(givenOpts) {
-  return Object.assign({
-    intermediate: false,
-  }, givenOpts);
-}
-
-function _parse(value, opts) {
-  let opcode, opcodeObj, values;
-  if (typeof value === "string") {
-    opcode = __WEBPACK_IMPORTED_MODULE_3__regex__["a" /* getOpcode */](value);
-    if (!opcode)
-      throw new Error(`Could not parse opcode from ${value}`);
-
-    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
-
-    values = _parseValues(opcode, opcodeObj, value);
-  }
-  else if (typeof value === "object") {
-    opcode = __WEBPACK_IMPORTED_MODULE_3__regex__["a" /* getOpcode */](value.op);
-    if (!opcode)
-      throw new Error("Object input to parse did not contain 'op'");
-
-    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
-    values = value;
-  }
-
-  if (!opcodeObj)
-    throw new Error(`Opcode ${opcode} was not recognized`);
-
-  if (opts.intermediate)
-    return values;
-
-  return bitsFromFormat(opcodeObj.format, values);
-}
-
-function _parseValues(opcode, opcodeObj, value) {
-  let regex = __WEBPACK_IMPORTED_MODULE_3__regex__["b" /* makeRegexForOpcode */](opcodeObj);
-  let match = regex.exec(value);
-  if (!match)
-    throw `Could not parse instruction: ${value}`;
-
-  let values = {
-    op: opcode
-  };
-
-  if (opcode.indexOf(".fmt") !== -1 || opcode.indexOf(".cond") !== -1) {
-    determineOpcodeValues(match[1], opcode, opcodeObj.fmts, opcodeObj.format, values);
-  }
-
-  const display = opcodeObj.display;
-  let matchIndex = 2; // 0 is whole match, 1 is opcode - skip both
-  for (let i = 0; i < display.length; i++, matchIndex++) {
-    const parsedVal = match[matchIndex];
-    let displayEntry = display[i];
-
-    const optional = displayEntry.endsWith("?");
-    displayEntry = displayEntry.replace("?", "");
-
-    switch (displayEntry) {
-      case "(":
-      case ")":
-        matchIndex--; // Eh
-        continue;
-
-      case "rs":
-      case "rd":
-      case "rt": {
-        const tryReg = __WEBPACK_IMPORTED_MODULE_2__regs__["h" /* getRegBits */](parsedVal);
-        if (tryReg === undefined) {
-          if (optional)
-            continue;
-
-          throw new Error(`Unrecognized ${displayEntry} register ${parsedVal}`);
-        }
-        values[displayEntry] = tryReg;
-        continue;
-      }
-
-      case "fs":
-      case "ft":
-      case "fd":
-      case "fr":
-        values[displayEntry] = parseInt(parsedVal);
-        if (isNaN(values[displayEntry]))
-          throw new Error(`Unrecognized ${displayEntry} register ${parsedVal}`);
-        continue;
-    }
-
-    const immDetails = __WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* getImmFormatDetails */](displayEntry);
-    if (immDetails) {
-      let value;
-      const immPieces = [match[matchIndex], match[matchIndex + 1], match[matchIndex + 2]];
-
-      if (!optional || immPieces[2]) {
-        value = __WEBPACK_IMPORTED_MODULE_1__immediates__["c" /* parseImmediate */](immPieces, immDetails.bits, immDetails.signed, immDetails.shift);
-        values[displayEntry] = value;
-      }
-
-      matchIndex += 2;
-
-      continue;
-    }
-
-    throw `Unrecognized opcode display entry ${displayEntry}`;
-  }
-
-  return values;
-}
-
-function bitsFromFormat(format, values) {
-  let output = 0;
-  let bitOffset = 0;
-  for (let i = 0; i < format.length; i++) {
-    let writeResult;
-    let piece = format[i];
-    let bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](Array.isArray(piece) ? piece[0] : piece);
-    output = (output << bitLength) >>> 0;
-    if (Array.isArray(piece)) {
-      for (let j = 0; j < piece.length; j++) {
-        writeResult = writeBitsForPiece(piece[j], output, values);
-        if (writeResult.wrote) {
-          output = writeResult.output;
-          break; // j
-        }
-      }
-    }
-    else {
-      writeResult = writeBitsForPiece(piece, output, values);
-      if (writeResult.wrote) {
-        output = writeResult.output;
-      }
-    }
-
-    bitOffset += bitLength;
-  }
-
-  if (bitOffset != 32)
-    throw new Error("Incorrect number of bits written for format " + format);
-
-  return output;
-}
-
-function writeBitsForPiece(piece, output, values) {
-  let wrote = false;
-  if (__WEBPACK_IMPORTED_MODULE_4__bitstrings__["b" /* isBinaryLiteral */](piece)) {
-    output |= __WEBPACK_IMPORTED_MODULE_4__bitstrings__["d" /* makeBitMaskFromString */](piece);
-    wrote = true;
-  }
-  else if (values[piece] !== undefined) {
-    let value = values[piece] & __WEBPACK_IMPORTED_MODULE_4__bitstrings__["c" /* makeBitMask */](__WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece));
-    wrote = true;
-    output |= value;
-  }
-
-  return {
-    wrote: wrote,
-    output: output >>> 0,
-  };
-}
-
-function determineOpcodeValues(givenOpcode, genericOpcode, allowedFormats, format, values) {
-  const givenPieces = givenOpcode.split(".");
-  const genericPieces = genericOpcode.split(".");
-  if (givenPieces.length !== genericPieces.length)
-    throw `Given opcode ${givenOpcode} does not have all pieces (${genericOpcode})`;
-
-  for (let i = 0; i < genericPieces.length; i++) {
-    const genericPiece = genericPieces[i];
-
-    if (genericPiece === "fmt" || genericPiece === "ftm3") {
-      if (allowedFormats.indexOf(givenPieces[i]) === -1)
-        throw `Format ${givenPieces[i]} is not allowed for ${genericPiece}. Allowed values are ${allowedFormats}`;
-
-      if (genericPiece === "fmt")
-        values["fmt"] = __WEBPACK_IMPORTED_MODULE_2__regs__["f" /* getFmtBits */](givenPieces[i]);
-      else if (genericPiece === "fmt3")
-        values["fmt3"] = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getFmt3Bits */](givenPieces[i]);
-    }
-
-    if (genericPiece === "cond")
-      values["cond"] = __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getCondBits */](givenPieces[i]);
-  }
-}
-
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"print\", function() { return print; });\n/* harmony import */ var _opcodes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./opcodes */ \"./node_modules/mips-inst/src/opcodes.js\");\n/* harmony import */ var _regs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./regs */ \"./node_modules/mips-inst/src/regs.js\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./immediates */ \"./node_modules/mips-inst/src/immediates.js\");\n/* harmony import */ var _bitstrings__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./bitstrings */ \"./node_modules/mips-inst/src/bitstrings.js\");\n\n\n\n\n\n/**\n * Prints a string representation of a MIPS instruction.\n *\n * With the `intermediate` option, this can also be used as a convenient base\n * for a disassembler. The object output with `intermediate` can be manipulated\n * prior to calling `print` with it again.\n * @param {Number|Array|ArrayBuffer|DataView|Object} inst MIPS instruction, or intermediate object format.\n * @param {Object} opts Behavior options\n * @param {String} opts.casing \"toUpperCase\" (default), \"toLowerCase\"\n * @param {Boolean} opts.commas True to separate values by commas\n * @param {Boolean} opts.include$ True to prefix registers with dollar sign\n * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a string\n * @param {Number} opts.numBase Number format. 16 (hex, default), 10 (decimal)\n * @returns {String|Array|Object} Returns a string representation of the given\n * MIPS instruction code(s).\n * If multiple values are given (array) then multiple values are returned.\n * When the `intermediate` option is passed, the return type is an object.\n */\nfunction print(inst, opts) {\n  opts = _getFinalOpts(opts);\n\n  if (Array.isArray(inst))\n    return inst.map(i => _print(i, opts));\n\n  const isArrayBuffer = inst instanceof ArrayBuffer;\n  if (isArrayBuffer || inst instanceof DataView) {\n    const dataView = isArrayBuffer ? new DataView(inst) : inst;\n    const result = [];\n    for (let i = 0; i < dataView.byteLength; i += 4) {\n      result.push(_print(dataView.getUint32(i), opts));\n    }\n    return result;\n  }\n\n  const inputType = typeof inst;\n  if (inputType === \"number\" || inputType === \"object\")\n    return _print(inst, opts);\n\n  throw new Error(\"Unexpected input to print.\");\n}\n\nfunction _getFinalOpts(givenOpts) {\n  return Object.assign({\n    casing: \"toUpperCase\",\n    commas: false,\n    include$: false,\n    intermediate: false,\n    numBase: 16\n  }, givenOpts);\n}\n\nfunction _print(inst, opts) {\n  let opcodeObj, opName, values;\n  if (typeof inst === \"number\") {\n    opName = Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"findMatch\"])(inst);\n    if (!opName)\n      throw new Error(\"Unrecognized instruction\");\n\n    opcodeObj = Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"getOpcodeDetails\"])(opName);\n\n    values = _extractValues(inst, opcodeObj.format);\n    values.op = opName;\n  }\n  else if (typeof inst === \"object\") {\n    if (!inst.op)\n      throw new Error(\"Instruction object did not contain op\");\n\n    opcodeObj = Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"getOpcodeDetails\"])(inst.op);\n\n    values = inst;\n  }\n  else\n    throw new Error(`Unexpected value ${inst}`);\n\n  if (!opcodeObj)\n    throw new Error(\"Invalid opcode\");\n\n  if (opts.intermediate)\n    return values;\n\n  return _printValues(values, opcodeObj, opts);\n}\n\nfunction _printValues(values, opcodeObj, opts) {\n  let result = _formatOpcode(values, opts);\n\n  function _getRegName(displayEntry) {\n    switch (displayEntry) {\n      case \"rs\":\n      case \"rt\":\n      case \"rd\":\n        return Object(_regs__WEBPACK_IMPORTED_MODULE_1__[\"getRegName\"])(values[displayEntry]);\n\n      case \"fs\":\n      case \"ft\":\n      case \"fd\":\n        return Object(_regs__WEBPACK_IMPORTED_MODULE_1__[\"getFloatRegName\"])(values[displayEntry]);\n    }\n  }\n\n  const display = opcodeObj.display;\n  for (let i = 0; i < display.length; i++) {\n    let displayEntry = display[i];\n\n    if (displayEntry.endsWith(\"?\")) {\n      displayEntry = displayEntry.replace(\"?\", \"\");\n      if (values[displayEntry] === undefined)\n        continue; // Optional value, not set.\n    }\n\n    let value = values[displayEntry];\n    if (value === undefined && displayEntry !== \"(\" && displayEntry !== \")\") {\n      throw new Error(`Expected ${displayEntry} value, got undefined`);\n    }\n\n    let addComma = opts.commas;\n\n    switch (displayEntry) {\n      case \"rs\":\n      case \"rt\":\n      case \"rd\":\n      case \"fs\":\n      case \"ft\":\n      case \"fd\":\n        if (!result.endsWith(\"(\"))\n          result += \" \";\n        result += _formatReg(_getRegName(displayEntry), opts);\n        break;\n\n      case \"(\":\n      case \")\":\n        addComma = false;\n        if (result.endsWith(\",\"))\n          result = result.slice(0, -1); // Lop off comma, since we are involved in a parenthesis open/close\n\n        result += displayEntry;\n        break;\n    }\n\n    const immDetails = Object(_immediates__WEBPACK_IMPORTED_MODULE_2__[\"getImmFormatDetails\"])(displayEntry);\n    if (immDetails) {\n      if (!result.endsWith(\"(\"))\n        result += \" \";\n\n      if (immDetails.signed && immDetails.bits === 16) {\n        value = Object(_immediates__WEBPACK_IMPORTED_MODULE_2__[\"makeInt16\"])(value);\n      }\n      if (immDetails.shift) {\n        value = value << immDetails.shift;\n      }\n\n      result += _formatNumber(value, opts);\n    }\n\n    if (addComma && (i !== display.length - 1) && !result.endsWith(\",\")) {\n      result += \",\";\n    }\n  }\n\n  return result.trim();\n}\n\nfunction _extractValues(inst, format) {\n  let values = {};\n  for (let i = format.length - 1; i >= 0; i--) {\n    let value, bitLength;\n    let piece = format[i];\n    if (Array.isArray(piece)) {\n      for (let j = piece.length - 1; j >= 0; j--) {\n        bitLength = Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"getValueBitLength\"])(piece[j]);\n        value = inst & Object(_bitstrings__WEBPACK_IMPORTED_MODULE_3__[\"makeBitMask\"])(bitLength);\n\n        if (Object(_bitstrings__WEBPACK_IMPORTED_MODULE_3__[\"isBinaryLiteral\"])(piece[j])) {\n          if (piece[j] === Object(_bitstrings__WEBPACK_IMPORTED_MODULE_3__[\"padBitString\"])(value.toString(2), bitLength)) {\n            piece = piece[j];\n            break;\n          }\n        }\n        else {\n          piece = piece[j];\n          break;\n        }\n      }\n    }\n    else {\n      bitLength = Object(_opcodes__WEBPACK_IMPORTED_MODULE_0__[\"getValueBitLength\"])(piece);\n      value = inst & Object(_bitstrings__WEBPACK_IMPORTED_MODULE_3__[\"makeBitMask\"])(bitLength);\n    }\n\n    if (Object(_bitstrings__WEBPACK_IMPORTED_MODULE_3__[\"isBinaryLiteral\"])(piece)) {\n      inst >>>= bitLength;\n      continue;\n    }\n\n    values[piece] = value;\n\n    inst >>>= bitLength;\n  }\n\n  return values;\n}\n\nfunction _formatNumber(num, opts) {\n  if (num === 0)\n    return num.toString(opts.numBase);\n\n  let value = \"\";\n  if (num < 0)\n    value += \"-\";\n\n  if (opts.numBase === 16)\n    value += \"0x\";\n  else if (opts.numBase === 8)\n    value += \"0o\";\n  else if (opts.numBase === 2)\n    value += \"0b\";\n\n  value += _applyCasing(Math.abs(num).toString(opts.numBase), opts.casing);\n  return value;\n}\n\nfunction _formatReg(regStr, opts) {\n  let value = \"\";\n  if (opts.include$)\n    value += \"$\";\n  value += _applyCasing(regStr, opts.casing);\n  return value;\n}\n\nfunction _formatOpcode(values, opts) {\n  const pieces = values.op.split(\".\");\n  for (let i = 0; i < pieces.length; i++) {\n    if (pieces[i] === \"fmt\") {\n      if (values.hasOwnProperty(\"fmt3\"))\n        pieces[i] = Object(_regs__WEBPACK_IMPORTED_MODULE_1__[\"getFmt3Name\"])(values[\"fmt3\"]);\n      else if (values.hasOwnProperty(\"fmt\"))\n        pieces[i] = Object(_regs__WEBPACK_IMPORTED_MODULE_1__[\"getFmtName\"])(values[\"fmt\"]);\n      else\n        throw new Error(\"Format value not available\");\n    }\n    else if (pieces[i] === \"cond\") {\n      if (values.hasOwnProperty(\"cond\"))\n        pieces[i] = Object(_regs__WEBPACK_IMPORTED_MODULE_1__[\"getCondName\"])(values[\"cond\"]);\n      else\n        throw new Error(\"Condition value not available\");\n    }\n  }\n  let opcode = pieces.join(\".\");\n\n  return _applyCasing(opcode, opts.casing);\n}\n\nfunction _applyCasing(value, casing) {\n  switch (casing) {\n    case \"toLowerCase\":\n      return value.toLowerCase();\n\n    case \"toUpperCase\":\n    default:\n      return value.toUpperCase();\n  }\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./node_modules/mips-inst/src/print.js?");
 
 /***/ }),
-/* 6 */
+
+/***/ "./node_modules/mips-inst/src/regex.js":
+/*!*********************************************!*\
+  !*** ./node_modules/mips-inst/src/regex.js ***!
+  \*********************************************/
+/*! exports provided: getOpcode, makeRegexForOpcode, isReg, isFloatReg */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = getOpcode;
-/* harmony export (immutable) */ __webpack_exports__["b"] = makeRegexForOpcode;
-/* unused harmony export isReg */
-/* unused harmony export isFloatReg */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__regs__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(1);
-
-
-
-const opRegex = "([A-Za-z0-3.]+)";
-const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
-const regRegex = "\\$?(\\w+)";
-const floatRegRegex = "\\$?[Ff]([0-9]+)";
-
-const opcodeRegex = new RegExp("^\\s*" + opRegex);
-
-// Gets the op string from a given entire instruction.
-// This is a general form (.fmt rather than .S, .D, etc.)
-function getOpcode(str) {
-  const match = opcodeRegex.exec(str);
-  if (match) {
-    const pieces = match[1].split("."); // Could be .fmt, .cond.fmt, etc
-    if (pieces.length === 1)
-      return pieces[0].toLowerCase();
-
-    // Loop from the end, as the end has the .fmt for tricky things like .D.W
-    let result = "";
-    let foundFmt = false;
-    let foundCond = false;
-    for (let i = pieces.length - 1; i > 0; i--) {
-      let piece = pieces[i];
-      if (!foundFmt) {
-        if (piece === "fmt" || __WEBPACK_IMPORTED_MODULE_0__regs__["k" /* isFmtString */](piece)) {
-          foundFmt = true;
-          piece = "fmt";
-        }
-      }
-
-      if (!foundCond) {
-        if (__WEBPACK_IMPORTED_MODULE_0__regs__["j" /* isCondString */](piece)) {
-          foundCond = true;
-          piece = "cond";
-        }
-      }
-
-      result = "." + piece + result;
-    }
-
-    return (pieces[0] + result).toLowerCase();
-  }
-  return null;
-}
-
-function makeRegexForOpcode(opcodeObj) {
-  const display = opcodeObj.display;
-
-  const parts = [opRegex];
-
-  for (let i = 0; i < display.length; i++) {
-    const part = display[i];
-    const optional = part.endsWith("?");
-
-    let regexPart = "";
-    if (optional)
-      regexPart += "(?:";
-
-    if (display[i + 1] === "(") {
-      if (optional)
-        throw new Error("Not prepared to generate optional regex with parenthesis");
-
-      if (display[i + 3] !== ")")
-        throw new Error("Not prepared to generate regex for multiple values in parenthesis"); // Or no closing paren
-
-      regexPart += makeParenthesisRegex(getRegexForPart(part), getRegexForPart(display[i + 2]));
-      i = i + 3;
-    }
-    else {
-      regexPart += getRegexForPart(part);
-    }
-
-    if (optional)
-      regexPart += "[,\\s]+)?";
-
-    parts.push(regexPart);
-  }
-
-  let regexStr =
-    "^\\s*" +
-    parts.reduce((str, next, index) => {
-      if (index === parts.length - 1)
-        return str + next;
-
-      // If it is an optional group, we already included the whitespace trailing.
-      if (!next.startsWith("(?:"))
-        return str + next + "[,\\s]+";
-
-      return str + next;
-    }, "") +
-    "\\s*$";
-
-  return new RegExp(regexStr);
-}
-
-function getRegexForPart(part) {
-  if (isReg(part))
-    return regRegex;
-  if (isFloatReg(part))
-    return floatRegRegex;
-
-  if (__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* getImmFormatDetails */](part))
-    return immRegex;
-
-  throw new Error(`Unrecognized display entry ${part}`);
-}
-
-function makeParenthesisRegex(regex1, regex2) {
-  return regex1 + "\\s*" + "\\(?" + regex2 + "\\)?";
-}
-
-function isReg(entry) {
-  if (!entry)
-    return false;
-
-  switch (entry.substr(0, 2)) {
-    case "rs":
-    case "rt":
-    case "rd":
-      return true;
-  }
-  return false;
-}
-
-function isFloatReg(entry) {
-  if (!entry)
-    return false;
-
-  switch (entry.substr(0, 2)) {
-    case "fs":
-    case "ft":
-    case "fd":
-      return true;
-  }
-  return false;
-}
-
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getOpcode\", function() { return getOpcode; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"makeRegexForOpcode\", function() { return makeRegexForOpcode; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"isReg\", function() { return isReg; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"isFloatReg\", function() { return isFloatReg; });\n/* harmony import */ var _regs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./regs */ \"./node_modules/mips-inst/src/regs.js\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./immediates */ \"./node_modules/mips-inst/src/immediates.js\");\n\n\n\nconst opRegex = \"([A-Za-z0-3.]+)\";\nconst immRegex = \"(-)?0?([xbo]?)([A-Fa-f0-9]+)\";\nconst regRegex = \"\\\\$?(\\\\w+)\";\nconst floatRegRegex = \"\\\\$?[Ff]([0-9]+)\";\n\nconst opcodeRegex = new RegExp(\"^\\\\s*\" + opRegex);\n\n// Gets the op string from a given entire instruction.\n// This is a general form (.fmt rather than .S, .D, etc.)\nfunction getOpcode(str) {\n  const match = opcodeRegex.exec(str);\n  if (match) {\n    const pieces = match[1].split(\".\"); // Could be .fmt, .cond.fmt, etc\n    if (pieces.length === 1)\n      return pieces[0].toLowerCase();\n\n    // Loop from the end, as the end has the .fmt for tricky things like .D.W\n    let result = \"\";\n    let foundFmt = false;\n    let foundCond = false;\n    for (let i = pieces.length - 1; i > 0; i--) {\n      let piece = pieces[i];\n      if (!foundFmt) {\n        if (piece === \"fmt\" || Object(_regs__WEBPACK_IMPORTED_MODULE_0__[\"isFmtString\"])(piece)) {\n          foundFmt = true;\n          piece = \"fmt\";\n        }\n      }\n\n      if (!foundCond) {\n        if (Object(_regs__WEBPACK_IMPORTED_MODULE_0__[\"isCondString\"])(piece)) {\n          foundCond = true;\n          piece = \"cond\";\n        }\n      }\n\n      result = \".\" + piece + result;\n    }\n\n    return (pieces[0] + result).toLowerCase();\n  }\n  return null;\n}\n\nfunction makeRegexForOpcode(opcodeObj) {\n  const display = opcodeObj.display;\n\n  const parts = [opRegex];\n\n  for (let i = 0; i < display.length; i++) {\n    const part = display[i];\n    const optional = part.endsWith(\"?\");\n\n    let regexPart = \"\";\n    if (optional)\n      regexPart += \"(?:\";\n\n    if (display[i + 1] === \"(\") {\n      if (optional)\n        throw new Error(\"Not prepared to generate optional regex with parenthesis\");\n\n      if (display[i + 3] !== \")\")\n        throw new Error(\"Not prepared to generate regex for multiple values in parenthesis\"); // Or no closing paren\n\n      regexPart += makeParenthesisRegex(getRegexForPart(part), getRegexForPart(display[i + 2]));\n      i = i + 3;\n    }\n    else {\n      regexPart += getRegexForPart(part);\n    }\n\n    if (optional)\n      regexPart += \"[,\\\\s]+)?\";\n\n    parts.push(regexPart);\n  }\n\n  let regexStr =\n    \"^\\\\s*\" +\n    parts.reduce((str, next, index) => {\n      if (index === parts.length - 1)\n        return str + next;\n\n      // If it is an optional group, we already included the whitespace trailing.\n      if (!next.startsWith(\"(?:\"))\n        return str + next + \"[,\\\\s]+\";\n\n      return str + next;\n    }, \"\") +\n    \"\\\\s*$\";\n\n  return new RegExp(regexStr);\n}\n\nfunction getRegexForPart(part) {\n  if (isReg(part))\n    return regRegex;\n  if (isFloatReg(part))\n    return floatRegRegex;\n\n  if (Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"getImmFormatDetails\"])(part))\n    return immRegex;\n\n  throw new Error(`Unrecognized display entry ${part}`);\n}\n\nfunction makeParenthesisRegex(regex1, regex2) {\n  return regex1 + \"\\\\s*\" + \"\\\\(?\" + regex2 + \"\\\\)?\";\n}\n\nfunction isReg(entry) {\n  if (!entry)\n    return false;\n\n  switch (entry.substr(0, 2)) {\n    case \"rs\":\n    case \"rt\":\n    case \"rd\":\n      return true;\n  }\n  return false;\n}\n\nfunction isFloatReg(entry) {\n  if (!entry)\n    return false;\n\n  switch (entry.substr(0, 2)) {\n    case \"fs\":\n    case \"ft\":\n    case \"fd\":\n      return true;\n  }\n  return false;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./node_modules/mips-inst/src/regex.js?");
 
 /***/ }),
-/* 7 */
+
+/***/ "./node_modules/mips-inst/src/regs.js":
+/*!********************************************!*\
+  !*** ./node_modules/mips-inst/src/regs.js ***!
+  \********************************************/
+/*! exports provided: getRegBits, getRegName, getFloatRegName, getFmtBits, getFmtName, getFmt3Bits, getFmt3Name, isFmtString, getCondBits, getCondName, isCondString */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = print;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__regs__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__immediates__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__bitstrings__ = __webpack_require__(2);
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getRegBits\", function() { return getRegBits; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getRegName\", function() { return getRegName; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getFloatRegName\", function() { return getFloatRegName; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getFmtBits\", function() { return getFmtBits; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getFmtName\", function() { return getFmtName; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getFmt3Bits\", function() { return getFmt3Bits; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getFmt3Name\", function() { return getFmt3Name; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"isFmtString\", function() { return isFmtString; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getCondBits\", function() { return getCondBits; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getCondName\", function() { return getCondName; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"isCondString\", function() { return isCondString; });\nconst regs = {\n  r0: 0,\n  zero: 0,\n  at: 1,\n  v0: 2,\n  v1: 3,\n  a0: 4,\n  a1: 5,\n  a2: 6,\n  a3: 7,\n  t0: 8,\n  t1: 9,\n  t2: 10,\n  t3: 11,\n  t4: 12,\n  t5: 13,\n  t6: 14,\n  t7: 15,\n  s0: 16,\n  s1: 17,\n  s2: 18,\n  s3: 19,\n  s4: 20,\n  s5: 21,\n  s6: 22,\n  s7: 23,\n  t8: 24,\n  t9: 25,\n  k0: 26,\n  k1: 27,\n  gp: 28,\n  sp: 29,\n  fp: 30,\n  ra: 31\n};\n\nfunction getRegBits(reg) {\n  if (!reg)\n    return undefined;\n  return regs[reg.toLowerCase()];\n}\n\nfunction getRegName(bits) {\n  for (let name in regs) {\n    if (regs[name] === bits)\n      return name;\n  }\n  return \"\";\n}\n\nfunction getFloatRegName(bits) {\n  if (typeof bits !== \"number\")\n    throw new Error(\"getFloatRegName encountered non-number\");\n\n  return \"F\" + bits;\n}\n\nconst fmts = {\n  S: 16,\n  D: 17,\n  W: 20,\n  L: 21,\n};\n\nfunction getFmtBits(fmtStr) {\n  return fmts[fmtStr.toUpperCase()];\n}\n\nfunction getFmtName(bits) {\n  for (let name in fmts) {\n    if (fmts[name] === bits)\n      return name;\n  }\n  return \"\";\n}\n\nconst fmt3s = {\n  S: 0,\n  D: 1,\n  W: 4,\n  L: 5,\n};\n\nfunction getFmt3Bits(fmtStr) {\n  return fmt3s[fmtStr.toUpperCase()];\n}\n\nfunction getFmt3Name(bits) {\n  for (let name in fmt3s) {\n    if (fmt3s[name] === bits)\n      return name;\n  }\n  return \"\";\n}\n\nfunction isFmtString(fmtStr) {\n  return fmts.hasOwnProperty(fmtStr.toUpperCase()) || fmt3s.hasOwnProperty(fmtStr.toUpperCase());\n}\n\nconst conds = {\n  F: 0,\n  UN: 1,\n  EQ: 2,\n  UEQ: 3,\n  OLT: 4,\n  ULT: 5,\n  OLE: 6,\n  ULE: 7,\n  SF: 8,\n  NGLE: 9,\n  SEQ: 10,\n  NGL: 11,\n  LT: 12,\n  NGE: 13,\n  LE: 14,\n  NGT: 15,\n};\n\nfunction getCondBits(condStr) {\n  return conds[condStr.toUpperCase()];\n}\n\nfunction getCondName(bits) {\n  for (let name in conds) {\n    if (conds[name] === bits)\n      return name;\n  }\n  return \"\";\n}\n\nfunction isCondString(condStr) {\n  return conds.hasOwnProperty(condStr.toUpperCase());\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./node_modules/mips-inst/src/regs.js?");
 
+/***/ }),
 
+/***/ "./src/assembler.ts":
+/*!**************************!*\
+  !*** ./src/assembler.ts ***!
+  \**************************/
+/*! exports provided: assemble */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"assemble\", function() { return assemble; });\n/* harmony import */ var mips_inst__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mips-inst */ \"./node_modules/mips-inst/src/index.js\");\n/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types */ \"./src/types.ts\");\n/* harmony import */ var _directives__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./directives */ \"./src/directives.ts\");\n/* harmony import */ var _functions__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./functions */ \"./src/functions.ts\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./immediates */ \"./src/immediates.ts\");\n/* harmony import */ var _labels__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./labels */ \"./src/labels.ts\");\n/* harmony import */ var _symbols__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./symbols */ \"./src/symbols.ts\");\n\n\n\n\n\n\n\nfunction assemble(input, opts) {\n    opts = opts || {};\n    var arr = _ensureArray(input);\n    arr = arr.filter(function (s) { return typeof s === \"string\"; });\n    arr = _stripComments(arr);\n    arr = arr.map(function (s) { return s.trim(); });\n    arr = arr.filter(Boolean);\n    var state = _makeNewAssemblerState();\n    var outStrs = [];\n    // First pass, calculate label positions.\n    arr = arr.map(function (line) {\n        state.line = line;\n        if (line[0] === \".\") {\n            Object(_directives__WEBPACK_IMPORTED_MODULE_2__[\"handleDirective\"])(state);\n            return line; // Keep directives for second pass.\n        }\n        var parsedLabel;\n        while (parsedLabel = Object(_labels__WEBPACK_IMPORTED_MODULE_5__[\"parseGlobalLabel\"])(state)) {\n            state.line = line = line.substr(parsedLabel.length + 1).trim();\n        }\n        // If !line, then only labels were on the line.\n        if (line) {\n            state.outIndex += 4;\n        }\n        return line;\n    });\n    // Re-filter out empty lines.\n    arr = arr.filter(Boolean);\n    state.buffer = opts.buffer || new ArrayBuffer(state.outIndex);\n    state.dataView = new DataView(state.buffer);\n    state.memPos = 0;\n    state.outIndex = 0;\n    state.currentPass = _types__WEBPACK_IMPORTED_MODULE_1__[\"AssemblerPhase\"].secondPass;\n    // Second pass, assemble!\n    arr.forEach(function (line) {\n        state.line = line;\n        if (line[0] === \".\") {\n            Object(_directives__WEBPACK_IMPORTED_MODULE_2__[\"handleDirective\"])(state);\n            return;\n        }\n        // Start a new \"area\" if we hit a global symbol boundary.\n        var globalSymbol = Object(_symbols__WEBPACK_IMPORTED_MODULE_6__[\"getSymbolByValue\"])(state, state.memPos + state.outIndex);\n        if (globalSymbol !== null) {\n            state.currentLabel = globalSymbol;\n        }\n        // Apply any built-in functions, symbols.\n        var instPieces = line.split(/[,\\s]+/g);\n        if (instPieces.length) {\n            var lastPiece = Object(_functions__WEBPACK_IMPORTED_MODULE_3__[\"runFunction\"])(instPieces[instPieces.length - 1], state);\n            if (lastPiece !== null) {\n                lastPiece = _fixBranch(instPieces[0], lastPiece, state);\n                instPieces[instPieces.length - 1] = lastPiece;\n                line = instPieces.join(\" \");\n            }\n        }\n        if (opts.text)\n            outStrs.push(line);\n        // At this point, we should be able to parse the instruction.\n        var inst = Object(mips_inst__WEBPACK_IMPORTED_MODULE_0__[\"parse\"])(line);\n        state.dataView.setUint32(state.outIndex, inst);\n        state.outIndex += 4;\n    });\n    if (opts.text)\n        return outStrs;\n    return state.buffer;\n}\n/** Strips single line ; or // comments. */\nfunction _stripComments(input) {\n    return input.map(function (line) {\n        var semicolonIndex = line.indexOf(\";\");\n        var slashesIndex = line.indexOf(\"//\");\n        if (semicolonIndex === -1 && slashesIndex === -1)\n            return line; // No comments\n        var removalIndex = semicolonIndex;\n        if (removalIndex === -1)\n            removalIndex = slashesIndex;\n        else if (slashesIndex !== -1)\n            removalIndex = Math.min(semicolonIndex, slashesIndex);\n        return line.substr(0, removalIndex);\n    });\n}\n/** Transforms branches from absolute to relative. */\nfunction _fixBranch(inst, offset, state) {\n    if (_instIsBranch(inst)) {\n        var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_4__[\"parseImmediate\"])(offset); // Should definitely succeed.\n        var memOffset = state.memPos + state.outIndex;\n        var diff = ((imm - memOffset) / 4) - 1;\n        return diff.toString(); // base 10 ok\n    }\n    return offset; // Leave as is.\n}\nfunction _instIsBranch(inst) {\n    inst = inst.toLowerCase();\n    if (inst[0] !== \"b\")\n        return false;\n    switch (inst) {\n        case \"bc1f\":\n        case \"bc1fl\":\n        case \"bc1t\":\n        case \"bc1tl\":\n        case \"beq\":\n        case \"beql\":\n        case \"bgez\":\n        case \"bgezal\":\n        case \"bgezall\":\n        case \"bgezl\":\n        case \"bgtz\":\n        case \"bgtzl\":\n        case \"blez\":\n        case \"blezl\":\n        case \"bltz\":\n        case \"bltzal\":\n        case \"bltzall\":\n        case \"bltzl\":\n        case \"bne\":\n        case \"bnel\":\n            return true;\n    }\n    return false;\n}\nfunction _makeNewAssemblerState() {\n    return {\n        buffer: null,\n        dataView: null,\n        line: \"\",\n        memPos: 0,\n        outIndex: 0,\n        symbols: Object.create(null),\n        symbolsByValue: Object.create(null),\n        currentLabel: null,\n        localSymbols: Object.create(null),\n        currentPass: _types__WEBPACK_IMPORTED_MODULE_1__[\"AssemblerPhase\"].firstPass,\n    };\n}\nfunction _ensureArray(input) {\n    if (typeof input === \"string\")\n        return input.split(/\\r?\\n/);\n    if (!Array.isArray(input))\n        throw new Error(\"Input must be a string or array of strings\");\n    return input;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/assembler.ts?");
 
+/***/ }),
 
-/**
- * Prints a string representation of a MIPS instruction.
- *
- * With the `intermediate` option, this can also be used as a convenient base
- * for a disassembler. The object output with `intermediate` can be manipulated
- * prior to calling `print` with it again.
- * @param {Number|Array|ArrayBuffer|DataView|Object} inst MIPS instruction, or intermediate object format.
- * @param {Object} opts Behavior options
- * @param {String} opts.casing "toUpperCase" (default), "toLowerCase"
- * @param {Boolean} opts.commas True to separate values by commas
- * @param {Boolean} opts.include$ True to prefix registers with dollar sign
- * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a string
- * @param {Number} opts.numBase Number format. 16 (hex, default), 10 (decimal)
- * @returns {String|Array|Object} Returns a string representation of the given
- * MIPS instruction code(s).
- * If multiple values are given (array) then multiple values are returned.
- * When the `intermediate` option is passed, the return type is an object.
- */
-function print(inst, opts) {
-  opts = _getFinalOpts(opts);
+/***/ "./src/directives.ts":
+/*!***************************!*\
+  !*** ./src/directives.ts ***!
+  \***************************/
+/*! exports provided: handleDirective */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-  if (Array.isArray(inst))
-    return inst.map(i => _print(i, opts));
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"handleDirective\", function() { return handleDirective; });\n/* harmony import */ var _directives_definelabel__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./directives/definelabel */ \"./src/directives/definelabel.ts\");\n/* harmony import */ var _directives_org__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./directives/org */ \"./src/directives/org.ts\");\n/* harmony import */ var _directives_orga__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./directives/orga */ \"./src/directives/orga.ts\");\n/* harmony import */ var _directives_align__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./directives/align */ \"./src/directives/align.ts\");\n/* harmony import */ var _directives_skip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./directives/skip */ \"./src/directives/skip.ts\");\n/* harmony import */ var _directives_fill__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./directives/fill */ \"./src/directives/fill.ts\");\n/* harmony import */ var _directives_ascii__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./directives/ascii */ \"./src/directives/ascii.ts\");\n/* harmony import */ var _directives_byte__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./directives/byte */ \"./src/directives/byte.ts\");\n/* harmony import */ var _directives_halfword__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./directives/halfword */ \"./src/directives/halfword.ts\");\n/* harmony import */ var _directives_word__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./directives/word */ \"./src/directives/word.ts\");\n/* harmony import */ var _directives_float__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./directives/float */ \"./src/directives/float.ts\");\n\n\n\n\n\n\n\n\n\n\n\nfunction getDirectives() {\n    return [\n        _directives_definelabel__WEBPACK_IMPORTED_MODULE_0__[\"default\"],\n        _directives_org__WEBPACK_IMPORTED_MODULE_1__[\"default\"],\n        _directives_orga__WEBPACK_IMPORTED_MODULE_2__[\"default\"],\n        _directives_align__WEBPACK_IMPORTED_MODULE_3__[\"default\"],\n        _directives_skip__WEBPACK_IMPORTED_MODULE_4__[\"default\"],\n        _directives_fill__WEBPACK_IMPORTED_MODULE_5__[\"default\"],\n        _directives_ascii__WEBPACK_IMPORTED_MODULE_6__[\"default\"],\n        _directives_byte__WEBPACK_IMPORTED_MODULE_7__[\"default\"],\n        _directives_halfword__WEBPACK_IMPORTED_MODULE_8__[\"default\"],\n        _directives_word__WEBPACK_IMPORTED_MODULE_9__[\"default\"],\n        _directives_float__WEBPACK_IMPORTED_MODULE_10__[\"default\"],\n    ];\n}\n/**\n * Runs a directive, which changes the assembler state.\n * @param state Current assembler state.\n */\nfunction handleDirective(state) {\n    if (getDirectives().some(function (directive) { return directive(state); }))\n        return;\n    throw new Error(\"handleDirective: Unrecongized directive \" + state.line);\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives.ts?");
 
-  const isArrayBuffer = inst instanceof ArrayBuffer;
-  if (isArrayBuffer || inst instanceof DataView) {
-    const dataView = isArrayBuffer ? new DataView(inst) : inst;
-    const result = [];
-    for (let i = 0; i < dataView.byteLength; i += 4) {
-      result.push(_print(dataView.getUint32(i), opts));
-    }
-    return result;
-  }
+/***/ }),
 
-  const inputType = typeof inst;
-  if (inputType === "number" || inputType === "object")
-    return _print(inst, opts);
+/***/ "./src/directives/align.ts":
+/*!*********************************!*\
+  !*** ./src/directives/align.ts ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-  throw new Error("Unexpected input to print.");
-}
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return align; });\n/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../types */ \"./src/types.ts\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\n\nvar alignRegex = /^\\.align\\s+([-\\w]+)$/i;\n/**\n * .align pads zeroes until the output position is aligned\n * with the specified alignment.\n * @param state Current assembler state.\n */\nfunction align(state) {\n    var results = state.line.match(alignRegex);\n    if (results === null)\n        return false; // Not .align\n    var immString = results[1];\n    var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(immString);\n    if (imm === null)\n        throw new Error(\"Could not parse .align immediate \" + immString);\n    if (imm % 2)\n        throw new Error(\".align directive requires a power of two.\");\n    if (imm < 0)\n        throw new Error(\".align directive cannot align by a negative value.\");\n    while (state.outIndex % imm) {\n        if (state.currentPass === _types__WEBPACK_IMPORTED_MODULE_0__[\"AssemblerPhase\"].secondPass) {\n            state.dataView.setUint8(state.outIndex, 0);\n        }\n        state.outIndex++;\n    }\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/align.ts?");
 
-function _getFinalOpts(givenOpts) {
-  return Object.assign({
-    casing: "toUpperCase",
-    commas: false,
-    include$: false,
-    intermediate: false,
-    numBase: 16
-  }, givenOpts);
-}
+/***/ }),
 
-function _print(inst, opts) {
-  let opcodeObj, opName, values;
-  if (typeof inst === "number") {
-    opName = __WEBPACK_IMPORTED_MODULE_0__opcodes__["a" /* findMatch */](inst);
-    if (!opName)
-      throw new Error("Unrecognized instruction");
+/***/ "./src/directives/ascii.ts":
+/*!*********************************!*\
+  !*** ./src/directives/ascii.ts ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opName);
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return ascii; });\n/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../types */ \"./src/types.ts\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\n\nvar regexAscii = /^\\.ascii\\s+([\\\\'\\\",-\\w\\s]+)$/i;\nvar regexAsciiZ = /^\\.asciiz\\s+([\\\\'\\\",-\\w\\s]+)$/i;\n/**\n * .ascii value[,...]\n * .asciiz value[,...]\n *\n * `value` can either be a string or byte value.\n * ex: \"string\"\n * ex: 'string'\n * ex: 0x0A\n *\n * @param state Current assembler state.\n */\nfunction ascii(state) {\n    var appendZero = false;\n    var results = state.line.match(regexAscii);\n    if (!results) {\n        results = state.line.match(regexAsciiZ);\n        if (!results)\n            return false;\n        appendZero = true;\n    }\n    var charsString = results[1];\n    // const pieces = charsString.split(\",\")\n    //   .map(s => s.trim())\n    //   .filter(s => !!s);\n    var numbers = [];\n    var currentStrChar = \"\";\n    var currentNumber = \"\";\n    var escaped = false;\n    for (var i = 0; i < charsString.length; i++) {\n        var char = charsString[i];\n        if (!escaped && !currentNumber) {\n            if (char === \"\\\\\") {\n                escaped = true;\n                continue;\n            }\n            if (char === \"\\\"\" || char === \"'\") {\n                if (currentNumber)\n                    throw new Error(\"Encountered string during parsing of number: \" + currentNumber);\n                if (currentStrChar && currentStrChar === char) {\n                    currentStrChar = \"\"; // Ending the current string\n                    continue;\n                }\n                else if (!currentStrChar) {\n                    currentStrChar = char;\n                    continue;\n                }\n                // else fall through, write the quote character.\n                // We're in a situation like \"abc'd\"\n            }\n        }\n        escaped = false;\n        if (currentStrChar) {\n            numbers.push(charsString.charCodeAt(i));\n            continue;\n        }\n        else {\n            if (/[,\\s]+/.test(char)) { // whitespace or comma\n                if (currentNumber) {\n                    var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(currentNumber);\n                    if (imm === null)\n                        throw new Error(\"Could not parse immediate \" + currentNumber);\n                    numbers.push(imm);\n                }\n                currentNumber = \"\";\n            }\n            else {\n                currentNumber += char;\n            }\n        }\n    }\n    if (currentStrChar)\n        throw new Error(\"Unterminated string: \" + charsString);\n    if (currentNumber) {\n        var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(currentNumber);\n        if (imm === null)\n            throw new Error(\"Could not parse immediate \" + currentNumber);\n        numbers.push(imm);\n    }\n    // for (const piece of pieces) {\n    //   if (piece[0] === \"\\\"\" || piece[0] === \"'\") {\n    //     let str: string = JSON.parse(piece);\n    //     if (typeof str !== \"string\")\n    //       throw new Error(\"Could not parse as string: \" + piece);\n    //     for (let i = 0; i < str.length; i++) {\n    //       numbers.push(str.charCodeAt(i));\n    //     }\n    //   }\n    //   else {\n    //     let imm = parseImmediate(piece);\n    //     if (imm === null)\n    //       throw new Error(`Could not parse immediate ${piece}`);\n    //     numbers.push(imm);\n    //   }\n    // }\n    if (appendZero)\n        numbers.push(0); // Add NULL byte.\n    if (state.currentPass === _types__WEBPACK_IMPORTED_MODULE_0__[\"AssemblerPhase\"].secondPass) {\n        for (var i = 0; i < numbers.length; i++) {\n            if (numbers[i] < 0)\n                state.dataView.setInt8(state.outIndex + i, numbers[i]);\n            else\n                state.dataView.setUint8(state.outIndex + i, numbers[i]);\n        }\n    }\n    state.outIndex += numbers.length;\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/ascii.ts?");
 
-    values = _extractValues(inst, opcodeObj.format);
-    values.op = opName;
-  }
-  else if (typeof inst === "object") {
-    if (!inst.op)
-      throw new Error("Instruction object did not contain op");
+/***/ }),
 
-    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](inst.op);
+/***/ "./src/directives/byte.ts":
+/*!********************************!*\
+  !*** ./src/directives/byte.ts ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-    values = inst;
-  }
-  else
-    throw new Error(`Unexpected value ${inst}`);
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return byte; });\n/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../types */ \"./src/types.ts\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\n\nvar regexByte = /^\\.byte\\s+([,-\\w\\s]+)$/i;\nvar regexDb = /^\\.db\\s+([,-\\w\\s]+)$/i;\n/**\n * .byte value[,...]\n * .db value[,...]\n * @param state Current assembler state.\n */\nfunction byte(state) {\n    var results = state.line.match(regexByte);\n    if (!results) {\n        results = state.line.match(regexDb);\n        if (!results)\n            return false;\n    }\n    var bytesString = results[1];\n    var pieces = bytesString.split(\",\")\n        .map(function (s) { return s.trim(); })\n        .filter(function (s) { return !!s; });\n    var numbers = pieces.map(function (s) {\n        var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(s);\n        if (imm === null)\n            throw new Error(\"Could not parse .byte immediate \" + s);\n        return imm;\n    });\n    if (state.currentPass === _types__WEBPACK_IMPORTED_MODULE_0__[\"AssemblerPhase\"].secondPass) {\n        for (var i = 0; i < numbers.length; i++) {\n            if (numbers[i] < 0)\n                state.dataView.setInt8(state.outIndex + i, numbers[i]);\n            else\n                state.dataView.setUint8(state.outIndex + i, numbers[i]);\n        }\n    }\n    state.outIndex += numbers.length;\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/byte.ts?");
 
-  if (!opcodeObj)
-    throw new Error("Invalid opcode");
+/***/ }),
 
-  if (opts.intermediate)
-    return values;
+/***/ "./src/directives/definelabel.ts":
+/*!***************************************!*\
+  !*** ./src/directives/definelabel.ts ***!
+  \***************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-  return _printValues(values, opcodeObj, opts);
-}
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return definelabel; });\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n/* harmony import */ var _symbols__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../symbols */ \"./src/symbols.ts\");\n\n\nvar defineLabelRegex = /^\\.definelabel\\s+(\\w+)[\\s,]+(\\w+)$/i;\n/**\n * .definelabel adds a new symbol.\n * @param state Current assembler state.\n */\nfunction definelabel(state) {\n    var results = state.line.match(defineLabelRegex);\n    if (results === null)\n        return false; // Not .definelabel\n    var name = results[1], value = results[2];\n    var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_0__[\"parseImmediate\"])(value);\n    if (imm === null) {\n        var symbolValue = Object(_symbols__WEBPACK_IMPORTED_MODULE_1__[\"getSymbolValue\"])(state, value);\n        if (symbolValue === null)\n            throw new Error(\".definelabel value must be numeric or an alias to another label\");\n        Object(_symbols__WEBPACK_IMPORTED_MODULE_1__[\"addSymbol\"])(state, name, symbolValue); // Alias\n    }\n    else {\n        Object(_symbols__WEBPACK_IMPORTED_MODULE_1__[\"addSymbol\"])(state, name, imm);\n    }\n    return true; // Symbol added\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/definelabel.ts?");
 
-function _printValues(values, opcodeObj, opts) {
-  let result = _formatOpcode(values, opts);
+/***/ }),
 
-  function _getRegName(displayEntry) {
-    switch (displayEntry) {
-      case "rs":
-      case "rt":
-      case "rd":
-        return __WEBPACK_IMPORTED_MODULE_1__regs__["i" /* getRegName */](values[displayEntry]);
+/***/ "./src/directives/fill.ts":
+/*!********************************!*\
+  !*** ./src/directives/fill.ts ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-      case "fs":
-      case "ft":
-      case "fd":
-        return __WEBPACK_IMPORTED_MODULE_1__regs__["c" /* getFloatRegName */](values[displayEntry]);
-    }
-  }
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return fill; });\n/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../types */ \"./src/types.ts\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\n\nvar regexLength = /^\\.fill\\s+([-\\w]+)$/i;\nvar regexLengthValue = /^\\.fill\\s+([-\\w]+),\\s*([-\\w]+)$/i;\n/**\n * .fill length[,value]\n * @param state Current assembler state.\n */\nfunction fill(state) {\n    var lengthStr, length;\n    var valueStr, value;\n    var results = state.line.match(regexLength);\n    if (results) {\n        lengthStr = results[1];\n    }\n    else {\n        results = state.line.match(regexLengthValue);\n        if (results) {\n            lengthStr = results[1], valueStr = results[2];\n        }\n        else {\n            return false; // Neither regex matched.\n        }\n    }\n    length = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(lengthStr);\n    if (length === null)\n        throw new Error(\"Could not parse .fill length \" + lengthStr);\n    if (length < 0)\n        throw new Error(\".fill length must be positive.\");\n    if (valueStr) {\n        value = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(valueStr);\n        if (value === null)\n            throw new Error(\"Could not parse .fill value \" + valueStr);\n    }\n    else\n        value = 0;\n    if (state.currentPass === _types__WEBPACK_IMPORTED_MODULE_0__[\"AssemblerPhase\"].secondPass) {\n        for (var i = 0; i < length; i++)\n            state.dataView.setInt8(state.outIndex + i, value);\n    }\n    state.outIndex += length;\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/fill.ts?");
 
-  const display = opcodeObj.display;
-  for (let i = 0; i < display.length; i++) {
-    let displayEntry = display[i];
+/***/ }),
 
-    if (displayEntry.endsWith("?")) {
-      displayEntry = displayEntry.replace("?", "");
-      if (values[displayEntry] === undefined)
-        continue; // Optional value, not set.
-    }
+/***/ "./src/directives/float.ts":
+/*!*********************************!*\
+  !*** ./src/directives/float.ts ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-    let value = values[displayEntry];
-    if (value === undefined && displayEntry !== "(" && displayEntry !== ")") {
-      throw new Error(`Expected ${displayEntry} value, got undefined`);
-    }
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return word; });\n/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../types */ \"./src/types.ts\");\n\nvar regexFloat = /^\\.float\\s+([,-\\.\\w\\s]+)$/i;\n/**\n * Writes 32-bit float values.\n * .float value[,...]\n * @param state Current assembler state.\n */\nfunction word(state) {\n    var results = state.line.match(regexFloat);\n    if (!results) {\n        return false;\n    }\n    var valuesString = results[1];\n    var pieces = valuesString.split(\",\")\n        .map(function (s) { return s.trim(); })\n        .filter(function (s) { return !!s; });\n    var numbers = pieces.map(function (s) {\n        var imm = parseFloat(s);\n        if (imm === null)\n            throw new Error(\"Could not parse .float immediate \" + s);\n        return imm;\n    });\n    if (state.currentPass === _types__WEBPACK_IMPORTED_MODULE_0__[\"AssemblerPhase\"].secondPass) {\n        for (var i = 0; i < numbers.length; i++) {\n            state.dataView.setFloat32(state.outIndex + (i * 4), numbers[i]);\n        }\n    }\n    state.outIndex += 4 * numbers.length;\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/float.ts?");
 
-    let addComma = opts.commas;
+/***/ }),
 
-    switch (displayEntry) {
-      case "rs":
-      case "rt":
-      case "rd":
-      case "fs":
-      case "ft":
-      case "fd":
-        if (!result.endsWith("("))
-          result += " ";
-        result += _formatReg(_getRegName(displayEntry), opts);
-        break;
+/***/ "./src/directives/halfword.ts":
+/*!************************************!*\
+  !*** ./src/directives/halfword.ts ***!
+  \************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-      case "(":
-      case ")":
-        addComma = false;
-        if (result.endsWith(","))
-          result = result.slice(0, -1); // Lop off comma, since we are involved in a parenthesis open/close
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return halfword; });\n/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../types */ \"./src/types.ts\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\n\nvar regexHalfword = /^\\.halfword\\s+([,-\\w\\s]+)$/i;\nvar regexDh = /^\\.dh\\s+([,-\\w\\s]+)$/i;\n/**\n * Writes 16-bit values.\n * .halfword value[,...]\n * .dh value[,...]\n * @param state Current assembler state.\n */\nfunction halfword(state) {\n    var results = state.line.match(regexHalfword);\n    if (!results) {\n        results = state.line.match(regexDh);\n        if (!results)\n            return false;\n    }\n    var halfwordsString = results[1];\n    var pieces = halfwordsString.split(\",\")\n        .map(function (s) { return s.trim(); })\n        .filter(function (s) { return !!s; });\n    var numbers = pieces.map(function (s) {\n        var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(s);\n        if (imm === null)\n            throw new Error(\"Could not parse .halfword immediate \" + s);\n        return imm;\n    });\n    if (state.currentPass === _types__WEBPACK_IMPORTED_MODULE_0__[\"AssemblerPhase\"].secondPass) {\n        for (var i = 0; i < numbers.length; i++) {\n            if (numbers[i] < 0)\n                state.dataView.setInt16(state.outIndex + (i * 2), numbers[i]);\n            else\n                state.dataView.setUint16(state.outIndex + (i * 2), numbers[i]);\n        }\n    }\n    state.outIndex += 2 * numbers.length;\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/halfword.ts?");
 
-        result += displayEntry;
-        break;
-    }
+/***/ }),
 
-    const immDetails = __WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */](displayEntry);
-    if (immDetails) {
-      if (!result.endsWith("("))
-        result += " ";
+/***/ "./src/directives/org.ts":
+/*!*******************************!*\
+  !*** ./src/directives/org.ts ***!
+  \*******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-      if (immDetails.signed && immDetails.bits === 16) {
-        value = __WEBPACK_IMPORTED_MODULE_2__immediates__["b" /* makeInt16 */](value);
-      }
-      if (immDetails.shift) {
-        value = value << immDetails.shift;
-      }
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return orga; });\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\nvar orgRegex = /^\\.org\\s+(\\w+)$/i;\n/**\n * .org changes the effective memory position.\n * @param state Current assembler state.\n */\nfunction orga(state) {\n    var results = state.line.match(orgRegex);\n    if (results === null)\n        return false; // Not .org\n    var loc = results[1];\n    var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_0__[\"parseImmediate\"])(loc);\n    if (imm === null)\n        throw new Error(\"Could not parse .org immediate \" + loc);\n    state.memPos = imm >>> 0; // Better be 32-bit\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/org.ts?");
 
-      result += _formatNumber(value, opts);
-    }
+/***/ }),
 
-    if (addComma && (i !== display.length - 1) && !result.endsWith(",")) {
-      result += ",";
-    }
-  }
+/***/ "./src/directives/orga.ts":
+/*!********************************!*\
+  !*** ./src/directives/orga.ts ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-  return result.trim();
-}
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return orga; });\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\nvar orgaRegex = /^\\.orga\\s+(\\w+)$/i;\n/**\n * .orga updates the current output buffer index.\n * @param state Current assembler state.\n */\nfunction orga(state) {\n    var results = state.line.match(orgaRegex);\n    if (results === null)\n        return false; // Not .orga\n    var loc = results[1];\n    var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_0__[\"parseImmediate\"])(loc);\n    if (imm === null)\n        throw new Error(\"Could not parse .orga immediate \" + loc);\n    state.outIndex = imm >>> 0; // Better be 32-bit\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/orga.ts?");
 
-function _extractValues(inst, format) {
-  let values = {};
-  for (let i = format.length - 1; i >= 0; i--) {
-    let value, bitLength;
-    let piece = format[i];
-    if (Array.isArray(piece)) {
-      for (let j = piece.length - 1; j >= 0; j--) {
-        bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece[j]);
-        value = inst & __WEBPACK_IMPORTED_MODULE_3__bitstrings__["c" /* makeBitMask */](bitLength);
+/***/ }),
 
-        if (__WEBPACK_IMPORTED_MODULE_3__bitstrings__["b" /* isBinaryLiteral */](piece[j])) {
-          if (piece[j] === __WEBPACK_IMPORTED_MODULE_3__bitstrings__["e" /* padBitString */](value.toString(2), bitLength)) {
-            piece = piece[j];
-            break;
-          }
-        }
-        else {
-          piece = piece[j];
-          break;
-        }
-      }
-    }
-    else {
-      bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece);
-      value = inst & __WEBPACK_IMPORTED_MODULE_3__bitstrings__["c" /* makeBitMask */](bitLength);
-    }
+/***/ "./src/directives/skip.ts":
+/*!********************************!*\
+  !*** ./src/directives/skip.ts ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-    if (__WEBPACK_IMPORTED_MODULE_3__bitstrings__["b" /* isBinaryLiteral */](piece)) {
-      inst >>>= bitLength;
-      continue;
-    }
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return skip; });\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\nvar regex = /^\\.skip\\s+([-\\w]+)$/i;\n/**\n * .skip passes over a given amout of bytes without overwriting them.\n * @param state Current assembler state.\n */\nfunction skip(state) {\n    var results = state.line.match(regex);\n    if (results === null)\n        return false;\n    var immString = results[1];\n    var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_0__[\"parseImmediate\"])(immString);\n    if (imm === null)\n        throw new Error(\"Could not parse .skip immediate \" + immString);\n    if (imm < 0)\n        throw new Error(\".skip directive cannot skip a negative length.\");\n    state.outIndex += imm;\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/skip.ts?");
 
-    values[piece] = value;
+/***/ }),
 
-    inst >>>= bitLength;
-  }
+/***/ "./src/directives/word.ts":
+/*!********************************!*\
+  !*** ./src/directives/word.ts ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-  return values;
-}
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return word; });\n/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../types */ \"./src/types.ts\");\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../immediates */ \"./src/immediates.ts\");\n\n\nvar regexWord = /^\\.word\\s+([,-\\w\\s]+)$/i;\nvar regexDw = /^\\.dw\\s+([,-\\w\\s]+)$/i;\n/**\n * Writes 32-bit values.\n * .word value[,...]\n * .dw value[,...]\n * @param state Current assembler state.\n */\nfunction word(state) {\n    var results = state.line.match(regexWord);\n    if (!results) {\n        results = state.line.match(regexDw);\n        if (!results)\n            return false;\n    }\n    var wordsString = results[1];\n    var pieces = wordsString.split(\",\")\n        .map(function (s) { return s.trim(); })\n        .filter(function (s) { return !!s; });\n    var numbers = pieces.map(function (s) {\n        var imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_1__[\"parseImmediate\"])(s);\n        if (imm === null)\n            throw new Error(\"Could not parse .word immediate \" + s);\n        return imm;\n    });\n    if (state.currentPass === _types__WEBPACK_IMPORTED_MODULE_0__[\"AssemblerPhase\"].secondPass) {\n        for (var i = 0; i < numbers.length; i++) {\n            if (numbers[i] < 0)\n                state.dataView.setInt32(state.outIndex + (i * 4), numbers[i]);\n            else\n                state.dataView.setUint32(state.outIndex + (i * 4), numbers[i]);\n        }\n    }\n    state.outIndex += 4 * numbers.length;\n    return true;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/directives/word.ts?");
 
-function _formatNumber(num, opts) {
-  if (num === 0)
-    return num.toString(opts.numBase);
+/***/ }),
 
-  let value = "";
-  if (num < 0)
-    value += "-";
+/***/ "./src/functions.ts":
+/*!**************************!*\
+  !*** ./src/functions.ts ***!
+  \**************************/
+/*! exports provided: runFunction */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-  if (opts.numBase === 16)
-    value += "0x";
-  else if (opts.numBase === 8)
-    value += "0o";
-  else if (opts.numBase === 2)
-    value += "0b";
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"runFunction\", function() { return runFunction; });\n/* harmony import */ var _immediates__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./immediates */ \"./src/immediates.ts\");\n/* harmony import */ var _symbols__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./symbols */ \"./src/symbols.ts\");\n\n\n/** Runs any built-in functions, and also resolves symbols. */\nfunction runFunction(value, state) {\n    // Don't parse an immediate on the root call.\n    var result = _runFunction(value, state, false);\n    if (result !== null)\n        return \"0x\" + result.toString(16).toUpperCase();\n    return null;\n}\nfunction _runFunction(value, state, doParseImmediate) {\n    var fnRegex = /^(\\w+)\\(([\\(\\),\\w+]+)\\)$/;\n    var results = fnRegex.exec(value);\n    if (results === null) { // Not a function\n        var imm = null;\n        if (doParseImmediate && (imm = Object(_immediates__WEBPACK_IMPORTED_MODULE_0__[\"parseImmediate\"])(value)) !== null) {\n            return imm;\n        }\n        var symbolValue = Object(_symbols__WEBPACK_IMPORTED_MODULE_1__[\"getSymbolValue\"])(state, value);\n        if (symbolValue !== null) {\n            return symbolValue;\n        }\n        return null;\n    }\n    else {\n        var fn = results[1], args = results[2];\n        if (!fns[fn]) {\n            // Did a symbol label accidentally look like a function?\n            var symbolValue = Object(_symbols__WEBPACK_IMPORTED_MODULE_1__[\"getSymbolValue\"])(state, fn);\n            if (symbolValue !== null) {\n                return symbolValue;\n            }\n            return null; // Might have been something like 0x10(V0)\n        }\n        // TODO: Doesn't support nested calls, multiple arguments.\n        return fns[fn].call(fns[fn], _runFunction(args, state, true));\n    }\n}\nvar fns = {\n    hi: function (value) {\n        var lower = value & 0x0000FFFF;\n        var upper = value >>> 16;\n        if (lower & 0x8000)\n            upper += 1;\n        return upper;\n    },\n    lo: function (value) {\n        return value & 0x0000FFFF;\n    },\n};\n\n\n//# sourceURL=webpack://MIPSAssem/./src/functions.ts?");
 
-  value += _applyCasing(Math.abs(num).toString(opts.numBase), opts.casing);
-  return value;
-}
+/***/ }),
 
-function _formatReg(regStr, opts) {
-  let value = "";
-  if (opts.include$)
-    value += "$";
-  value += _applyCasing(regStr, opts.casing);
-  return value;
-}
+/***/ "./src/immediates.ts":
+/*!***************************!*\
+  !*** ./src/immediates.ts ***!
+  \***************************/
+/*! exports provided: parseImmediate */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-function _formatOpcode(values, opts) {
-  const pieces = values.op.split(".");
-  for (let i = 0; i < pieces.length; i++) {
-    if (pieces[i] === "fmt") {
-      if (values.hasOwnProperty("fmt3"))
-        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["e" /* getFmt3Name */](values["fmt3"]);
-      else if (values.hasOwnProperty("fmt"))
-        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["g" /* getFmtName */](values["fmt"]);
-      else
-        throw new Error("Format value not available");
-    }
-    else if (pieces[i] === "cond") {
-      if (values.hasOwnProperty("cond"))
-        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["b" /* getCondName */](values["cond"]);
-      else
-        throw new Error("Condition value not available");
-    }
-  }
-  let opcode = pieces.join(".");
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"parseImmediate\", function() { return parseImmediate; });\nfunction parseImmediate(value) {\n    if (typeof value !== \"string\")\n        return null;\n    var negative = value[0] === \"-\";\n    if (negative)\n        value = value.substr(1);\n    var result;\n    if (value[0] === \"b\" || value[0] === \"0\" && value[1] === \"b\")\n        result = parseInt(value.substr(2), 2);\n    else if (value[0] === \"o\" || value[0] === \"0\" && value[1] === \"o\")\n        result = parseInt(value.substr(2), 8);\n    else if (value[0] === \"x\" || value[0] === \"0\" && value[1] === \"x\")\n        result = parseInt(value.substr(2), 16);\n    else\n        result = parseInt(value, 10);\n    if (isNaN(result))\n        return null;\n    if (negative)\n        result = -result;\n    return result;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/immediates.ts?");
 
-  return _applyCasing(opcode, opts.casing);
-}
+/***/ }),
 
-function _applyCasing(value, casing) {
-  switch (casing) {
-    case "toLowerCase":
-      return value.toLowerCase();
+/***/ "./src/index.ts":
+/*!**********************!*\
+  !*** ./src/index.ts ***!
+  \**********************/
+/*! exports provided: assemble */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-    case "toUpperCase":
-    default:
-      return value.toUpperCase();
-  }
-}
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _assembler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./assembler */ \"./src/assembler.ts\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"assemble\", function() { return _assembler__WEBPACK_IMPORTED_MODULE_0__[\"assemble\"]; });\n\n\n\n\n//# sourceURL=webpack://MIPSAssem/./src/index.ts?");
 
+/***/ }),
+
+/***/ "./src/labels.ts":
+/*!***********************!*\
+  !*** ./src/labels.ts ***!
+  \***********************/
+/*! exports provided: parseGlobalLabel, isLocalLabel */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"parseGlobalLabel\", function() { return parseGlobalLabel; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"isLocalLabel\", function() { return isLocalLabel; });\n/* harmony import */ var _symbols__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./symbols */ \"./src/symbols.ts\");\n\n/**\n * Parses a LABEL: expression and adds it to the symbol table.\n * Examples of valid labels:\n *    basicLabel:    excited!Label!:    mystery?Label?:\n *    @@localLabel:  12345:             !?!:\n */\nfunction parseGlobalLabel(state) {\n    var labelRegex = /^((?:@@)?[\\w\\?\\!]+)\\:/;\n    var results = state.line.match(labelRegex);\n    if (results === null)\n        return false; // Not a label.\n    var name = results[1];\n    if (isLocalLabel(name)) {\n        if (!state.currentLabel) {\n            throw new Error(\"Local label \" + name + \" (starts with @@) cannot be used before a global label\");\n        }\n        Object(_symbols__WEBPACK_IMPORTED_MODULE_0__[\"addLocalSymbol\"])(state, name, getLabelValueFromState(state));\n    }\n    else {\n        state.currentLabel = name;\n        Object(_symbols__WEBPACK_IMPORTED_MODULE_0__[\"addSymbol\"])(state, name, getLabelValueFromState(state));\n    }\n    return name;\n}\nfunction isLocalLabel(name) {\n    return name.indexOf(\"@@\") === 0;\n}\nfunction getLabelValueFromState(state) {\n    return (state.memPos + state.outIndex) >>> 0;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/labels.ts?");
+
+/***/ }),
+
+/***/ "./src/symbols.ts":
+/*!************************!*\
+  !*** ./src/symbols.ts ***!
+  \************************/
+/*! exports provided: addSymbol, addLocalSymbol, getSymbolValue, getSymbolByValue */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"addSymbol\", function() { return addSymbol; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"addLocalSymbol\", function() { return addLocalSymbol; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getSymbolValue\", function() { return getSymbolValue; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getSymbolByValue\", function() { return getSymbolByValue; });\n/* harmony import */ var _labels__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./labels */ \"./src/labels.ts\");\n\n/**\n * Adds a symbol to the symbol table.\n * @param state Assembler state\n * @param name Symbol name\n * @param value Symbol value\n */\nfunction addSymbol(state, name, value) {\n    state.symbols[name] = value;\n    state.symbolsByValue[value] = name;\n}\n/**\n * Adds a local symbol to the symbol table.\n * @param state Assembler state\n * @param name Local symbol name\n * @param value Local symbol value\n *\n * Assumes !!state.currentLabel\n */\nfunction addLocalSymbol(state, name, value) {\n    var localTable = state.localSymbols[state.currentLabel];\n    if (!localTable) {\n        localTable = state.localSymbols[state.currentLabel] = Object.create(null);\n    }\n    localTable[name] = value;\n}\n/**\n * Retrieves a symbol by name, global or local.\n */\nfunction getSymbolValue(state, name) {\n    if (Object(_labels__WEBPACK_IMPORTED_MODULE_0__[\"isLocalLabel\"])(name)) {\n        if (!state.currentLabel) {\n            throw new Error(\"Local label \" + name + \" cannot be referenced in the current scope\");\n        }\n        var localTable = state.localSymbols[state.currentLabel];\n        if (localTable) {\n            return localTable[name] || null;\n        }\n        return null;\n    }\n    return state.symbols[name] || null;\n}\n/**\n * Retrieves a symbol by value from the symbol table.\n * Does not retrieve local labels.\n */\nfunction getSymbolByValue(state, value) {\n    return state.symbolsByValue[value] || null;\n}\n\n\n//# sourceURL=webpack://MIPSAssem/./src/symbols.ts?");
+
+/***/ }),
+
+/***/ "./src/types.ts":
+/*!**********************!*\
+  !*** ./src/types.ts ***!
+  \**********************/
+/*! exports provided: AssemblerPhase */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"AssemblerPhase\", function() { return AssemblerPhase; });\nvar AssemblerPhase;\n(function (AssemblerPhase) {\n    AssemblerPhase[AssemblerPhase[\"firstPass\"] = 0] = \"firstPass\";\n    AssemblerPhase[AssemblerPhase[\"secondPass\"] = 1] = \"secondPass\";\n})(AssemblerPhase || (AssemblerPhase = {}));\n\n\n//# sourceURL=webpack://MIPSAssem/./src/types.ts?");
 
 /***/ })
-/******/ ]);
-});
 
-/***/ }),
-/* 7 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = handleDirective;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__directives_definelabel__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__directives_org__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__directives_orga__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__directives_align__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__directives_skip__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__directives_fill__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__directives_ascii__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__directives_byte__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__directives_halfword__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__directives_word__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__directives_float__ = __webpack_require__(18);
-
-
-
-
-
-
-
-
-
-
-
-function getDirectives() {
-    return [
-        __WEBPACK_IMPORTED_MODULE_0__directives_definelabel__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_1__directives_org__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_2__directives_orga__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_3__directives_align__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_4__directives_skip__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_5__directives_fill__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_6__directives_ascii__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_7__directives_byte__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_8__directives_halfword__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_9__directives_word__["a" /* default */],
-        __WEBPACK_IMPORTED_MODULE_10__directives_float__["a" /* default */],
-    ];
-}
-/**
- * Runs a directive, which changes the assembler state.
- * @param state Current assembler state.
- */
-function handleDirective(state) {
-    if (getDirectives().some(function (directive) { return directive(state); }))
-        return;
-    throw new Error("handleDirective: Unrecongized directive " + state.line);
-}
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = definelabel;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__symbols__ = __webpack_require__(2);
-
-
-var defineLabelRegex = /^\.definelabel\s+(\w+)[\s,]+(\w+)$/i;
-/**
- * .definelabel adds a new symbol.
- * @param state Current assembler state.
- */
-function definelabel(state) {
-    var results = state.line.match(defineLabelRegex);
-    if (results === null)
-        return false; // Not .definelabel
-    var name = results[1], value = results[2];
-    var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(value);
-    if (imm === null) {
-        var symbolValue = Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["d" /* getSymbolValue */])(state, value);
-        if (symbolValue === null)
-            throw new Error(".definelabel value must be numeric or an alias to another label");
-        Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["b" /* addSymbol */])(state, name, symbolValue); // Alias
-    }
-    else {
-        Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["b" /* addSymbol */])(state, name, imm);
-    }
-    return true; // Symbol added
-}
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = orga;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
-
-var orgRegex = /^\.org\s+(\w+)$/i;
-/**
- * .org changes the effective memory position.
- * @param state Current assembler state.
- */
-function orga(state) {
-    var results = state.line.match(orgRegex);
-    if (results === null)
-        return false; // Not .org
-    var loc = results[1];
-    var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(loc);
-    if (imm === null)
-        throw new Error("Could not parse .org immediate " + loc);
-    state.memPos = imm >>> 0; // Better be 32-bit
-    return true;
-}
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = orga;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
-
-var orgaRegex = /^\.orga\s+(\w+)$/i;
-/**
- * .orga updates the current output buffer index.
- * @param state Current assembler state.
- */
-function orga(state) {
-    var results = state.line.match(orgaRegex);
-    if (results === null)
-        return false; // Not .orga
-    var loc = results[1];
-    var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(loc);
-    if (imm === null)
-        throw new Error("Could not parse .orga immediate " + loc);
-    state.outIndex = imm >>> 0; // Better be 32-bit
-    return true;
-}
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = align;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
-
-
-var alignRegex = /^\.align\s+([-\w]+)$/i;
-/**
- * .align pads zeroes until the output position is aligned
- * with the specified alignment.
- * @param state Current assembler state.
- */
-function align(state) {
-    var results = state.line.match(alignRegex);
-    if (results === null)
-        return false; // Not .align
-    var immString = results[1];
-    var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(immString);
-    if (imm === null)
-        throw new Error("Could not parse .align immediate " + immString);
-    if (imm % 2)
-        throw new Error(".align directive requires a power of two.");
-    if (imm < 0)
-        throw new Error(".align directive cannot align by a negative value.");
-    while (state.outIndex % imm) {
-        if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-            state.dataView.setUint8(state.outIndex, 0);
-        }
-        state.outIndex++;
-    }
-    return true;
-}
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = skip;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
-
-var regex = /^\.skip\s+([-\w]+)$/i;
-/**
- * .skip passes over a given amout of bytes without overwriting them.
- * @param state Current assembler state.
- */
-function skip(state) {
-    var results = state.line.match(regex);
-    if (results === null)
-        return false;
-    var immString = results[1];
-    var imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(immString);
-    if (imm === null)
-        throw new Error("Could not parse .skip immediate " + immString);
-    if (imm < 0)
-        throw new Error(".skip directive cannot skip a negative length.");
-    state.outIndex += imm;
-    return true;
-}
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = fill;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
-
-
-var regexLength = /^\.fill\s+([-\w]+)$/i;
-var regexLengthValue = /^\.fill\s+([-\w]+),\s*([-\w]+)$/i;
-/**
- * .fill length[,value]
- * @param state Current assembler state.
- */
-function fill(state) {
-    var lengthStr, length;
-    var valueStr, value;
-    var results = state.line.match(regexLength);
-    if (results) {
-        lengthStr = results[1];
-    }
-    else {
-        results = state.line.match(regexLengthValue);
-        if (results) {
-            lengthStr = results[1], valueStr = results[2];
-        }
-        else {
-            return false; // Neither regex matched.
-        }
-    }
-    length = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(lengthStr);
-    if (length === null)
-        throw new Error("Could not parse .fill length " + lengthStr);
-    if (length < 0)
-        throw new Error(".fill length must be positive.");
-    if (valueStr) {
-        value = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(valueStr);
-        if (value === null)
-            throw new Error("Could not parse .fill value " + valueStr);
-    }
-    else
-        value = 0;
-    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-        for (var i = 0; i < length; i++)
-            state.dataView.setInt8(state.outIndex + i, value);
-    }
-    state.outIndex += length;
-    return true;
-}
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = ascii;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
-
-
-var regexAscii = /^\.ascii\s+([\\'\",-\w\s]+)$/i;
-var regexAsciiZ = /^\.asciiz\s+([\\'\",-\w\s]+)$/i;
-/**
- * .ascii value[,...]
- * .asciiz value[,...]
- *
- * `value` can either be a string or byte value.
- * ex: "string"
- * ex: 'string'
- * ex: 0x0A
- *
- * @param state Current assembler state.
- */
-function ascii(state) {
-    var appendZero = false;
-    var results = state.line.match(regexAscii);
-    if (!results) {
-        results = state.line.match(regexAsciiZ);
-        if (!results)
-            return false;
-        appendZero = true;
-    }
-    var charsString = results[1];
-    // const pieces = charsString.split(",")
-    //   .map(s => s.trim())
-    //   .filter(s => !!s);
-    var numbers = [];
-    var currentStrChar = "";
-    var currentNumber = "";
-    var escaped = false;
-    for (var i = 0; i < charsString.length; i++) {
-        var char = charsString[i];
-        if (!escaped && !currentNumber) {
-            if (char === "\\") {
-                escaped = true;
-                continue;
-            }
-            if (char === "\"" || char === "'") {
-                if (currentNumber)
-                    throw new Error("Encountered string during parsing of number: " + currentNumber);
-                if (currentStrChar && currentStrChar === char) {
-                    currentStrChar = ""; // Ending the current string
-                    continue;
-                }
-                else if (!currentStrChar) {
-                    currentStrChar = char;
-                    continue;
-                }
-                // else fall through, write the quote character.
-                // We're in a situation like "abc'd"
-            }
-        }
-        escaped = false;
-        if (currentStrChar) {
-            numbers.push(charsString.charCodeAt(i));
-            continue;
-        }
-        else {
-            if (/[,\s]+/.test(char)) { // whitespace or comma
-                if (currentNumber) {
-                    var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(currentNumber);
-                    if (imm === null)
-                        throw new Error("Could not parse immediate " + currentNumber);
-                    numbers.push(imm);
-                }
-                currentNumber = "";
-            }
-            else {
-                currentNumber += char;
-            }
-        }
-    }
-    if (currentStrChar)
-        throw new Error("Unterminated string: " + charsString);
-    if (currentNumber) {
-        var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(currentNumber);
-        if (imm === null)
-            throw new Error("Could not parse immediate " + currentNumber);
-        numbers.push(imm);
-    }
-    // for (const piece of pieces) {
-    //   if (piece[0] === "\"" || piece[0] === "'") {
-    //     let str: string = JSON.parse(piece);
-    //     if (typeof str !== "string")
-    //       throw new Error("Could not parse as string: " + piece);
-    //     for (let i = 0; i < str.length; i++) {
-    //       numbers.push(str.charCodeAt(i));
-    //     }
-    //   }
-    //   else {
-    //     let imm = parseImmediate(piece);
-    //     if (imm === null)
-    //       throw new Error(`Could not parse immediate ${piece}`);
-    //     numbers.push(imm);
-    //   }
-    // }
-    if (appendZero)
-        numbers.push(0); // Add NULL byte.
-    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-        for (var i = 0; i < numbers.length; i++) {
-            if (numbers[i] < 0)
-                state.dataView.setInt8(state.outIndex + i, numbers[i]);
-            else
-                state.dataView.setUint8(state.outIndex + i, numbers[i]);
-        }
-    }
-    state.outIndex += numbers.length;
-    return true;
-}
-
-
-/***/ }),
-/* 15 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = byte;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
-
-
-var regexByte = /^\.byte\s+([,-\w\s]+)$/i;
-var regexDb = /^\.db\s+([,-\w\s]+)$/i;
-/**
- * .byte value[,...]
- * .db value[,...]
- * @param state Current assembler state.
- */
-function byte(state) {
-    var results = state.line.match(regexByte);
-    if (!results) {
-        results = state.line.match(regexDb);
-        if (!results)
-            return false;
-    }
-    var bytesString = results[1];
-    var pieces = bytesString.split(",")
-        .map(function (s) { return s.trim(); })
-        .filter(function (s) { return !!s; });
-    var numbers = pieces.map(function (s) {
-        var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(s);
-        if (imm === null)
-            throw new Error("Could not parse .byte immediate " + s);
-        return imm;
-    });
-    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-        for (var i = 0; i < numbers.length; i++) {
-            if (numbers[i] < 0)
-                state.dataView.setInt8(state.outIndex + i, numbers[i]);
-            else
-                state.dataView.setUint8(state.outIndex + i, numbers[i]);
-        }
-    }
-    state.outIndex += numbers.length;
-    return true;
-}
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = halfword;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
-
-
-var regexHalfword = /^\.halfword\s+([,-\w\s]+)$/i;
-var regexDh = /^\.dh\s+([,-\w\s]+)$/i;
-/**
- * Writes 16-bit values.
- * .halfword value[,...]
- * .dh value[,...]
- * @param state Current assembler state.
- */
-function halfword(state) {
-    var results = state.line.match(regexHalfword);
-    if (!results) {
-        results = state.line.match(regexDh);
-        if (!results)
-            return false;
-    }
-    var halfwordsString = results[1];
-    var pieces = halfwordsString.split(",")
-        .map(function (s) { return s.trim(); })
-        .filter(function (s) { return !!s; });
-    var numbers = pieces.map(function (s) {
-        var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(s);
-        if (imm === null)
-            throw new Error("Could not parse .halfword immediate " + s);
-        return imm;
-    });
-    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-        for (var i = 0; i < numbers.length; i++) {
-            if (numbers[i] < 0)
-                state.dataView.setInt16(state.outIndex + (i * 2), numbers[i]);
-            else
-                state.dataView.setUint16(state.outIndex + (i * 2), numbers[i]);
-        }
-    }
-    state.outIndex += 2 * numbers.length;
-    return true;
-}
-
-
-/***/ }),
-/* 17 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = word;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(0);
-
-
-var regexWord = /^\.word\s+([,-\w\s]+)$/i;
-var regexDw = /^\.dw\s+([,-\w\s]+)$/i;
-/**
- * Writes 32-bit values.
- * .word value[,...]
- * .dw value[,...]
- * @param state Current assembler state.
- */
-function word(state) {
-    var results = state.line.match(regexWord);
-    if (!results) {
-        results = state.line.match(regexDw);
-        if (!results)
-            return false;
-    }
-    var wordsString = results[1];
-    var pieces = wordsString.split(",")
-        .map(function (s) { return s.trim(); })
-        .filter(function (s) { return !!s; });
-    var numbers = pieces.map(function (s) {
-        var imm = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* parseImmediate */])(s);
-        if (imm === null)
-            throw new Error("Could not parse .word immediate " + s);
-        return imm;
-    });
-    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-        for (var i = 0; i < numbers.length; i++) {
-            if (numbers[i] < 0)
-                state.dataView.setInt32(state.outIndex + (i * 4), numbers[i]);
-            else
-                state.dataView.setUint32(state.outIndex + (i * 4), numbers[i]);
-        }
-    }
-    state.outIndex += 4 * numbers.length;
-    return true;
-}
-
-
-/***/ }),
-/* 18 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = word;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__types__ = __webpack_require__(1);
-
-var regexFloat = /^\.float\s+([,-\.\w\s]+)$/i;
-/**
- * Writes 32-bit float values.
- * .float value[,...]
- * @param state Current assembler state.
- */
-function word(state) {
-    var results = state.line.match(regexFloat);
-    if (!results) {
-        return false;
-    }
-    var valuesString = results[1];
-    var pieces = valuesString.split(",")
-        .map(function (s) { return s.trim(); })
-        .filter(function (s) { return !!s; });
-    var numbers = pieces.map(function (s) {
-        var imm = parseFloat(s);
-        if (imm === null)
-            throw new Error("Could not parse .float immediate " + s);
-        return imm;
-    });
-    if (state.currentPass === __WEBPACK_IMPORTED_MODULE_0__types__["a" /* AssemblerPhase */].secondPass) {
-        for (var i = 0; i < numbers.length; i++) {
-            state.dataView.setFloat32(state.outIndex + (i * 4), numbers[i]);
-        }
-    }
-    state.outIndex += 4 * numbers.length;
-    return true;
-}
-
-
-/***/ }),
-/* 19 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = runFunction;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__immediates__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__symbols__ = __webpack_require__(2);
-
-
-/** Runs any built-in functions, and also resolves symbols. */
-function runFunction(value, state) {
-    // Don't parse an immediate on the root call.
-    var result = _runFunction(value, state, false);
-    if (result !== null)
-        return "0x" + result.toString(16).toUpperCase();
-    return null;
-}
-function _runFunction(value, state, doParseImmediate) {
-    var fnRegex = /^(\w+)\(([\(\),\w+]+)\)$/;
-    var results = fnRegex.exec(value);
-    if (results === null) { // Not a function
-        var imm = null;
-        if (doParseImmediate && (imm = Object(__WEBPACK_IMPORTED_MODULE_0__immediates__["a" /* parseImmediate */])(value)) !== null) {
-            return imm;
-        }
-        var symbolValue = Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["d" /* getSymbolValue */])(state, value);
-        if (symbolValue !== null) {
-            return symbolValue;
-        }
-        return null;
-    }
-    else {
-        var fn = results[1], args = results[2];
-        if (!fns[fn]) {
-            // Did a symbol label accidentally look like a function?
-            var symbolValue = Object(__WEBPACK_IMPORTED_MODULE_1__symbols__["d" /* getSymbolValue */])(state, fn);
-            if (symbolValue !== null) {
-                return symbolValue;
-            }
-            return null; // Might have been something like 0x10(V0)
-        }
-        // TODO: Doesn't support nested calls, multiple arguments.
-        return fns[fn].call(fns[fn], _runFunction(args, state, true));
-    }
-}
-var fns = {
-    hi: function (value) {
-        var lower = value & 0x0000FFFF;
-        var upper = value >>> 16;
-        if (lower & 0x8000)
-            upper += 1;
-        return upper;
-    },
-    lo: function (value) {
-        return value & 0x0000FFFF;
-    },
-};
-
-
-/***/ })
-/******/ ]);
+/******/ });
 });
