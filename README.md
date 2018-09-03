@@ -130,7 +130,7 @@ npm run build
 
 To run tests:
 ```
-npm test
+npm run test
 ```
 
 License
