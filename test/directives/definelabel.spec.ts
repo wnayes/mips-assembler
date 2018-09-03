@@ -40,4 +40,17 @@ describe(".definelabel", () => {
       "NOP",
     ]);
   });
+
+  it("handles the zero constant", () => {
+    expect(assemble(`
+      .definelabel const1,0
+      JAL 0x80023456
+      ADDIU A0 R0 const1
+      NOP
+    `, { text: true })).to.deep.equal([
+      "JAL 0x80023456",
+      "ADDIU A0 R0 0",
+      "NOP",
+    ]);
+  });
 });

@@ -30,10 +30,13 @@ export function parseImmediate(value: string): number | null {
  * @param value Numeric value
  */
 export function formatImmediate(value: number): string {
+  const isZero = value === 0;
   const isNegative = value < 0;
   let result = value.toString(16).toUpperCase();
   if (isNegative) {
     result = result.substr(1); // Remove the negative sign.
   }
-  return (isNegative ? "-" : "") + "0x" + result;
+  return (isNegative ? "-" : "")
+    + (isZero ? "" : "0x")
+    + result;
 }

@@ -38,13 +38,17 @@ export function getSymbolValue(state: IAssemblerState, name: string): number | n
     }
 
     const localTable = state.localSymbols[state.currentLabel];
-    if (localTable) {
-      return localTable[name] || null;
+    if (localTable && Object.prototype.hasOwnProperty.call(localTable, name)) {
+      return localTable[name];
     }
     return null;
   }
 
-  return state.symbols[name] || null;
+  if (Object.prototype.hasOwnProperty.call(state.symbols, name)) {
+    return state.symbols[name];
+  }
+
+  return null;
 }
 
 /**
@@ -52,5 +56,6 @@ export function getSymbolValue(state: IAssemblerState, name: string): number | n
  * Does not retrieve local labels.
  */
 export function getSymbolByValue(state: IAssemblerState, value: number): string | null {
+  // Don't need hasOwnProperty check here, all values in key->value should be truthy strings.
   return state.symbolsByValue[value] || null;
 }
