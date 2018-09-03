@@ -100,18 +100,6 @@ describe("Assembler", () => {
     ]);
   });
 
-  it("does definelabel", () => {
-    expect(assemble(`
-      .org 0x80004000
-      .definelabel ExternalLibFn,0x80023456
-      JAL ExternalLibFn
-      NOP
-    `, { text: true })).to.deep.equal([
-      "JAL 0x80023456",
-      "NOP",
-    ]);
-  });
-
   it("handles hi/lo", () => {
     expect(assemble(`
       .org 0x80004000

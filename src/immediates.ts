@@ -24,3 +24,16 @@ export function parseImmediate(value: string): number | null {
 
   return result;
 }
+
+/**
+ * Formats a numeric value for use in final assembly.
+ * @param value Numeric value
+ */
+export function formatImmediate(value: number): string {
+  const isNegative = value < 0;
+  let result = value.toString(16).toUpperCase();
+  if (isNegative) {
+    result = result.substr(1); // Remove the negative sign.
+  }
+  return (isNegative ? "-" : "") + "0x" + result;
+}

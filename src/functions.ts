@@ -1,5 +1,5 @@
 import { IAssemblerState } from "./types";
-import { parseImmediate } from "./immediates";
+import { parseImmediate, formatImmediate } from "./immediates";
 import { getSymbolValue } from "./symbols";
 
 /** Runs any built-in functions, and also resolves symbols. */
@@ -7,7 +7,7 @@ export function runFunction(value: string, state: IAssemblerState): string {
   // Don't parse an immediate on the root call.
   const result = _runFunction(value, state, false);
   if (result !== null)
-    return "0x" + result.toString(16).toUpperCase();
+    return formatImmediate(result);
   return null;
 }
 
