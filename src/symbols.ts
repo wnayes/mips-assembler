@@ -21,9 +21,9 @@ export function addSymbol(state: IAssemblerState, name: string, value: number): 
  * Assumes !!state.currentLabel
  */
 export function addLocalSymbol(state: IAssemblerState, name: string, value: number): void {
-  let localTable = state.localSymbols[state.currentLabel];
+  let localTable = state.localSymbols[state.currentLabel!];
   if (!localTable) {
-    localTable = state.localSymbols[state.currentLabel] = Object.create(null);
+    localTable = state.localSymbols[state.currentLabel!] = Object.create(null);
   }
   localTable[name] = value;
 }

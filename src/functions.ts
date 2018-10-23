@@ -3,7 +3,7 @@ import { parseImmediate, formatImmediate } from "./immediates";
 import { getSymbolValue } from "./symbols";
 
 /** Runs any built-in functions, and also resolves symbols. */
-export function runFunction(value: string, state: IAssemblerState): string {
+export function runFunction(value: string, state: IAssemblerState): string | null {
   // Don't parse an immediate on the root call.
   const result = _runFunction(value, state, false);
   if (result !== null)
@@ -39,7 +39,7 @@ function _runFunction(value: string, state: IAssemblerState, doParseImmediate: b
     }
 
     // TODO: Doesn't support nested calls, multiple arguments.
-    return fns[fn](state, _runFunction(args, state, true));
+    return fns[fn](state, _runFunction(args, state, true)!);
   }
 }
 

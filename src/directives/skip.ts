@@ -1,4 +1,4 @@
-import { IAssemblerState, AssemblerPhase } from "../types";
+import { IAssemblerState } from "../types";
 import { parseImmediate } from "../immediates";
 
 const regex = /^\.skip\s+([-\w]+)$/i;

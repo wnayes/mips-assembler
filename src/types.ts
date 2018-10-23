@@ -3,12 +3,30 @@ export enum AssemblerPhase {
   secondPass
 }
 
-export interface IAssemblerState {
+export type IAssemblerState = IAssemblerStateFirstPass | IAssemblerStateSecondPass;
+
+interface IAssemblerStateFirstPass extends IAssemblerStateBase {
+  currentPass: AssemblerPhase.firstPass;
+
+  /** Output buffer. */
+  buffer: null;
+
+  /** DataView against the buffer. */
+  dataView: null;
+}
+
+interface IAssemblerStateSecondPass extends IAssemblerStateBase {
+  currentPass: AssemblerPhase.secondPass;
+
   /** Output buffer. */
   buffer: ArrayBuffer;
 
   /** DataView against the buffer. */
   dataView: DataView;
+}
+
+interface IAssemblerStateBase {
+  currentPass: AssemblerPhase;
 
   /** Current line being assembled. */
   line: string;
@@ -34,6 +52,4 @@ export interface IAssemblerState {
       [localLabelName: string]: number
     }
   }
-
-  currentPass: AssemblerPhase;
 }

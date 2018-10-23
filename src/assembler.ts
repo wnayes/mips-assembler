@@ -26,6 +26,11 @@ export interface IAssembleOpts {
   text?: boolean;
 }
 
+/**
+ * Assembles the given input instructions.
+ * @param input
+ * @param opts
+ */
 export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayBuffer | string[] {
   opts = opts || {};
 
@@ -90,12 +95,12 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     // Apply any built-in functions, symbols.
     line = evaluateExpressionsOnCurrentLine(state);
 
-    if (opts.text)
+    if (opts!.text)
       outStrs.push(line);
 
     // At this point, we should be able to parse the instruction.
     const inst = parse(line);
-    state.dataView.setUint32(state.outIndex, inst);
+    state.dataView!.setUint32(state.outIndex, inst);
 
     state.outIndex += 4;
   });
@@ -141,7 +146,7 @@ function _stripComments(input: string[]): string[] {
 /** Transforms branches from absolute to relative. */
 function _fixBranch(inst: string, offset: string, state: IAssemblerState): string {
   if (_instIsBranch(inst)) {
-    const imm = parseImmediate(offset); // Should definitely succeed.
+    const imm = parseImmediate(offset)!; // Should definitely succeed.
     const memOffset = state.memPos + state.outIndex;
     const diff = ((imm - memOffset) / 4) - 1;
     return diff.toString(); // base 10 ok
