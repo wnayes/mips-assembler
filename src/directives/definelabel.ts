@@ -1,8 +1,9 @@
 import { IAssemblerState } from "../types";
 import { parseImmediate } from "../immediates";
 import { addSymbol, getSymbolValue } from "../symbols";
+import { LABEL_REGEX_STR } from "../labels";
 
-const defineLabelRegex = /^\.definelabel\s+(\w+)[\s,]+([-\w]+)$/i;
+const defineLabelRegex = new RegExp(`^\\.definelabel\\s+(${LABEL_REGEX_STR})[\\s,]+([-\\w]+)$`, "i");
 
 /**
  * .definelabel adds a new symbol.

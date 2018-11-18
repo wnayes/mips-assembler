@@ -1,6 +1,10 @@
 import { IAssemblerState } from "./types";
 import { addSymbol, addLocalSymbol } from "./symbols";
 
+export const LABEL_REGEX_STR = "(?:@@)?[\\w\\?\\!]+";
+
+const labelRegex = new RegExp(`^(${LABEL_REGEX_STR})\\:`);
+
 /**
  * Parses a LABEL: expression and adds it to the symbol table.
  * Examples of valid labels:
@@ -8,7 +12,6 @@ import { addSymbol, addLocalSymbol } from "./symbols";
  *    @@localLabel:  12345:             !?!:
  */
 export function parseGlobalLabel(state: IAssemblerState): string | false {
-  const labelRegex = /^((?:@@)?[\w\?\!]+)\:/;
   const results = state.line.match(labelRegex);
   if (results === null)
     return false; // Not a label.
