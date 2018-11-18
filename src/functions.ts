@@ -2,13 +2,14 @@ import { IAssemblerState } from "./types";
 import { parseImmediate, formatImmediate } from "./immediates";
 import { getSymbolValue } from "./symbols";
 import { unescapeQuotes } from "./strings";
+import { LABEL_CHARS } from "./labels";
 
 /** Runs any built-in functions, and also resolves symbols. */
 export function runFunction(value: string, state: IAssemblerState): string | number | null {
   return _runFunction(value, state);
 }
 
-const fnRegex = /^(\w+)\(([\(\),\w]*)\)$/;
+const fnRegex = new RegExp(`^(\\w+)\\(([\\(\\),\\w${LABEL_CHARS}]*)\\)$`);
 
 function _runFunction(value: string, state: IAssemblerState): string | number | null {
   const results = fnRegex.exec(value);

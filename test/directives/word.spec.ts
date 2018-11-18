@@ -91,5 +91,19 @@ aliases.forEach(alias => {
       expect(dataView.getInt32(4)).to.equal(-256);
       expect(dataView.getUint32(8)).to.equal(0x80123456);
     });
+
+    it("supports expressions as values", () => {
+      const buffer = new ArrayBuffer(8);
+      const dataView = new DataView(buffer);
+      assemble(`
+        .org 0x80123456
+        .definelabel pos,0x1F2F3F00
+        the_word!:
+        .${alias} hi(pos), lo(the_word!)
+      `, { buffer });
+
+      expect(dataView.getUint32(0)).to.equal(0x1F2F);
+      expect(dataView.getUint32(4)).to.equal(0x3456);
+    });
   });
 });
