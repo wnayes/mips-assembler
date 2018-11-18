@@ -92,4 +92,28 @@ describe(".definelabel", () => {
       "NOP",
     ]);
   });
+
+  it("can define label aliases", () => {
+    expect(assemble(`
+      .definelabel ExternalLibFn,0x80023456
+      .definelabel ExternalLibFnAlt,ExternalLibFn
+      JAL ExternalLibFnAlt
+      NOP
+    `, { text: true })).to.deep.equal([
+      "JAL 0x80023456",
+      "NOP",
+    ]);
+  });
+
+  it("can define label aliases with '!', '?'", () => {
+    expect(assemble(`
+      .definelabel External_Lib_Fn?!,0x80023456
+      .definelabel ExternalLibFnAlt?,External_Lib_Fn?!
+      JAL ExternalLibFnAlt?
+      NOP
+    `, { text: true })).to.deep.equal([
+      "JAL 0x80023456",
+      "NOP",
+    ]);
+  });
 });

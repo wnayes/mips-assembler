@@ -1,7 +1,8 @@
 import { IAssemblerState } from "./types";
 import { addSymbol, addLocalSymbol } from "./symbols";
 
-export const LABEL_REGEX_STR = "(?:@@)?[\\w\\?\\!]+";
+export const LABEL_CHARS = "\\?\\!";
+export const LABEL_REGEX_STR = `(?:@@)?[\\w${LABEL_CHARS}]+`;
 
 const labelRegex = new RegExp(`^(${LABEL_REGEX_STR})\\:`);
 
