@@ -2,10 +2,9 @@ import { parse, print } from "mips-inst";
 
 import { IAssemblerState, AssemblerPhase } from "./types";
 import { handleDirective } from "./directives";
-import { runFunction } from "./functions";
-import { parseImmediate } from "./immediates";
 import { parseGlobalLabel } from "./labels";
 import { getSymbolByValue } from "./symbols";
+import { evaluateExpressionsOnCurrentLine, parseExpressionsOnCurrentLine } from "./expressions";
 
 /**
  * Optional parameters used to configure assembly.
@@ -49,6 +48,7 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     state.line = line;
 
     if (line[0] === ".") {
+      parseExpressionsOnCurrentLine(state);
       handleDirective(state);
       return line; // Keep directives for second pass.
     }
@@ -79,9 +79,11 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
   // Second pass, assemble!
   arr.forEach(line => {
     state.line = line;
+    state.lineExpressions = [];
+    state.evaluatedLineExpressions = [];
 
     if (line[0] === ".") {
-      line = evaluateExpressionsOnCurrentLine(state);
+      evaluateExpressionsOnCurrentLine(state);
       handleDirective(state);
       return;
     }
@@ -93,7 +95,7 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     }
 
     // Apply any built-in functions, symbols.
-    line = evaluateExpressionsOnCurrentLine(state);
+    line = state.line = evaluateExpressionsOnCurrentLine(state);
 
     if (opts!.text)
       outStrs.push(line);
@@ -109,20 +111,6 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     return outStrs;
 
   return state.buffer;
-}
-
-function evaluateExpressionsOnCurrentLine(state: IAssemblerState) {
-  let line = state.line;
-  const instPieces = line.split(/[,\s]+/g);
-  if (instPieces.length > 1) {
-    let lastPiece = runFunction(instPieces[instPieces.length - 1], state);
-    if (lastPiece !== null) {
-      lastPiece = _fixBranch(instPieces[0], lastPiece, state);
-      instPieces[instPieces.length - 1] = lastPiece;
-      line = state.line = instPieces.join(" ");
-    }
-  }
-  return line;
 }
 
 /** Strips single line ; or // comments. */
@@ -143,49 +131,6 @@ function _stripComments(input: string[]): string[] {
   });
 }
 
-/** Transforms branches from absolute to relative. */
-function _fixBranch(inst: string, offset: string, state: IAssemblerState): string {
-  if (_instIsBranch(inst)) {
-    const imm = parseImmediate(offset)!; // Should definitely succeed.
-    const memOffset = state.memPos + state.outIndex;
-    const diff = ((imm - memOffset) / 4) - 1;
-    return diff.toString(); // base 10 ok
-  }
-
-  return offset; // Leave as is.
-}
-
-function _instIsBranch(inst: string): boolean {
-  inst = inst.toLowerCase();
-  if (inst[0] !== "b")
-    return false;
-
-  switch (inst) {
-    case "bc1f":
-    case "bc1fl":
-    case "bc1t":
-    case "bc1tl":
-    case "beq":
-    case "beql":
-    case "bgez":
-    case "bgezal":
-    case "bgezall":
-    case "bgezl":
-    case "bgtz":
-    case "bgtzl":
-    case "blez":
-    case "blezl":
-    case "bltz":
-    case "bltzal":
-    case "bltzall":
-    case "bltzl":
-    case "bne":
-    case "bnel":
-      return true;
-  }
-  return false;
-}
-
 function _makeNewAssemblerState(): IAssemblerState {
   return {
     buffer: null,
@@ -198,6 +143,8 @@ function _makeNewAssemblerState(): IAssemblerState {
     currentLabel: null,
     localSymbols: Object.create(null),
     currentPass: AssemblerPhase.firstPass,
+    lineExpressions: [],
+    evaluatedLineExpressions: null,
   };
 }
 

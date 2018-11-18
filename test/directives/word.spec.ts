@@ -75,5 +75,21 @@ aliases.forEach(alias => {
       expect(dataView.getUint32(4)).to.equal(257);
       expect(dataView.getUint32(8)).to.equal(90000);
     });
+
+    it("supports labels as values", () => {
+      const buffer = new ArrayBuffer(12);
+      const dataView = new DataView(buffer);
+      assemble(`
+        .org 0x80123456
+        .definelabel pos,0x1F2F3F00
+        .definelabel neg,-256
+        the_word!:
+        .${alias} pos,neg,the_word!
+      `, { buffer });
+
+      expect(dataView.getUint32(0)).to.equal(0x1F2F3F00);
+      expect(dataView.getInt32(4)).to.equal(-256);
+      expect(dataView.getUint32(8)).to.equal(0x80123456);
+    });
   });
 });

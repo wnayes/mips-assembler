@@ -1,8 +1,8 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
-import { parseImmediate } from "../immediates";
+import { makeNumericExprListRegExp } from "./directiveHelpers";
 
-const regexHalfword = /^\.halfword\s+([,-\w\s\(\)]+)$/i;
-const regexDh = /^\.dh\s+([,-\w\s\(\)]+)$/i;
+const regexHalfword = makeNumericExprListRegExp("halfword");
+const regexDh = makeNumericExprListRegExp("dh");
 
 /**
  * Writes 16-bit values.
@@ -18,19 +18,16 @@ export default function halfword(state: IAssemblerState): boolean {
       return false;
   }
 
-  const [, halfwordsString] = results;
-  const pieces = halfwordsString.split(",")
-    .map(s => s.trim())
-    .filter(s => !!s);
-
   if (state.currentPass === AssemblerPhase.secondPass) {
-    const numbers = pieces.map(s => {
-      let imm = parseImmediate(s);
-      if (imm === null)
-        throw new Error(`Could not parse .halfword immediate ${s}`);
-      return imm;
-    });
+    if (!state.evaluatedLineExpressions.length) {
+      throw new Error(".halfword directive requires arguments");
+    }
 
+    if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
+      throw new Error(".halfword directive requires numeric arguments");
+    }
+
+    const numbers = state.evaluatedLineExpressions as number[];
     for (let i = 0; i < numbers.length; i++) {
       if (numbers[i] < 0)
         state.dataView.setInt16(state.outIndex + (i * 2), numbers[i]);
@@ -39,7 +36,7 @@ export default function halfword(state: IAssemblerState): boolean {
     }
   }
 
-  state.outIndex += 2 * pieces.length;
+  state.outIndex += 2 * state.lineExpressions.length;
 
   return true;
 }

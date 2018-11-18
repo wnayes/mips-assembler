@@ -1,8 +1,8 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
-import { parseImmediate } from "../immediates";
+import { makeNumericExprListRegExp } from "./directiveHelpers";
 
-const regexWord = /^\.word\s+([,-\w\s\(\)]+)$/i;
-const regexDw = /^\.dw\s+([,-\w\s\(\)]+)$/i;
+const regexWord = makeNumericExprListRegExp("word");
+const regexDw = makeNumericExprListRegExp("dw");
 
 /**
  * Writes 32-bit values.
@@ -18,19 +18,16 @@ export default function word(state: IAssemblerState): boolean {
       return false;
   }
 
-  const [, wordsString] = results;
-  const pieces = wordsString.split(",")
-    .map(s => s.trim())
-    .filter(s => !!s);
-
   if (state.currentPass === AssemblerPhase.secondPass) {
-    const numbers = pieces.map(s => {
-      let imm = parseImmediate(s);
-      if (imm === null)
-        throw new Error(`Could not parse .word immediate ${s}`);
-      return imm;
-    });
+    if (!state.evaluatedLineExpressions.length) {
+      throw new Error(".word directive requires arguments");
+    }
 
+    if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
+      throw new Error(".word directive requires numeric arguments");
+    }
+
+    const numbers = state.evaluatedLineExpressions as number[];
     for (let i = 0; i < numbers.length; i++) {
       if (numbers[i] < 0)
         state.dataView.setInt32(state.outIndex + (i * 4), numbers[i]);
@@ -39,7 +36,7 @@ export default function word(state: IAssemblerState): boolean {
     }
   }
 
-  state.outIndex += 4 * pieces.length;
+  state.outIndex += 4 * state.lineExpressions.length;
 
   return true;
 }

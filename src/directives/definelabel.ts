@@ -2,6 +2,7 @@ import { IAssemblerState } from "../types";
 import { parseImmediate } from "../immediates";
 import { addSymbol, getSymbolValue } from "../symbols";
 import { LABEL_REGEX_STR, LABEL_CHARS } from "../labels";
+import { runFunction } from "../functions";
 
 const defineLabelRegex = new RegExp(
   `^\\.definelabel\\s+(${LABEL_REGEX_STR})[\\s,]+([-\\w${LABEL_CHARS}]+)$`,
@@ -17,19 +18,18 @@ export default function definelabel(state: IAssemblerState): boolean {
   if (results === null)
     return false; // Not .definelabel
 
-  const [, name, value] = results;
-
-  const imm = parseImmediate(value);
-  if (imm === null) {
-    const symbolValue = getSymbolValue(state, value);
-    if (symbolValue === null)
-      throw new Error(".definelabel value must be numeric or an alias to another label");
-
-    addSymbol(state, name, symbolValue); // Alias
+  if (state.lineExpressions.length !== 2) {
+    throw new Error(".definelabel must have two arguments, a label name and value");
   }
-  else {
-    addSymbol(state, name, imm);
+
+  const name = state.lineExpressions[0];
+  const value = runFunction(state.lineExpressions[1], state);
+
+  if (typeof value !== "number") {
+    throw new Error("The value in .definelabel must evaluate to a numeric value");
   }
+
+  addSymbol(state, name, value);
 
   return true; // Symbol added
 }

@@ -8,7 +8,7 @@ describe("Assembler", () => {
     expect(assemble(`
       .org 0x80004000
       main:
-      ADDIU SP SP -32
+      ADDIU SP SP -0x20
       SW RA 24(SP)
       loop:
       JAL 0x80023456
@@ -17,17 +17,17 @@ describe("Assembler", () => {
       NOP
       LW RA 24(SP)
       JR RA
-      ADDIU SP SP 32
+      ADDIU SP SP 0x20
     `, { text: true })).to.deep.equal([
-      "ADDIU SP SP -32",
+      "ADDIU SP SP -0x20",
       "SW RA 24(SP)",
       "JAL 0x80023456",
       "NOP",
-      "BEQ V0 R0 -3",
+      "BEQ V0 R0 -0x3",
       "NOP",
       "LW RA 24(SP)",
       "JR RA",
-      "ADDIU SP SP 32",
+      "ADDIU SP SP 0x20",
     ]);
   });
 
@@ -35,7 +35,7 @@ describe("Assembler", () => {
     expect(assemble(`
       .org 0x80004000
       main:
-      ADDIU SP SP -32
+      ADDIU SP SP -0x20
       SW RA 24(SP)
       NOP
       BEQ V0 R0 skip
@@ -44,17 +44,17 @@ describe("Assembler", () => {
       skip:
       LW RA 24(SP)
       JR RA
-      ADDIU SP SP 32
+      ADDIU SP SP 0x20
     `, { text: true })).to.deep.equal([
-      "ADDIU SP SP -32",
+      "ADDIU SP SP -0x20",
       "SW RA 24(SP)",
       "NOP",
-      "BEQ V0 R0 2",
+      "BEQ V0 R0 0x2",
       "JAL 0x80023456",
       "NOP",
       "LW RA 24(SP)",
       "JR RA",
-      "ADDIU SP SP 32",
+      "ADDIU SP SP 0x20",
     ]);
   });
 
@@ -65,7 +65,7 @@ describe("Assembler", () => {
       BEQ R0 R0 main
       NOP
     `, { text: true })).to.deep.equal([
-      "BEQ R0 R0 -1",
+      "BEQ R0 R0 -0x1",
       "NOP",
     ]);
   });
@@ -76,7 +76,7 @@ describe("Assembler", () => {
       // Another one
       .org 0x80004000
       main: ;why not here?
-      ADDIU SP SP -32 ; Trailing an instruction
+      ADDIU SP SP -0x20 ; Trailing an instruction
       SW RA 24(SP)// store RA
       loop:
       JAL 0x80023456
@@ -85,18 +85,18 @@ describe("Assembler", () => {
       NOP
       LW RA 24(SP)
       JR RA
-      ADDIU SP SP 32
+      ADDIU SP SP 0x20
       ; end comment
     `, { text: true })).to.deep.equal([
-      "ADDIU SP SP -32",
+      "ADDIU SP SP -0x20",
       "SW RA 24(SP)",
       "JAL 0x80023456",
       "NOP",
-      "BEQ V0 R0 -3",
+      "BEQ V0 R0 -0x3",
       "NOP",
       "LW RA 24(SP)",
       "JR RA",
-      "ADDIU SP SP 32",
+      "ADDIU SP SP 0x20",
     ]);
   });
 
@@ -126,7 +126,7 @@ describe("Assembler", () => {
     it("handles labels on the same line as instructions", () => {
       expect(assemble(`
         .org 0x80004000
-        main:ADDIU SP SP -32
+        main:ADDIU SP SP -0x20
         SW RA 24(SP)
         loop: JAL 0x80023456
         NOP
@@ -134,24 +134,24 @@ describe("Assembler", () => {
         NOP
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
       `, { text: true })).to.deep.equal([
-        "ADDIU SP SP -32",
+        "ADDIU SP SP -0x20",
         "SW RA 24(SP)",
         "JAL 0x80023456",
         "NOP",
-        "BEQ V0 R0 -3",
+        "BEQ V0 R0 -0x3",
         "NOP",
         "LW RA 24(SP)",
         "JR RA",
-        "ADDIU SP SP 32",
+        "ADDIU SP SP 0x20",
       ]);
     });
 
     it("handles multiple labels on the same line", () => {
       expect(assemble(`
         .org 0x80004000
-        main:start:ADDIU SP SP -32
+        main:start:ADDIU SP SP -0x20
         SW RA 24(SP)
         loop: repeat:
         JAL 0x80023456
@@ -160,17 +160,17 @@ describe("Assembler", () => {
         NOP
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
       `, { text: true })).to.deep.equal([
-        "ADDIU SP SP -32",
+        "ADDIU SP SP -0x20",
         "SW RA 24(SP)",
         "JAL 0x80023456",
         "NOP",
-        "BEQ V0 R0 -3",
+        "BEQ V0 R0 -0x3",
         "NOP",
         "LW RA 24(SP)",
         "JR RA",
-        "ADDIU SP SP 32",
+        "ADDIU SP SP 0x20",
       ]);
     });
 
@@ -178,7 +178,7 @@ describe("Assembler", () => {
       expect(assemble(`
         .org 0x80004000
         main:
-        ADDIU SP SP -32
+        ADDIU SP SP -0x20
         SW RA 24(SP)
         loop: JAL 0x80023456
         NOP
@@ -186,18 +186,18 @@ describe("Assembler", () => {
         NOP
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
         end:
       `, { text: true })).to.deep.equal([
-        "ADDIU SP SP -32",
+        "ADDIU SP SP -0x20",
         "SW RA 24(SP)",
         "JAL 0x80023456",
         "NOP",
-        "BEQ V0 R0 -3",
+        "BEQ V0 R0 -0x3",
         "NOP",
         "LW RA 24(SP)",
         "JR RA",
-        "ADDIU SP SP 32",
+        "ADDIU SP SP 0x20",
       ]);
     });
 
@@ -205,7 +205,7 @@ describe("Assembler", () => {
       expect(assemble(`
         .org 0x80004000
         main:
-        ADDIU SP SP -32
+        ADDIU SP SP -0x20
         SW RA 24(SP)
         loop?: JAL 0x80023456
         NOP
@@ -213,18 +213,18 @@ describe("Assembler", () => {
         NOP
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
         end:
       `, { text: true })).to.deep.equal([
-        "ADDIU SP SP -32",
+        "ADDIU SP SP -0x20",
         "SW RA 24(SP)",
         "JAL 0x80023456",
         "NOP",
-        "BEQ V0 R0 -3",
+        "BEQ V0 R0 -0x3",
         "NOP",
         "LW RA 24(SP)",
         "JR RA",
-        "ADDIU SP SP 32",
+        "ADDIU SP SP 0x20",
       ]);
     });
 
@@ -232,7 +232,7 @@ describe("Assembler", () => {
       expect(assemble(`
         .org 0x80004000
         main:
-        ADDIU SP SP -32
+        ADDIU SP SP -0x20
         SW RA 24(SP)
         loop!: JAL 0x80023456
         NOP
@@ -240,18 +240,18 @@ describe("Assembler", () => {
         NOP
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
         end:
       `, { text: true })).to.deep.equal([
-        "ADDIU SP SP -32",
+        "ADDIU SP SP -0x20",
         "SW RA 24(SP)",
         "JAL 0x80023456",
         "NOP",
-        "BEQ V0 R0 -3",
+        "BEQ V0 R0 -0x3",
         "NOP",
         "LW RA 24(SP)",
         "JR RA",
-        "ADDIU SP SP 32",
+        "ADDIU SP SP 0x20",
       ]);
     });
 
@@ -259,7 +259,7 @@ describe("Assembler", () => {
       expect(assemble(`
         .org 0x80004000
         main_2:
-        ADDIU SP SP -32
+        ADDIU SP SP -0x20
         SW RA 24(SP)
         __loop: JAL 0x80023456
         NOP
@@ -267,18 +267,18 @@ describe("Assembler", () => {
         NOP
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
         end:
       `, { text: true })).to.deep.equal([
-        "ADDIU SP SP -32",
+        "ADDIU SP SP -0x20",
         "SW RA 24(SP)",
         "JAL 0x80023456",
         "NOP",
-        "BEQ V0 R0 -3",
+        "BEQ V0 R0 -0x3",
         "NOP",
         "LW RA 24(SP)",
         "JR RA",
-        "ADDIU SP SP 32",
+        "ADDIU SP SP 0x20",
       ]);
     });
   });
@@ -288,7 +288,7 @@ describe("Assembler", () => {
       expect(assemble(`
         .org 0x80004000
         main_2:
-        ADDIU SP SP -32
+        ADDIU SP SP -0x20
         SW RA 24(SP)
         @@loop: JAL 0x80023456
         NOP
@@ -297,18 +297,18 @@ describe("Assembler", () => {
         exit:
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
         end:
       `, { text: true })).to.deep.equal([
-        "ADDIU SP SP -32",
+        "ADDIU SP SP -0x20",
         "SW RA 24(SP)",
         "JAL 0x80023456",
         "NOP",
-        "BEQ V0 R0 -3",
+        "BEQ V0 R0 -0x3",
         "NOP",
         "LW RA 24(SP)",
         "JR RA",
-        "ADDIU SP SP 32",
+        "ADDIU SP SP 0x20",
       ]);
     });
 
@@ -317,7 +317,7 @@ describe("Assembler", () => {
         assemble(`
         .org 0x80004000
         main_2:
-        ADDIU SP SP -32
+        ADDIU SP SP -0x20
         SW RA 24(SP)
         @@loop: JAL 0x80023456
         NOP
@@ -326,7 +326,7 @@ describe("Assembler", () => {
         exit:
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
         BEQ R0 R0 @@loop ; cannot be used in the exit region
         end:
       `, { text: true });
@@ -339,7 +339,7 @@ describe("Assembler", () => {
         .org 0x80004000
         @@localstart:
         main_2:
-        ADDIU SP SP -32
+        ADDIU SP SP -0x20
         SW RA 24(SP)
         @@loop: JAL 0x80023456
         NOP
@@ -348,7 +348,7 @@ describe("Assembler", () => {
         exit:
         LW RA 24(SP)
         JR RA
-        ADDIU SP SP 32
+        ADDIU SP SP 0x20
         BEQ R0 R0 @@loop ; cannot be used in the exit region
         end:
       `, { text: true });

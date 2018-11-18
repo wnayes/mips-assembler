@@ -1,7 +1,7 @@
 import { IAssemblerState } from "../types";
-import { parseImmediate } from "../immediates";
+import { runFunction } from "../functions";
 
-const orgRegex = /^\.org\s+(\w+)$/i;
+const orgRegex = /^\.org\s+/i;
 
 /**
  * .org changes the effective memory position.
@@ -12,10 +12,15 @@ export default function orga(state: IAssemblerState): boolean {
   if (results === null)
     return false; // Not .org
 
-  const [, loc] = results;
-  const imm = parseImmediate(loc);
-  if (imm === null)
-    throw new Error(`Could not parse .org immediate ${loc}`);
+  if (state.lineExpressions.length !== 1) {
+    throw new Error(".org directive requires one numeric argument");
+  }
+
+  const imm = runFunction(state.lineExpressions[0], state);
+  if (typeof imm !== "number")
+    throw new Error(`Could not parse .org immediate ${imm}`);
+  if (imm < 0)
+    throw new Error(".org directive cannot be negative");
 
   state.memPos = imm >>> 0; // Better be 32-bit
   return true;

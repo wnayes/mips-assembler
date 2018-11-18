@@ -1,7 +1,7 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
-import { parseImmediate } from "../immediates";
+import { runFunction } from "../functions";
 
-const alignRegex = /^\.align\s+([-\w]+)$/i;
+const alignRegex = /^\.align\s+/i;
 
 /**
  * .align pads zeroes until the output position is aligned
@@ -13,10 +13,15 @@ export default function align(state: IAssemblerState): boolean {
   if (results === null)
     return false; // Not .align
 
-  const [, immString] = results;
-  const imm = parseImmediate(immString);
+  if (state.lineExpressions.length !== 1) {
+    throw new Error(".align requires one power of two number argument");
+  }
+
+  const imm = runFunction(state.lineExpressions[0], state);
   if (imm === null)
-    throw new Error(`Could not parse .align immediate ${immString}`);
+    throw new Error(`Could not parse .align immediate ${state.lineExpressions}`);
+  if (typeof imm !== "number")
+    throw new Error(".align requires one power of two number argument");
   if (imm % 2)
     throw new Error(".align directive requires a power of two.");
   if (imm < 0)

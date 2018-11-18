@@ -13,6 +13,9 @@ interface IAssemblerStateFirstPass extends IAssemblerStateBase {
 
   /** DataView against the buffer. */
   dataView: null;
+
+  /** Evaluated results of an expression list on the line. */
+  evaluatedLineExpressions: null;
 }
 
 interface IAssemblerStateSecondPass extends IAssemblerStateBase {
@@ -23,6 +26,9 @@ interface IAssemblerStateSecondPass extends IAssemblerStateBase {
 
   /** DataView against the buffer. */
   dataView: DataView;
+
+  /** Evaluated results of an expression list on the line. */
+  evaluatedLineExpressions: (string | number | null)[];
 }
 
 interface IAssemblerStateBase {
@@ -52,4 +58,7 @@ interface IAssemblerStateBase {
       [localLabelName: string]: number
     }
   }
+
+  /** Pre-evaluated expression list on the line. */
+  lineExpressions: string[];
 }

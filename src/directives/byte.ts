@@ -1,8 +1,8 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
-import { parseImmediate } from "../immediates";
+import { makeNumericExprListRegExp } from "./directiveHelpers";
 
-const regexByte = /^\.byte\s+([,-\w\s\(\)]+)$/i;
-const regexDb = /^\.db\s+([,-\w\s\(\)]+)$/i;
+const regexByte = makeNumericExprListRegExp("byte");
+const regexDb = makeNumericExprListRegExp("db");
 
 /**
  * .byte value[,...]
@@ -17,19 +17,16 @@ export default function byte(state: IAssemblerState): boolean {
       return false;
   }
 
-  const [, bytesString] = results;
-  const pieces = bytesString.split(",")
-    .map(s => s.trim())
-    .filter(s => !!s);
-
   if (state.currentPass === AssemblerPhase.secondPass) {
-    const numbers = pieces.map(s => {
-      let imm = parseImmediate(s);
-      if (imm === null)
-        throw new Error(`Could not parse .byte immediate ${s}`);
-      return imm;
-    });
+    if (!state.evaluatedLineExpressions.length) {
+      throw new Error(".byte directive requires arguments");
+    }
 
+    if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
+      throw new Error(".byte directive requires numeric arguments");
+    }
+
+    const numbers = state.evaluatedLineExpressions as number[];
     for (let i = 0; i < numbers.length; i++) {
       if (numbers[i] < 0)
         state.dataView.setInt8(state.outIndex + i, numbers[i]);
@@ -38,7 +35,7 @@ export default function byte(state: IAssemblerState): boolean {
     }
   }
 
-  state.outIndex += pieces.length;
+  state.outIndex += state.lineExpressions.length;
 
   return true;
 }

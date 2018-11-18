@@ -3,22 +3,32 @@ import { parseImmediate, formatImmediate } from "./immediates";
 import { getSymbolValue } from "./symbols";
 
 /** Runs any built-in functions, and also resolves symbols. */
-export function runFunction(value: string, state: IAssemblerState): string | null {
-  // Don't parse an immediate on the root call.
-  const result = _runFunction(value, state, false);
-  if (result !== null)
-    return formatImmediate(result);
-  return null;
+export function runFunction(value: string, state: IAssemblerState): string | number | null {
+  return _runFunction(value, state);
 }
 
-function _runFunction(value: string, state: IAssemblerState, doParseImmediate: boolean): number | null {
-  const fnRegex = /^(\w+)\(([\(\),\w]*)\)$/;
+const fnRegex = /^(\w+)\(([\(\),\w]*)\)$/;
+
+function _runFunction(value: string, state: IAssemblerState): string | number | null {
   const results = fnRegex.exec(value);
   if (results === null) { // Not a function
-    let imm = null;
-    if (doParseImmediate && (imm = parseImmediate(value)) !== null) {
+    // Number?
+    let imm = parseImmediate(value);
+    if (imm !== null) {
       return imm;
     }
+
+    // String?
+    // TODO: Less hacky
+    let str: string | undefined;
+    try {
+      str = JSON.parse(value);
+    }
+    catch {} // Well, not a string.
+    if (typeof str === "string") {
+      return str;
+    }
+
     const symbolValue = getSymbolValue(state, value);
     if (symbolValue !== null) {
       return symbolValue;
@@ -39,18 +49,21 @@ function _runFunction(value: string, state: IAssemblerState, doParseImmediate: b
     }
 
     // TODO: Doesn't support nested calls, multiple arguments.
-    return fns[fn](state, _runFunction(args, state, true)!);
+    return fns[fn](state, _runFunction(args, state)!);
   }
 }
 
 interface IAssemblerFunction {
-  (state: IAssemblerState, value: number): number;
+  (state: IAssemblerState, value: string | number): number;
 }
 
 /** Built-in functions */
 const fns: { [fnName: string]: IAssemblerFunction } = Object.create(null);
 
-fns.hi = function(state: IAssemblerState, value: number): number {
+fns.hi = function(state: IAssemblerState, value: string | number): number {
+  if (typeof value === "string")
+    throw new Error(`Assembler function hi cannot be called with string "${value}", value must be a number.`);
+
   let lower = value & 0x0000FFFF;
   let upper = value >>> 16;
   if (lower & 0x8000)
@@ -58,11 +71,14 @@ fns.hi = function(state: IAssemblerState, value: number): number {
   return upper;
 };
 
-fns.lo = function(state: IAssemblerState, value: number): number {
+fns.lo = function(state: IAssemblerState, value: string | number): number {
+  if (typeof value === "string")
+    throw new Error(`Assembler function lo cannot be called with string "${value}", value must be a number.`);
+
   return value & 0x0000FFFF;
 };
 
 /** Current memory address */
-fns.org = function(state: IAssemblerState, value: number): number {
+fns.org = function(state: IAssemblerState, value: string | number): number {
   return state.memPos + state.outIndex;
 };
