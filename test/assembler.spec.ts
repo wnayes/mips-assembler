@@ -122,6 +122,18 @@ describe("Assembler", () => {
     ]);
   });
 
+  it("handles hi/lo in relative memory lookup location", () => {
+    expect(assemble(`
+      .org 0x80004000
+      .definelabel ExternalLoc,0x80023456
+      LUI V0, hi(ExternalLoc)
+      LHU V0, lo(ExternalLoc)(V0)
+    `, { text: true })).to.deep.equal([
+      "LUI V0 0x8002",
+      "LHU V0 13398(V0)", // 0x3456
+    ]);
+  });
+
   describe("labels", () => {
     it("handles labels on the same line as instructions", () => {
       expect(assemble(`
