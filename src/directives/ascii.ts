@@ -1,8 +1,8 @@
 import { IAssemblerState, AssemblerPhase } from "../types";
-import { parseImmediate } from "../immediates";
+import { runFunction } from "../functions";
 
-const regexAscii = /^\.ascii\s+([\\'\",-\w\s]+)$/i;
-const regexAsciiZ = /^\.asciiz\s+([\\'\",-\w\s]+)$/i;
+const regexAscii = /^\.ascii\s+/i;
+const regexAsciiZ = /^\.asciiz\s+/i;
 
 /**
  * .ascii value[,...]
@@ -25,93 +25,22 @@ export default function ascii(state: IAssemblerState): boolean {
     appendZero = true;
   }
 
-  const [, charsString] = results;
-  // const pieces = charsString.split(",")
-  //   .map(s => s.trim())
-  //   .filter(s => !!s);
-
   const numbers: number[] = [];
 
-  let currentStrChar = "";
-  let currentNumber = "";
-  let escaped = false;
-
-  for (let i = 0; i < charsString.length; i++) {
-    const char = charsString[i];
-
-    if (!escaped && !currentNumber) {
-      if (char === "\\") {
-        escaped = true;
-        continue;
-      }
-
-      if (char === "\"" || char === "'") {
-        if (currentNumber)
-          throw new Error("Encountered string during parsing of number: " + currentNumber);
-
-        if (currentStrChar && currentStrChar === char) {
-          currentStrChar = ""; // Ending the current string
-          continue;
-        }
-        else if (!currentStrChar) {
-          currentStrChar = char;
-          continue;
-        }
-        // else fall through, write the quote character.
-        // We're in a situation like "abc'd"
+  const lineExps = state.lineExpressions;
+  lineExps.forEach((expr) => {
+    const value = runFunction(expr, state);
+    if (value === null)
+      throw new Error("Could not parse .ascii value " + expr);
+    if (typeof value === "number") {
+      numbers.push(value);
+    }
+    else if (typeof value === "string") {
+      for (let i = 0; i < value.length; i++) {
+        numbers.push(value.charCodeAt(i));
       }
     }
-
-    escaped = false;
-
-    if (currentStrChar) {
-      numbers.push(charsString.charCodeAt(i));
-      continue;
-    }
-    else {
-      if (/[,\s]+/.test(char)) { // whitespace or comma
-        if (currentNumber) {
-          let imm = parseImmediate(currentNumber);
-          if (imm === null)
-            throw new Error(`Could not parse immediate ${currentNumber}`);
-          numbers.push(imm);
-        }
-        currentNumber = "";
-      }
-      else {
-        currentNumber += char;
-      }
-    }
-  }
-
-  if (currentStrChar)
-    throw new Error("Unterminated string: " + charsString);
-
-  if (currentNumber) {
-    let imm = parseImmediate(currentNumber);
-    if (imm === null)
-      throw new Error(`Could not parse immediate ${currentNumber}`);
-    numbers.push(imm);
-  }
-
-
-  // for (const piece of pieces) {
-  //   if (piece[0] === "\"" || piece[0] === "'") {
-  //     let str: string = JSON.parse(piece);
-  //     if (typeof str !== "string")
-  //       throw new Error("Could not parse as string: " + piece);
-
-  //     for (let i = 0; i < str.length; i++) {
-  //       numbers.push(str.charCodeAt(i));
-  //     }
-  //   }
-  //   else {
-  //     let imm = parseImmediate(piece);
-  //     if (imm === null)
-  //       throw new Error(`Could not parse immediate ${piece}`);
-  //     numbers.push(imm);
-  //   }
-  // }
+  });
 
   if (appendZero)
     numbers.push(0); // Add NULL byte.

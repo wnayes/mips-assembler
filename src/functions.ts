@@ -1,6 +1,7 @@
 import { IAssemblerState } from "./types";
 import { parseImmediate, formatImmediate } from "./immediates";
 import { getSymbolValue } from "./symbols";
+import { unescapeQuotes } from "./strings";
 
 /** Runs any built-in functions, and also resolves symbols. */
 export function runFunction(value: string, state: IAssemblerState): string | number | null {
@@ -19,12 +20,7 @@ function _runFunction(value: string, state: IAssemblerState): string | number | 
     }
 
     // String?
-    // TODO: Less hacky
-    let str: string | undefined;
-    try {
-      str = JSON.parse(value);
-    }
-    catch {} // Well, not a string.
+    let str = unescapeQuotes(value);
     if (typeof str === "string") {
       return str;
     }

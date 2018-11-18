@@ -28,7 +28,6 @@ export function evaluateExpressionsOnCurrentLine(state: IAssemblerState): string
   const exprList = line.substr(firstSpaceIndex + 1);
   const exprs = splitExpressionList(exprList);
   state.lineExpressions = exprs;
-  console.log("expression list", exprs);
 
   if (exprs.length > 0) {
     const evaluatedExprs = exprs.map((expr, i) => {
