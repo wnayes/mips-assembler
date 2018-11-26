@@ -13,6 +13,9 @@ export function unescapeQuotes(str: string): string | null {
   if (str[str.length - 1] !== startQuoteChar) {
     return null;
   }
+  if (startQuoteChar !== "\"" && startQuoteChar !== "'") {
+    return null; // Not a string
+  }
 
   let output = "";
   for (let i = 1; i < str.length - 1; i++) {

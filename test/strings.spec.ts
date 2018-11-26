@@ -12,4 +12,14 @@ describe("unescapeQuotes", () => {
     expect(unescapeQuotes("\"test\"")).to.equal("test");
     expect(unescapeQuotes("\"test \\\\ test\"")).to.equal("test \\ test");
   });
+
+  it("returns null for non-string things", () => {
+    expect(unescapeQuotes("null")).to.equal(null);
+    expect(unescapeQuotes("")).to.equal(null);
+    expect(unescapeQuotes("label")).to.equal(null);
+    expect(unescapeQuotes("'almost")).to.equal(null);
+    expect(unescapeQuotes("almost'")).to.equal(null);
+    expect(unescapeQuotes("\"almost")).to.equal(null);
+    expect(unescapeQuotes("almost\"")).to.equal(null);
+  });
 });

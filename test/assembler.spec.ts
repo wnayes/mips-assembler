@@ -120,6 +120,17 @@ describe("Assembler", () => {
       "LUI A0 0x8003",
       "ADDIU A0 A0 0xC456",
     ]);
+
+    expect(assemble(`
+      .org 0x80004000
+      LUI A1 hi(lbl)
+      ADDIU A1 A1 lo(lbl)
+      lbl:
+      .ascii "Some text"
+    `, { text: true })).to.deep.equal([
+      "LUI A1 0x8000",
+      "ADDIU A1 A1 0x4008",
+    ]);
   });
 
   it("handles hi/lo in relative memory lookup location", () => {
