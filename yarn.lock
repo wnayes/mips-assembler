@@ -1696,10 +1696,10 @@ minizlib@^1.1.0:
   dependencies:
     minipass "^2.2.1"
 
-mips-inst@^2.2.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/mips-inst/-/mips-inst-2.2.1.tgz#02688d86d7a4e3eb3e9eca7a2bcf13ed2aa6e360"
-  integrity sha512-hlxhQIczOfFK0blvKJuhynxRUQrImEqNfxXuII2jysl9KMIuvGce1WPIiy6vcDQGXFZluGsyjvS+rWCIt1dHZg==
+mips-inst@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/mips-inst/-/mips-inst-2.2.2.tgz#c4b8e302dc11d9998e350d37273f6d8e7fbb265d"
+  integrity sha512-BwqyNOm4XaQ3p3cEw0mziTYDzr786sCwx5ISion0oxjvK8VB6IiXX22sdGBjWQUMf24t+b+k7X7y4DLfxj1HkA==
 
 mississippi@^2.0.0:
   version "2.0.0"

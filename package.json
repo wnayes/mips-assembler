@@ -11,7 +11,7 @@
   "author": "Will Nayes",
   "license": "MIT",
   "dependencies": {
-    "mips-inst": "^2.2.1"
+    "mips-inst": "^2.2.2"
   },
   "devDependencies": {
     "@types/chai": "^4.1.6",
