@@ -47,15 +47,15 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
   arr = arr.map(line => {
     state.line = line;
 
+    let parsedLabel: string | boolean;
+    while (parsedLabel = parseGlobalLabel(state)) {
+      state.line = line = line.substr(parsedLabel.length + 1).trim();
+    }
+
     if (line[0] === ".") {
       parseExpressionsOnCurrentLine(state);
       handleDirective(state);
       return line; // Keep directives for second pass.
-    }
-
-    let parsedLabel: string | boolean;
-    while (parsedLabel = parseGlobalLabel(state)) {
-      state.line = line = line.substr(parsedLabel.length + 1).trim();
     }
 
     // If !line, then only labels were on the line.

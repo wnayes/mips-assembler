@@ -171,6 +171,16 @@ describe("Assembler", () => {
       ]);
     });
 
+    it("handles labels on same line as directives", () => {
+      const buffer = assemble(`
+        .org 0x80000000
+        test_label: .word 0, 0
+        test_label2: .word 0, 0, 0
+      `) as ArrayBuffer;
+
+      expect(buffer.byteLength).to.equal(20);
+    });
+
     it("handles multiple labels on the same line", () => {
       expect(assemble(`
         .org 0x80004000
