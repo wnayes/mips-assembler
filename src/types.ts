@@ -49,6 +49,12 @@ interface IAssemblerStateBase {
   /** Symbol table of values */
   symbolsByValue: { [value: number]: string };
 
+  /**
+   * When requested, is populated with the memory locations of symbols after
+   * assembly.
+   */
+  symbolOutputMap?: { [name: string]: number } | null | undefined;
+
   /** The last global label that was passed during the assembly. */
   currentLabel: string | null;
 

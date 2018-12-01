@@ -10,6 +10,9 @@ import { isLocalLabel } from "./labels";
 export function addSymbol(state: IAssemblerState, name: string, value: number): void {
   state.symbols[name] = value;
   state.symbolsByValue[value] = name;
+  if (state.symbolOutputMap) {
+    state.symbolOutputMap[name] = state.outIndex;
+  }
 }
 
 /**

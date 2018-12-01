@@ -1,4 +1,4 @@
-import { parse, print } from "mips-inst";
+import { parse } from "mips-inst";
 
 import { IAssemblerState, AssemblerPhase } from "./types";
 import { handleDirective } from "./directives";
@@ -17,6 +17,12 @@ export interface IAssembleOpts {
    * (like .orga)
    */
   buffer?: ArrayBuffer;
+
+  /**
+   * After assembly, if an object is passed, it will be populated with a map
+   * of symbol names to their memory output location in the buffer.
+   */
+  symbolOutputMap?: { [name: string]: number };
 
   /**
    * If true, return an array of text instructions instead of a buffer.
@@ -39,7 +45,7 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
   arr = arr.map(s => { return s.trim(); });
   arr = arr.filter(Boolean);
 
-  const state = _makeNewAssemblerState();
+  const state = _makeNewAssemblerState(opts);
 
   const outStrs: string[] = [];
 
@@ -131,7 +137,7 @@ function _stripComments(input: string[]): string[] {
   });
 }
 
-function _makeNewAssemblerState(): IAssemblerState {
+function _makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
   return {
     buffer: null,
     dataView: null,
@@ -140,6 +146,7 @@ function _makeNewAssemblerState(): IAssemblerState {
     outIndex: 0,
     symbols: Object.create(null),
     symbolsByValue: Object.create(null),
+    symbolOutputMap: opts.symbolOutputMap,
     currentLabel: null,
     localSymbols: Object.create(null),
     currentPass: AssemblerPhase.firstPass,

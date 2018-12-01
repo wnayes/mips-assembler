@@ -1,7 +1,8 @@
 import "mocha";
 import { expect } from "chai";
 
-import { assemble } from "../src/assembler";
+import { assemble, IAssembleOpts } from "../src/assembler";
+import { it } from "mocha";
 
 describe("Assembler", () => {
   it("does basic loop", () => {
@@ -386,6 +387,49 @@ describe("Assembler", () => {
         end:
       `, { text: true });
       }).to.throw("Local label @@localstart (starts with @@) cannot be used before a global label");
+    });
+  });
+
+  describe("symbolOutputMap", () => {
+    it("records the correct output indices", () => {
+      const opts = {
+        symbolOutputMap: Object.create(null)
+      };
+      assemble(`
+        .org 0x80004000
+        main:start:ADDIU SP SP -0x20
+        SW RA 24(SP)
+        loop: repeat:
+        JAL 0x80023456
+        NOP
+        @@insideloopforsomereason:
+        BEQ V0 R0 loop
+        NOP
+        LW RA 24(SP)
+        end:
+        JR RA
+        ADDIU SP SP 0x20
+      `, opts);
+
+      expect(opts.symbolOutputMap).to.deep.equal({
+        main: 0,
+        start: 0,
+        loop: 8,
+        repeat: 8,
+        end: 28
+      });
+    });
+
+    it("is not populated if not passed", () => {
+      const opts: IAssembleOpts = {};
+      assemble(`
+        .org 0x80004000
+        main:start:ADDIU SP SP -0x20
+        SW RA 24(SP)
+        loop: repeat:
+        NOP
+      `, opts);
+      expect(opts.symbolOutputMap).to.be.undefined;
     });
   });
 });
