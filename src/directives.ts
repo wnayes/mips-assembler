@@ -1,5 +1,4 @@
-import { IAssemblerState, AssemblerPhase } from "./types";
-import { parseImmediate } from "./immediates";
+import { IAssemblerState } from "./types";
 
 import definelabel from "./directives/definelabel";
 import org from "./directives/org";
@@ -12,6 +11,8 @@ import byte from "./directives/byte";
 import halfword from "./directives/halfword";
 import word from "./directives/word";
 import float from "./directives/float";
+import ifcond from "./directives/if";
+import endif from "./directives/endif";
 
 function getDirectives() {
   return [
@@ -26,6 +27,8 @@ function getDirectives() {
     halfword,
     word,
     float,
+    ifcond,
+    endif,
   ];
 }
 
@@ -38,4 +41,19 @@ export function handleDirective(state: IAssemblerState): void {
     return;
 
   throw new Error(`handleDirective: Unrecongized directive ${state.line}`);
+}
+
+/**
+ * Tests if a line represents a conditional block directive.
+ * @param line Line from the pre-assembly input
+ */
+export function isConditionalDirective(line: string): boolean {
+  const normalized = line.toLowerCase();
+  return startsWith(normalized, ".if")
+    || startsWith(normalized, ".else")
+    || startsWith(normalized, ".endif");
+}
+
+function startsWith(str: string, search: string): boolean {
+  return str.substr(0, search.length) === search;
 }

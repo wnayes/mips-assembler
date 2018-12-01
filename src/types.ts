@@ -67,4 +67,24 @@ interface IAssemblerStateBase {
 
   /** Pre-evaluated expression list on the line. */
   lineExpressions: string[];
+
+  /** Stack of if/else block states tracked during the assembly. */
+  ifElseStack: IfElseState[];
+}
+
+/** States of an if/else/endif level. */
+export enum IfElseState {
+  /**
+   * We are within an if block, but haven't reached a part we should execute.
+   */
+  AcceptingBlock,
+
+  /** We are executing code within an if/else block. */
+  ExecutingBlock,
+
+  /**
+   * We have already executed an if or elseif block, and are passing over
+   * remaining instructions.
+   */
+  NoLongerAcceptingBlock,
 }

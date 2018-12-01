@@ -1,7 +1,7 @@
 import { parse } from "mips-inst";
 
-import { IAssemblerState, AssemblerPhase } from "./types";
-import { handleDirective } from "./directives";
+import { IAssemblerState, AssemblerPhase, IfElseState } from "./types";
+import { handleDirective, isConditionalDirective } from "./directives";
 import { parseGlobalLabel } from "./labels";
 import { getSymbolByValue } from "./symbols";
 import { evaluateExpressionsOnCurrentLine, parseExpressionsOnCurrentLine } from "./expressions";
@@ -53,10 +53,10 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
   arr = arr.map(line => {
     state.line = line;
 
-    let parsedLabel: string | boolean;
-    while (parsedLabel = parseGlobalLabel(state)) {
-      state.line = line = line.substr(parsedLabel.length + 1).trim();
-    }
+    if (shouldSkipCurrentInstruction(state))
+      return line;
+
+    line = processLabelsOnCurrentLine(state);
 
     if (line[0] === ".") {
       parseExpressionsOnCurrentLine(state);
@@ -88,6 +88,9 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     state.lineExpressions = [];
     state.evaluatedLineExpressions = [];
 
+    if (shouldSkipCurrentInstruction(state))
+      return line;
+
     if (line[0] === ".") {
       evaluateExpressionsOnCurrentLine(state);
       handleDirective(state);
@@ -113,10 +116,31 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     state.outIndex += 4;
   });
 
+  if (state.ifElseStack.length)
+    throw new Error("An if directive was used without an endif directive");
+
   if (opts.text)
     return outStrs;
 
   return state.buffer;
+}
+
+/** Tests if the current state deems we shouldn't execute the current line. */
+function shouldSkipCurrentInstruction(state: IAssemblerState): boolean {
+  if (state.ifElseStack.length) {
+    const ifElseState = state.ifElseStack[state.ifElseStack.length - 1];
+    return ifElseState !== IfElseState.ExecutingBlock
+      && !isConditionalDirective(state.line);
+  }
+  return false;
+}
+
+function processLabelsOnCurrentLine(state: IAssemblerState): string {
+  let parsedLabel: string | boolean;
+  while (parsedLabel = parseGlobalLabel(state)) {
+    state.line = state.line.substr(parsedLabel.length + 1).trim();
+  }
+  return state.line;
 }
 
 /** Strips single line ; or // comments. */
@@ -152,6 +176,7 @@ function _makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
     currentPass: AssemblerPhase.firstPass,
     lineExpressions: [],
     evaluatedLineExpressions: null,
+    ifElseStack: [],
   };
 }
 
