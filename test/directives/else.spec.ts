@@ -5,39 +5,16 @@ import { print } from "mips-inst";
 
 import { assemble } from "../../src/assembler";
 
-describe(".if", () => {
-  it("allows a region to be assembled if the condition is true", () => {
+describe(".else", () => {
+  it("executes if an if condition was false", () => {
     expect(print(assemble(`
       LW T0 0(GP)
       JAL 0x80012344
       NOP
-      LUI A0 0x3F
-      .if 1
-      LH A0 0(V0)
-      ADDIU V0 R0 10
-      .endif
-      JR RA
-      NOP
-    `))).to.deep.equal([
-      "LW T0 0(GP)",
-      "JAL 0x12344",
-      "NOP",
-      "LUI A0 0x3F",
-      "LH A0 0(V0)",
-      "ADDIU V0 R0 0xA",
-      "JR RA",
-      "NOP",
-    ]);
-  });
-
-  it("prevents a region from being output if the condition is false", () => {
-    expect(print(assemble(`
-      LW T0 0(GP)
-      JAL 0x80012344
-      NOP
-      LUI A0 0x3F
       .if 0
+      LUI A0 0x3F
       LH A0 0(V0)
+      .else
       ADDIU V0 R0 10
       .endif
       JR RA
@@ -46,23 +23,22 @@ describe(".if", () => {
       "LW T0 0(GP)",
       "JAL 0x12344",
       "NOP",
-      "LUI A0 0x3F",
+      "ADDIU V0 R0 0xA",
       "JR RA",
       "NOP",
     ]);
   });
 
-  it("supports nested ifs", () => {
+  it("doesn't execute if an if condition was true", () => {
     expect(print(assemble(`
       LW T0 0(GP)
       JAL 0x80012344
       NOP
+      .if 1
       LUI A0 0x3F
-      .if 1
       LH A0 0(V0)
-      .if 1
+      .else
       ADDIU V0 R0 10
-      .endif
       .endif
       JR RA
       NOP
@@ -72,21 +48,24 @@ describe(".if", () => {
       "NOP",
       "LUI A0 0x3F",
       "LH A0 0(V0)",
-      "ADDIU V0 R0 0xA",
       "JR RA",
       "NOP",
     ]);
+  });
 
+  it("supports nesting", () => {
     expect(print(assemble(`
       LW T0 0(GP)
       JAL 0x80012344
       NOP
-      LUI A0 0x3F
       .if 1
-      LH A0 0(V0)
       .if 0
-      ADDIU V0 R0 10
+      LUI A0 0x3F
+      .else
+      LH A0 0(V0)
       .endif
+      .else
+      ADDIU V0 R0 10
       .endif
       JR RA
       NOP
@@ -94,33 +73,30 @@ describe(".if", () => {
       "LW T0 0(GP)",
       "JAL 0x12344",
       "NOP",
-      "LUI A0 0x3F",
       "LH A0 0(V0)",
       "JR RA",
       "NOP",
     ]);
   });
 
-  it("evaluates the condition from a label", () => {
-    expect(print(assemble(`
-      .definelabel truthy,100
-      .if truthy
-      LH A0 0(V0)
-      ADDIU V0 R0 10
-      .endif
-    `))).to.deep.equal([
-      "LH A0 0(V0)",
-      "ADDIU V0 R0 0xA",
-    ]);
-  });
-
-  it("must have the conditional label evaluated prior to testing it", () => {
+  it("extra elses cause error", () => {
     expect(() => print(assemble(`
-      .if truthy
+      LW T0 0(GP)
+      JAL 0x80012344
+      NOP
+      .if 1
+      .if 0
+      LUI A0 0x3F
+      .else
       LH A0 0(V0)
+      .else
+      JR RA
+      .endif
+      .else
       ADDIU V0 R0 10
       .endif
-      .definelabel truthy,100
+      JR RA
+      NOP
     `))).to.throw();
   });
 });

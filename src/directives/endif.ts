@@ -1,4 +1,4 @@
-import { IAssemblerState, IfElseState } from "../types";
+import { IAssemblerState } from "../types";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
 
 const regexEndIf = makeBasicDirectiveRegExp("endif", true);

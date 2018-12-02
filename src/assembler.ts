@@ -1,6 +1,6 @@
 import { parse } from "mips-inst";
 
-import { IAssemblerState, AssemblerPhase, IfElseState } from "./types";
+import { IAssemblerState, AssemblerPhase, IfElseStateFlags } from "./types";
 import { handleDirective, isConditionalDirective } from "./directives";
 import { parseGlobalLabel } from "./labels";
 import { getSymbolByValue } from "./symbols";
@@ -129,7 +129,7 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
 function shouldSkipCurrentInstruction(state: IAssemblerState): boolean {
   if (state.ifElseStack.length) {
     const ifElseState = state.ifElseStack[state.ifElseStack.length - 1];
-    return ifElseState !== IfElseState.ExecutingBlock
+    return !(ifElseState & IfElseStateFlags.ExecutingBlock)
       && !isConditionalDirective(state.line);
   }
   return false;

@@ -69,22 +69,34 @@ interface IAssemblerStateBase {
   lineExpressions: string[];
 
   /** Stack of if/else block states tracked during the assembly. */
-  ifElseStack: IfElseState[];
+  ifElseStack: IfElseStateFlags[];
 }
 
 /** States of an if/else/endif level. */
-export enum IfElseState {
+export enum IfElseStateFlags {
+  /** Unused */
+  None,
+
   /**
    * We are within an if block, but haven't reached a part we should execute.
    */
-  AcceptingBlock,
+  AcceptingBlock = 1 << 0,
 
   /** We are executing code within an if/else block. */
-  ExecutingBlock,
+  ExecutingBlock = 1 << 1,
 
   /**
    * We have already executed an if or elseif block, and are passing over
    * remaining instructions.
    */
-  NoLongerAcceptingBlock,
+  NoLongerAcceptingBlock = 1 << 2,
+
+  /** Flag set once a plain else directive is encountered. */
+  SawElse = 1 << 3,
 }
+
+/** Mask for checking current block state. */
+export const IfElseBlockStateMask =
+  IfElseStateFlags.AcceptingBlock
+  | IfElseStateFlags.ExecutingBlock
+  | IfElseStateFlags.NoLongerAcceptingBlock;

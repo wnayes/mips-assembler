@@ -1,4 +1,4 @@
-import { IAssemblerState, IfElseState } from "../types";
+import { IAssemblerState, IfElseStateFlags } from "../types";
 import { runFunction } from "../functions";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
 
@@ -28,10 +28,10 @@ export default function ifcond(state: IAssemblerState): boolean {
     throw new Error("Condition of if directive must evaluate to a numeric value, saw: " + value);
 
   if (value) {
-    state.ifElseStack.push(IfElseState.ExecutingBlock);
+    state.ifElseStack.push(IfElseStateFlags.ExecutingBlock);
   }
   else {
-    state.ifElseStack.push(IfElseState.AcceptingBlock);
+    state.ifElseStack.push(IfElseStateFlags.AcceptingBlock);
   }
 
   return true;
