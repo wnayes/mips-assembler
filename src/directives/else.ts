@@ -1,5 +1,6 @@
-import { IAssemblerState, IfElseStateFlags, IfElseBlockStateMask } from "../types";
+import { IAssemblerState } from "../types";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
+import { setIfElseBlockState, IfElseStateFlags, IfElseBlockStateMask } from "../conditionals";
 
 const regexElse = makeBasicDirectiveRegExp("else", true);
 
@@ -25,13 +26,11 @@ export default function elseblock(state: IAssemblerState): boolean {
 
   switch (curState & IfElseBlockStateMask) {
     case IfElseStateFlags.AcceptingBlock:
-      state.ifElseStack[state.ifElseStack.length - 1] &= ~IfElseBlockStateMask;
-      state.ifElseStack[state.ifElseStack.length - 1] |= IfElseStateFlags.ExecutingBlock;
+      setIfElseBlockState(state, IfElseStateFlags.ExecutingBlock);
       break;
 
     case IfElseStateFlags.ExecutingBlock:
-      state.ifElseStack[state.ifElseStack.length - 1] &= ~IfElseBlockStateMask;
-      state.ifElseStack[state.ifElseStack.length - 1] |= IfElseStateFlags.NoLongerAcceptingBlock;
+      setIfElseBlockState(state, IfElseStateFlags.NoLongerAcceptingBlock);
       break;
 
     case IfElseStateFlags.NoLongerAcceptingBlock:

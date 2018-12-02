@@ -13,6 +13,7 @@ import word from "./directives/word";
 import float from "./directives/float";
 import ifcond from "./directives/if";
 import elseblock from "./directives/else";
+import elseif from "./directives/elseif";
 import endif from "./directives/endif";
 
 function getDirectives() {
@@ -29,6 +30,7 @@ function getDirectives() {
     word,
     float,
     ifcond,
+    elseif,
     elseblock,
     endif,
   ];

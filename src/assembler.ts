@@ -1,10 +1,11 @@
 import { parse } from "mips-inst";
 
-import { IAssemblerState, AssemblerPhase, IfElseStateFlags } from "./types";
+import { IAssemblerState, AssemblerPhase } from "./types";
 import { handleDirective, isConditionalDirective } from "./directives";
 import { parseGlobalLabel } from "./labels";
 import { getSymbolByValue } from "./symbols";
 import { evaluateExpressionsOnCurrentLine, parseExpressionsOnCurrentLine } from "./expressions";
+import { IfElseStateFlags } from "./conditionals";
 
 /**
  * Optional parameters used to configure assembly.

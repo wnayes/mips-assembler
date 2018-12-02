@@ -1,6 +1,7 @@
-import { IAssemblerState, IfElseStateFlags } from "../types";
+import { IAssemblerState } from "../types";
 import { runFunction } from "../functions";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
+import { IfElseStateFlags } from "../conditionals";
 
 const regexIf = makeBasicDirectiveRegExp("if");
 
