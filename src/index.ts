@@ -1,3 +1,4 @@
 export {
-  assemble
+  assemble,
+  IAssembleOpts
 } from "./assembler";
