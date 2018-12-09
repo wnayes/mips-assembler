@@ -93,6 +93,8 @@ OtherGlobalLabel:  ; this will terminate the area where
 j @@LocalLabel     ; as a result, this will cause an error
 ```
 
+If a label starts with a single `@`, it is a static label. Static labels act like global labels, but are only visible to the current "file." See the `include` or `beginfile`/`endfile` directives.
+
 ### Directives
 
 #### General directives
@@ -120,6 +122,40 @@ Sets the output pointer to the specified offset. This affects the location that 
 ```
 
 Defines `label` with a given value, creating a symbol for it.
+
+##### Include another assembly file
+
+```
+.include "filename"
+```
+
+Inlines a "file" containing assembly at the current location.
+
+Note that, since we're in JavaScript, the "filename" is not a path to an actual file. It should be a key in the `files` object that can be passed through the `assemble` opts.
+
+```
+assemble(`
+  .org 0x80001000
+  .include "external"
+`, {
+  files: {
+    "external": `
+      ADDIU A0 R0 123
+      .ascii "This is the external 'file'"
+    `
+  }
+});
+```
+
+##### File scoping
+
+```
+.beginfile
+.endfile
+```
+
+If you want to achieve file scoping without actually having separate assembly in the `files` opt object, you can surround assembly with `.beginfile` and `.endfile`. This would enable usage of static labels for example.
+
 
 ####  Text and data directives
 
