@@ -1,4 +1,4 @@
-import { IAssemblerState } from "./types";
+import { IAssemblerState } from "./state";
 
 import definelabel from "./directives/definelabel";
 import org from "./directives/org";
@@ -15,6 +15,9 @@ import ifcond from "./directives/if";
 import elseblock from "./directives/else";
 import elseif from "./directives/elseif";
 import endif from "./directives/endif";
+import include from "./directives/include";
+import beginfile from "./directives/beginfile";
+import endfile from "./directives/endfile";
 
 function getDirectives() {
   return [
@@ -33,6 +36,9 @@ function getDirectives() {
     elseif,
     elseblock,
     endif,
+    include,
+    beginfile,
+    endfile,
   ];
 }
 

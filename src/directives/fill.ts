@@ -1,5 +1,5 @@
-import { IAssemblerState, AssemblerPhase } from "../types";
-import { parseImmediate } from "../immediates";
+import { AssemblerPhase } from "../types";
+import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 
 const regex = /^\.fill\s+/i;

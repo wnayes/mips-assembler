@@ -1,8 +1,8 @@
-import { IAssemblerState } from "./types";
-import { addSymbol, addLocalSymbol } from "./symbols";
+import { IAssemblerState } from "./state";
+import { addSymbol, addLocalSymbol, addStaticLabel } from "./symbols";
 
-export const LABEL_CHARS = "\\?\\!";
-export const LABEL_REGEX_STR = `(?:@@)?[\\w${LABEL_CHARS}]+`;
+export const LABEL_CHARS = "\\?\\!\\@";
+export const LABEL_REGEX_STR = `@?@?[\\w\\?\\!]+`;
 
 const labelRegex = new RegExp(`^(${LABEL_REGEX_STR})\\:`);
 
@@ -25,6 +25,9 @@ export function parseGlobalLabel(state: IAssemblerState): string | false {
 
     addLocalSymbol(state, name, getLabelValueFromState(state));
   }
+  else if (isStaticLabel(name)) {
+    addStaticLabel(state, name, getLabelValueFromState(state));
+  }
   else {
     state.currentLabel = name;
     addSymbol(state, name, getLabelValueFromState(state));
@@ -35,6 +38,10 @@ export function parseGlobalLabel(state: IAssemblerState): string | false {
 
 export function isLocalLabel(name: string): boolean {
   return name.indexOf("@@") === 0;
+}
+
+export function isStaticLabel(name: string): boolean {
+  return name.indexOf("@") === 0 && name[1] !== "@";
 }
 
 function getLabelValueFromState(state: IAssemblerState): number {

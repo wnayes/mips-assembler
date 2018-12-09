@@ -1,11 +1,12 @@
 import { parse } from "mips-inst";
 
-import { IAssemblerState, AssemblerPhase } from "./types";
+import { AssemblerPhase } from "./types";
 import { handleDirective, isConditionalDirective } from "./directives";
 import { parseGlobalLabel } from "./labels";
 import { getSymbolByValue } from "./symbols";
 import { evaluateExpressionsOnCurrentLine, parseExpressionsOnCurrentLine } from "./expressions";
 import { IfElseStateFlags } from "./conditionals";
+import { makeNewAssemblerState, IAssemblerState } from "./state";
 
 /**
  * Optional parameters used to configure assembly.
@@ -18,6 +19,12 @@ export interface IAssembleOpts {
    * (like .orga)
    */
   buffer?: ArrayBuffer;
+
+  /**
+   * Object containing "file names" and strings containing assembly.
+   * These files can be used with the `.include` directive.
+   */
+  files?: { [name: string]: string };
 
   /**
    * After assembly, if an object is passed, it will be populated with a map
@@ -40,41 +47,51 @@ export interface IAssembleOpts {
 export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayBuffer | string[] {
   opts = opts || {};
 
-  let arr = _ensureArray(input);
-  arr = arr.filter(s => { return typeof s === "string" });
-  arr = _stripComments(arr);
-  arr = arr.map(s => { return s.trim(); });
-  arr = arr.filter(Boolean);
+  let arr = normalizeInput(input);
 
-  const state = _makeNewAssemblerState(opts);
+  const state = makeNewAssemblerState(opts);
 
   const outStrs: string[] = [];
 
   // First pass, calculate label positions.
-  arr = arr.map(line => {
+  // Not using `arr.map` because `arr` changes mid-processing.
+  let arrNew = [];
+  for (let i = 0; i < arr.length; i++) {
+    let line = arr[i];
     state.line = line;
 
-    if (shouldSkipCurrentInstruction(state))
-      return line;
+    if (shouldSkipCurrentInstruction(state)) {
+      if (line) {
+        arrNew.push(line);
+      }
+      continue;
+    }
 
     line = processLabelsOnCurrentLine(state);
 
     if (line[0] === ".") {
       parseExpressionsOnCurrentLine(state);
       handleDirective(state);
-      return line; // Keep directives for second pass.
+      line = state.line; // Directive may change the line.
+    }
+    else {
+      // If !line, then only labels were on the line.
+      if (line) {
+        state.outIndex += 4;
+      }
     }
 
-    // If !line, then only labels were on the line.
     if (line) {
-      state.outIndex += 4;
+      arrNew.push(line);
     }
 
-    return line;
-  });
-
-  // Re-filter out empty lines.
-  arr = arr.filter(Boolean);
+    if ("linesToInsert" in state && state.linesToInsert) {
+      const linesToInsert = normalizeInput(state.linesToInsert);
+      arr.splice(i + 1, 0, ...linesToInsert);
+      state.linesToInsert = null;
+    }
+  };
+  arr = arrNew;
 
   state.buffer = opts.buffer || new ArrayBuffer(state.outIndex);
   state.dataView = new DataView(state.buffer);
@@ -144,6 +161,15 @@ function processLabelsOnCurrentLine(state: IAssemblerState): string {
   return state.line;
 }
 
+function normalizeInput(input: string | string[]) {
+  let arr = _ensureArray(input);
+  arr = arr.filter(s => { return typeof s === "string"; });
+  arr = _stripComments(arr);
+  arr = arr.map(s => { return s.trim(); });
+  arr = arr.filter(Boolean);
+  return arr;
+}
+
 /** Strips single line ; or // comments. */
 function _stripComments(input: string[]): string[] {
   return input.map(line => {
@@ -160,25 +186,6 @@ function _stripComments(input: string[]): string[] {
 
     return line.substr(0, removalIndex);
   });
-}
-
-function _makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
-  return {
-    buffer: null,
-    dataView: null,
-    line: "",
-    memPos: 0,
-    outIndex: 0,
-    symbols: Object.create(null),
-    symbolsByValue: Object.create(null),
-    symbolOutputMap: opts.symbolOutputMap,
-    currentLabel: null,
-    localSymbols: Object.create(null),
-    currentPass: AssemblerPhase.firstPass,
-    lineExpressions: [],
-    evaluatedLineExpressions: null,
-    ifElseStack: [],
-  };
 }
 
 function _ensureArray(input: string | string[]): string[] {

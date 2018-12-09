@@ -1,5 +1,6 @@
-import { IAssemblerState } from "./types";
-import { isLocalLabel } from "./labels";
+import { IAssemblerState } from "./state";
+import { isLocalLabel, isStaticLabel } from "./labels";
+import { AssemblerPhase } from "./types";
 
 /**
  * Adds a symbol to the symbol table.
@@ -31,8 +32,32 @@ export function addLocalSymbol(state: IAssemblerState, name: string, value: numb
   localTable[name] = value;
 }
 
+export function addStaticLabel(state: IAssemblerState, name: string, value: number): void {
+  const staticsTable = state.staticSymbols[state.staticSymbols.length - 1];
+  staticsTable[name] = value;
+}
+
+export function pushStaticLabelStateLevel(state: IAssemblerState): void {
+  if (state.currentPass === AssemblerPhase.firstPass) {
+    state.staticSymbols.push(Object.create(null));
+    state.staticSymbolIndices.push(state.staticSymbols.length - 1);
+  }
+  else {
+    state.staticSymbolIndices.shift();
+  }
+}
+
+export function popStaticLabelStateLevel(state: IAssemblerState): void {
+  if (state.currentPass === AssemblerPhase.firstPass) {
+    state.staticSymbolIndices.push(state.staticSymbolIndices[state.staticSymbolIndices.length - 2]);
+  }
+  else {
+    state.staticSymbolIndices.shift();
+  }
+}
+
 /**
- * Retrieves a symbol by name, global or local.
+ * Retrieves a symbol by name. Works for all: global, static, or local.
  */
 export function getSymbolValue(state: IAssemblerState, name: string): number | null {
   if (isLocalLabel(name)) {
@@ -47,6 +72,14 @@ export function getSymbolValue(state: IAssemblerState, name: string): number | n
     return null;
   }
 
+  if (isStaticLabel(name)) {
+    const staticTable = state.staticSymbols[state.staticSymbolIndices[0]];
+    if (Object.prototype.hasOwnProperty.call(staticTable, name)) {
+      return staticTable[name];
+    }
+    return null;
+  }
+
   if (Object.prototype.hasOwnProperty.call(state.symbols, name)) {
     return state.symbols[name];
   }
@@ -57,6 +90,7 @@ export function getSymbolValue(state: IAssemblerState, name: string): number | n
 /**
  * Retrieves a symbol by value from the symbol table.
  * Does not retrieve local labels.
+ * TODO: Should do static labels too.
  */
 export function getSymbolByValue(state: IAssemblerState, value: number): string | null {
   // Don't need hasOwnProperty check here, all values in key->value should be truthy strings.

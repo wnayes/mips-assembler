@@ -1,4 +1,4 @@
-import { IAssemblerState } from "./types";
+import { IAssemblerState } from "./state";
 
 /** States of an if/else/endif level. */
 export enum IfElseStateFlags {

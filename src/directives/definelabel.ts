@@ -1,6 +1,5 @@
-import { IAssemblerState } from "../types";
-import { parseImmediate } from "../immediates";
-import { addSymbol, getSymbolValue } from "../symbols";
+import { IAssemblerState } from "../state";
+import { addSymbol } from "../symbols";
 import { LABEL_REGEX_STR, LABEL_CHARS } from "../labels";
 import { runFunction } from "../functions";
 

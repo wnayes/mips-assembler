@@ -1,4 +1,4 @@
-import { IAssemblerState } from "../types";
+import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 
 const orgRegex = /^\.org\s+/i;

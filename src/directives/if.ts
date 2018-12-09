@@ -1,4 +1,4 @@
-import { IAssemblerState } from "../types";
+import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
 import { IfElseStateFlags } from "../conditionals";

@@ -1,5 +1,5 @@
-import { IAssemblerState } from "./types";
-import { parseImmediate, formatImmediate } from "./immediates";
+import { IAssemblerState } from "./state";
+import { parseImmediate } from "./immediates";
 import { getSymbolValue } from "./symbols";
 import { unescapeQuotes } from "./strings";
 import { LABEL_CHARS } from "./labels";

@@ -1,5 +1,4 @@
-import { IAssemblerState } from "../types";
-import { parseImmediate } from "../immediates";
+import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 
 const orgaRegex = /^\.orga\s+/i;

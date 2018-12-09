@@ -1,6 +1,6 @@
-import { IAssemblerState } from "./types";
+import { IAssemblerState } from "./state";
 import { runFunction } from "./functions";
-import { parseImmediate, formatImmediate } from "./immediates";
+import { formatImmediate } from "./immediates";
 import { LABEL_CHARS } from "./labels";
 
 export const EXPR_CHARS = ",-\\w\\s\\(\\)" + LABEL_CHARS;
