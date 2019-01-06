@@ -40,7 +40,10 @@ export function addStaticLabel(state: IAssemblerState, name: string, value: numb
 export function pushStaticLabelStateLevel(state: IAssemblerState): void {
   if (state.currentPass === AssemblerPhase.firstPass) {
     state.staticSymbols.push(Object.create(null));
-    state.staticSymbolIndices.push(state.staticSymbols.length - 1);
+    const prevIndex = state.staticSymbolIndices[state.staticSymbolIndices.length - 1];
+    const newIndex = state.staticSymbols.length - 1;
+    state.staticSymbolIndices.before[newIndex] = prevIndex;
+    state.staticSymbolIndices.push(newIndex);
   }
   else {
     state.staticSymbolIndices.shift();
@@ -49,7 +52,8 @@ export function pushStaticLabelStateLevel(state: IAssemblerState): void {
 
 export function popStaticLabelStateLevel(state: IAssemblerState): void {
   if (state.currentPass === AssemblerPhase.firstPass) {
-    state.staticSymbolIndices.push(state.staticSymbolIndices[state.staticSymbolIndices.length - 2]);
+    const indices = state.staticSymbolIndices;
+    indices.push(indices.before[indices[indices.length - 1]]);
   }
   else {
     state.staticSymbolIndices.shift();

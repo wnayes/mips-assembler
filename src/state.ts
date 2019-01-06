@@ -3,6 +3,8 @@ import { AssemblerPhase } from "./types";
 import { IAssembleOpts } from "./assembler";
 
 export function makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
+  const staticSymbolIndices: any = [0];
+  staticSymbolIndices.before = Object.create(null);
   return {
     buffer: null,
     dataView: null,
@@ -15,7 +17,7 @@ export function makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
     currentLabel: null,
     localSymbols: Object.create(null),
     staticSymbols: [Object.create(null)],
-    staticSymbolIndices: [0],
+    staticSymbolIndices,
     currentPass: AssemblerPhase.firstPass,
     lineExpressions: [],
     evaluatedLineExpressions: null,
@@ -24,6 +26,8 @@ export function makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
     linesToInsert: null,
   };
 }
+
+type IStaticSymbolIndices = number[] & { before: { [index: number]: number }}
 
 export type IAssemblerState = IAssemblerStateFirstPass | IAssemblerStateSecondPass;
 
@@ -97,7 +101,7 @@ interface IAssemblerStateBase {
   staticSymbols: { [staticLabelName: string]: number }[];
 
   /** Index of the current array in `staticSymbols`. */
-  staticSymbolIndices: number[];
+  staticSymbolIndices: IStaticSymbolIndices;
 
   /** Pre-evaluated expression list on the line. */
   lineExpressions: string[];

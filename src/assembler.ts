@@ -136,6 +136,8 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
 
   if (state.ifElseStack.length)
     throw new Error("An if directive was used without an endif directive");
+  if (state.staticSymbolIndices[0] !== 0)
+    throw new Error("A beginfile directive was used without an endfile directive");
 
   if (opts.text)
     return outStrs;
