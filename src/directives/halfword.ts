@@ -1,6 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { makeNumericExprListRegExp } from "./directiveHelpers";
+import { throwError } from "../errors";
 
 const regexHalfword = makeNumericExprListRegExp("halfword");
 const regexDh = makeNumericExprListRegExp("dh");
@@ -21,11 +22,11 @@ export default function halfword(state: IAssemblerState): boolean {
 
   if (state.currentPass === AssemblerPhase.secondPass) {
     if (!state.evaluatedLineExpressions.length) {
-      throw new Error(".halfword directive requires arguments");
+      throwError(".halfword directive requires arguments", state);
     }
 
     if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
-      throw new Error(".halfword directive requires numeric arguments");
+      throwError(".halfword directive requires numeric arguments", state);
     }
 
     const numbers = state.evaluatedLineExpressions as number[];

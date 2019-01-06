@@ -1,6 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
+import { throwError } from "../errors";
 
 const alignRegex = /^\.align\s+/i;
 
@@ -15,18 +16,20 @@ export default function align(state: IAssemblerState): boolean {
     return false; // Not .align
 
   if (state.lineExpressions.length !== 1) {
-    throw new Error(".align requires one power of two number argument");
+    throwError(".align requires one power of two number argument", state);
   }
 
   const imm = runFunction(state.lineExpressions[0], state);
   if (imm === null)
-    throw new Error(`Could not parse .align immediate ${state.lineExpressions}`);
-  if (typeof imm !== "number")
-    throw new Error(".align requires one power of two number argument");
+    throwError(`Could not parse .align immediate ${state.lineExpressions}`, state);
+  if (typeof imm !== "number") {
+    throwError(".align requires one power of two number argument", state);
+    return false;
+  }
   if (imm % 2)
-    throw new Error(".align directive requires a power of two.");
+    throwError(".align directive requires a power of two.", state);
   if (imm < 0)
-    throw new Error(".align directive cannot align by a negative value.");
+    throwError(".align directive cannot align by a negative value.", state);
 
   while (state.outIndex % imm) {
     if (state.currentPass === AssemblerPhase.secondPass) {

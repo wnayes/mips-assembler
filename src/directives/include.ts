@@ -2,6 +2,7 @@ import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
 import { AssemblerPhase } from "../types";
+import { throwError } from "../errors";
 
 const regexInclude = makeBasicDirectiveRegExp("include");
 
@@ -18,22 +19,24 @@ export default function include(state: IAssemblerState): boolean {
   }
 
   if (!state.lineExpressions.length)
-    throw new Error("A file name must be passed to an include directive");
+    throwError("A file name must be passed to an include directive", state);
   if (state.lineExpressions.length > 1)
-    throw new Error("Only a single file name can be passed to an include directive");
+    throwError("Only a single file name can be passed to an include directive", state);
 
   const filename = runFunction(state.lineExpressions[0], state);
   if (filename === null)
-    throw new Error("Could not parse .include file name");
-  if (typeof filename !== "string")
-    throw new Error("File name of include directive must evaluate to a string, saw: " + filename);
+    throwError("Could not parse .include file name", state);
+  if (typeof filename !== "string") {
+    throwError("File name of include directive must evaluate to a string, saw: " + filename, state);
+    return false;
+  }
 
   const file = state.files[filename];
   if (typeof file !== "string")
-    throw new Error(`The ${filename} file was not a string`);
+    throwError(`The ${filename} file was not a string`, state);
 
   if (state.currentPass !== AssemblerPhase.firstPass)
-    throw new Error("The `include` directive shouldn't be present after the first assembly phase");
+    throw Error("The `include` directive shouldn't be present after the first assembly phase");
 
   state.linesToInsert =
 `.beginfile

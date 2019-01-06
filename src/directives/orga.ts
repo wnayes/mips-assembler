@@ -1,5 +1,6 @@
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
+import { throwError } from "../errors";
 
 const orgaRegex = /^\.orga\s+/i;
 
@@ -13,14 +14,16 @@ export default function orga(state: IAssemblerState): boolean {
     return false; // Not .orga
 
   if (state.lineExpressions.length !== 1) {
-    throw new Error(".orga directive requires one numeric argument");
+    throwError(".orga directive requires one numeric argument", state);
   }
 
   const imm = runFunction(state.lineExpressions[0], state);
-  if (typeof imm !== "number")
-    throw new Error(`Could not parse .orga immediate ${imm}`);
+  if (typeof imm !== "number") {
+    throwError(`Could not parse .orga immediate ${imm}`, state);
+    return false;
+  }
   if (imm < 0)
-    throw new Error(".orga directive cannot be negative.");
+    throwError(".orga directive cannot be negative.", state);
 
   state.outIndex = imm >>> 0; // Better be 32-bit
   return true;

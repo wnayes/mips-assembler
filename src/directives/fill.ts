@@ -1,6 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
+import { throwError } from "../errors";
 
 const regex = /^\.fill\s+/i;
 
@@ -19,15 +20,19 @@ export default function fill(state: IAssemblerState): boolean {
 
   let length, value;
   length = runFunction(state.lineExpressions[0], state);
-  if (typeof length !== "number")
-    throw new Error(`Could not parse .fill length ${state.lineExpressions[0]}`);
+  if (typeof length !== "number") {
+    throwError(`Could not parse .fill length ${state.lineExpressions[0]}`, state);
+    return false;
+  }
   if (length < 0)
-    throw new Error(".fill length must be positive.");
+    throwError(".fill length must be positive.", state);
 
   if (state.lineExpressions.length > 1) {
     value = runFunction(state.lineExpressions[1], state);
-    if (typeof value !== "number")
-      throw new Error(`Could not parse .fill value ${state.lineExpressions[1]}`);
+    if (typeof value !== "number") {
+      throwError(`Could not parse .fill value ${state.lineExpressions[1]}`, state);
+      return false;
+    }
   }
   else
     value = 0;

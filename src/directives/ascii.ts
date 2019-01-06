@@ -1,6 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
+import { throwError } from "../errors";
 
 const regexAscii = /^\.ascii\s+/i;
 const regexAsciiZ = /^\.asciiz\s+/i;
@@ -32,7 +33,7 @@ export default function ascii(state: IAssemblerState): boolean {
   lineExps.forEach((expr) => {
     const value = runFunction(expr, state);
     if (value === null)
-      throw new Error("Could not parse .ascii value " + expr);
+      throwError("Could not parse .ascii value " + expr, state);
     if (typeof value === "number") {
       numbers.push(value);
     }

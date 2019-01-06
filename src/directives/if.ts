@@ -2,6 +2,7 @@ import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
 import { IfElseStateFlags } from "../conditionals";
+import { throwError } from "../errors";
 
 const regexIf = makeBasicDirectiveRegExp("if");
 
@@ -18,15 +19,15 @@ export default function ifcond(state: IAssemblerState): boolean {
   }
 
   if (!state.lineExpressions.length)
-    throw new Error("A condition must be passed to an if directive");
+    throwError("A condition must be passed to an if directive", state);
   if (state.lineExpressions.length > 1)
-    throw new Error("Only a single condition can be passed to an if directive");
+    throwError("Only a single condition can be passed to an if directive", state);
 
   const value = runFunction(state.lineExpressions[0], state);
   if (value === null)
-    throw new Error("Could not parse .if condition");
+    throwError("Could not parse .if condition", state);
   if (typeof value !== "number")
-    throw new Error("Condition of if directive must evaluate to a numeric value, saw: " + value);
+    throwError("Condition of if directive must evaluate to a numeric value, saw: " + value, state);
 
   if (value) {
     state.ifElseStack.push(IfElseStateFlags.ExecutingBlock);

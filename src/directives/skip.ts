@@ -1,5 +1,6 @@
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
+import { throwError } from "../errors";
 
 const regex = /^\.skip\s+/i;
 
@@ -13,14 +14,16 @@ export default function skip(state: IAssemblerState): boolean {
     return false;
 
   if (state.lineExpressions.length !== 1) {
-    throw new Error(".skip directive requires one numeric argument");
+    throwError(".skip directive requires one numeric argument", state);
   }
 
   const imm = runFunction(state.lineExpressions[0], state);
-  if (typeof imm !== "number")
-    throw new Error(`Could not parse .skip immediate ${imm}`);
+  if (typeof imm !== "number") {
+    throwError(`Could not parse .skip immediate ${imm}`, state);
+    return false;
+  }
   if (imm < 0)
-    throw new Error(".skip directive cannot skip a negative length.");
+    throwError(".skip directive cannot skip a negative length.", state);
 
   state.outIndex += imm;
   return true;

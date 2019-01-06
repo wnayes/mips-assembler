@@ -1,6 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { makeNumericExprListRegExp } from "./directiveHelpers";
+import { throwError } from "../errors";
 
 const regexByte = makeNumericExprListRegExp("byte");
 const regexDb = makeNumericExprListRegExp("db");
@@ -20,11 +21,11 @@ export default function byte(state: IAssemblerState): boolean {
 
   if (state.currentPass === AssemblerPhase.secondPass) {
     if (!state.evaluatedLineExpressions.length) {
-      throw new Error(".byte directive requires arguments");
+      throwError(".byte directive requires arguments", state);
     }
 
     if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
-      throw new Error(".byte directive requires numeric arguments");
+      throwError(".byte directive requires numeric arguments", state);
     }
 
     const numbers = state.evaluatedLineExpressions as number[];

@@ -1,6 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { makeNumericExprListRegExp } from "./directiveHelpers";
+import { throwError } from "../errors";
 
 const regexWord = makeNumericExprListRegExp("word");
 const regexDw = makeNumericExprListRegExp("dw");
@@ -21,11 +22,11 @@ export default function word(state: IAssemblerState): boolean {
 
   if (state.currentPass === AssemblerPhase.secondPass) {
     if (!state.evaluatedLineExpressions.length) {
-      throw new Error(".word directive requires arguments");
+      throwError(".word directive requires arguments", state);
     }
 
     if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
-      throw new Error(".word directive requires numeric arguments");
+      throwError(".word directive requires numeric arguments", state);
     }
 
     const numbers = state.evaluatedLineExpressions as number[];

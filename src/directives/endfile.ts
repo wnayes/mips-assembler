@@ -1,6 +1,7 @@
 import { IAssemblerState } from "../state";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
 import { popStaticLabelStateLevel } from "../symbols";
+import { throwError } from "../errors";
 
 const regexEndFile = makeBasicDirectiveRegExp("endfile", true);
 
@@ -15,7 +16,7 @@ export default function beginfile(state: IAssemblerState): boolean {
   }
 
   if (state.lineExpressions.length)
-    throw new Error("The endfile directive takes no arguments");
+    throwError("The endfile directive takes no arguments", state);
 
   popStaticLabelStateLevel(state);
 

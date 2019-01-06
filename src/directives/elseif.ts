@@ -2,6 +2,7 @@ import { IAssemblerState } from "../state";
 import { makeBasicDirectiveRegExp } from "./directiveHelpers";
 import { runFunction } from "../functions";
 import { setIfElseBlockState, IfElseStateFlags, IfElseBlockStateMask  } from "../conditionals";
+import { throwError } from "../errors";
 
 const regexElseIf = makeBasicDirectiveRegExp("elseif");
 
@@ -18,21 +19,21 @@ export default function elseif(state: IAssemblerState): boolean {
   }
 
   if (!state.lineExpressions.length)
-    throw new Error("A condition must be passed to an elseif directive");
+    throwError("A condition must be passed to an elseif directive", state);
   if (state.lineExpressions.length > 1)
-    throw new Error("Only a single condition can be passed to an elseif directive");
+    throwError("Only a single condition can be passed to an elseif directive", state);
   if (!state.ifElseStack.length)
-    throw new Error("An elseif directive was reached, but there was no previous if directive");
+    throwError("An elseif directive was reached, but there was no previous if directive", state);
 
   const curState = state.ifElseStack[state.ifElseStack.length - 1];
   if (curState & IfElseStateFlags.SawElse)
-    throw new Error("Encountered an elseif after seeing an else directive");
+    throwError("Encountered an elseif after seeing an else directive", state);
 
   const value = runFunction(state.lineExpressions[0], state);
   if (value === null)
-    throw new Error("Could not parse .elseif condition");
+    throwError("Could not parse .elseif condition", state);
   if (typeof value !== "number")
-    throw new Error("Condition of elseif directive must evaluate to a numeric value, saw: " + value);
+    throwError("Condition of elseif directive must evaluate to a numeric value, saw: " + value, state);
 
   switch (curState & IfElseBlockStateMask) {
     case IfElseStateFlags.AcceptingBlock:
@@ -49,7 +50,7 @@ export default function elseif(state: IAssemblerState): boolean {
       break;
 
     default:
-      throw new Error("Unexpected conditional block state: " + curState.toString(16));
+      throwError("Unexpected conditional block state: " + curState.toString(16), state);
   }
 
   return true;

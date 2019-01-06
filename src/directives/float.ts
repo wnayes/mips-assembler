@@ -1,5 +1,6 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
+import { throwError } from "../errors";
 
 const regexFloat = /^\.float\s+([,-\.\w\s\(\)]+)$/i;
 
@@ -23,7 +24,7 @@ export default function word(state: IAssemblerState): boolean {
     const numbers = pieces.map(s => {
       let imm = parseFloat(s);
       if (imm === null)
-        throw new Error(`Could not parse .float immediate ${s}`);
+        throwError(`Could not parse .float immediate ${s}`, state);
       return imm;
     });
 
