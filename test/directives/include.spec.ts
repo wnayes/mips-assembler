@@ -94,6 +94,35 @@ describe(".include", () => {
     ]);
   });
 
+  it("handles @static labels in directives", () => {
+    expect(print(assemble(`
+      LW T0 0(GP)
+      JAL 0x80012344
+      NOP
+      .include "example1"
+      JR RA
+      NOP
+    `, {
+      files: {
+        example1: `
+          .definelabel @static_value,0x100
+          LUI A0 @static_value
+          LH A0 0(V0)
+          ADDIU V0 R0 10
+        `
+      }
+    }))).to.deep.equal([
+      "LW T0 0(GP)",
+      "JAL 0x12344",
+      "NOP",
+      "LUI A0 0x100",
+      "LH A0 0(V0)",
+      "ADDIU V0 R0 0xA",
+      "JR RA",
+      "NOP",
+    ]);
+  });
+
   it("doesn't leak static labels outside of file", () => {
     expect(() => assemble(`
       LW T0 0(GP)

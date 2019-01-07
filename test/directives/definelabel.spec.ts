@@ -116,4 +116,27 @@ describe(".definelabel", () => {
       "NOP",
     ]);
   });
+
+  it("can define static labels", () => {
+    expect(assemble(`
+      .definelabel @static,0x80023456
+      JAL @static
+      NOP
+    `, { text: true })).to.deep.equal([
+      "JAL 0x80023456",
+      "NOP",
+    ]);
+  });
+
+  it("can define local labels", () => {
+    expect(assemble(`
+      global:
+      .definelabel @@local,0x80023456
+      JAL @@local
+      NOP
+    `, { text: true })).to.deep.equal([
+      "JAL 0x80023456",
+      "NOP",
+    ]);
+  });
 });

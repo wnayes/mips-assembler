@@ -9,6 +9,28 @@ import { AssemblerPhase } from "./types";
  * @param value Symbol value
  */
 export function addSymbol(state: IAssemblerState, name: string, value: number): void {
+  if (isLocalLabel(name)) {
+    if (!state.currentLabel) {
+      throw new Error(`Local label ${name} (starts with @@) cannot be used before a global label`);
+    }
+
+    addLocalSymbol(state, name, value);
+  }
+  else if (isStaticLabel(name)) {
+    addStaticLabel(state, name, value);
+  }
+  else {
+    addGlobalSymbol(state, name, value);
+  }
+}
+
+/**
+ * Adds a global symbol to the symbol table.
+ * @param state Assembler state
+ * @param name Symbol name
+ * @param value Symbol value
+ */
+export function addGlobalSymbol(state: IAssemblerState, name: string, value: number): void {
   state.symbols[name] = value;
   state.symbolsByValue[value] = name;
   if (state.symbolOutputMap) {

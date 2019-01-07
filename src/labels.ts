@@ -1,5 +1,5 @@
 import { IAssemblerState } from "./state";
-import { addSymbol, addLocalSymbol, addStaticLabel } from "./symbols";
+import { addSymbol } from "./symbols";
 
 export const LABEL_CHARS = "\\?\\!\\@";
 export const LABEL_REGEX_STR = `@?@?[\\w\\?\\!]+`;
@@ -18,20 +18,11 @@ export function parseGlobalLabel(state: IAssemblerState): string | false {
     return false; // Not a label.
 
   const [, name] = results;
-  if (isLocalLabel(name)) {
-    if (!state.currentLabel) {
-      throw new Error(`Local label ${name} (starts with @@) cannot be used before a global label`);
-    }
-
-    addLocalSymbol(state, name, getLabelValueFromState(state));
-  }
-  else if (isStaticLabel(name)) {
-    addStaticLabel(state, name, getLabelValueFromState(state));
-  }
-  else {
+  if (!isLocalLabel(name) && !isStaticLabel(name)) {
     state.currentLabel = name;
-    addSymbol(state, name, getLabelValueFromState(state));
   }
+
+  addSymbol(state, name, getLabelValueFromState(state));
 
   return name;
 }
