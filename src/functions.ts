@@ -4,6 +4,7 @@ import { getSymbolValue } from "./symbols";
 import { unescapeQuotes } from "./strings";
 import { LABEL_CHARS } from "./labels";
 
+import { abs } from "./functions/abs";
 import { hi } from "./functions/hi";
 import { lo } from "./functions/lo";
 import { org } from "./functions/org";
@@ -13,7 +14,7 @@ export function runFunction(value: string, state: IAssemblerState): string | num
   return _runFunction(value, state);
 }
 
-const fnRegex = new RegExp(`^(\\w+)\\(([\\(\\),\\w${LABEL_CHARS}]*)\\)$`, "i");
+const fnRegex = new RegExp(`^(\\w+)\\(([\\(\\),-\\w${LABEL_CHARS}]*)\\)$`, "i");
 
 function _runFunction(value: string, state: IAssemblerState): string | number | null {
   const results = fnRegex.exec(value);
@@ -90,6 +91,7 @@ interface IAssemblerFunction {
 /** Built-in functions */
 const fns: { [fnName: string]: IAssemblerFunction } = Object.create(null);
 
+fns.abs = abs;
 fns.hi = hi;
 fns.lo = lo;
 fns.org = org;

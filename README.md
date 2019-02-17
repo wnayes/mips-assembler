@@ -262,8 +262,10 @@ These functions can be used in place of immediates, and can be passed symbols/la
 
 | Function | Description |
 |----------|-------------|
-| `hi(val)` | High half of 32-bit value `val`, adjusted for sign extension of low half (MIPS) |
-| `lo(val)` | Sign-extended low half of 32-bit value `val` (MIPS) |
+| `abs(value)` | Absolute value of `value` |
+| `hi(value)` | High half of 32-bit value `value`, adjusted for sign extension of low half |
+| `lo(value)` | Sign-extended low half of 32-bit value `value` |
+| `org()` | Current memory address |
 
 ### Comments
 
