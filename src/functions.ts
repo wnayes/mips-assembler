@@ -4,6 +4,10 @@ import { getSymbolValue } from "./symbols";
 import { unescapeQuotes } from "./strings";
 import { LABEL_CHARS } from "./labels";
 
+import { hi } from "./functions/hi";
+import { lo } from "./functions/lo";
+import { org } from "./functions/org";
+
 /** Runs any built-in functions, and also resolves symbols. */
 export function runFunction(value: string, state: IAssemblerState): string | number | null {
   return _runFunction(value, state);
@@ -86,25 +90,6 @@ interface IAssemblerFunction {
 /** Built-in functions */
 const fns: { [fnName: string]: IAssemblerFunction } = Object.create(null);
 
-fns.hi = function(state: IAssemblerState, value: string | number): number {
-  if (typeof value === "string")
-    throw new Error(`Assembler function hi cannot be called with string "${value}", value must be a number.`);
-
-  let lower = value & 0x0000FFFF;
-  let upper = value >>> 16;
-  if (lower & 0x8000)
-    upper += 1;
-  return upper;
-};
-
-fns.lo = function(state: IAssemblerState, value: string | number): number {
-  if (typeof value === "string")
-    throw new Error(`Assembler function lo cannot be called with string "${value}", value must be a number.`);
-
-  return value & 0x0000FFFF;
-};
-
-/** Current memory address */
-fns.org = function(state: IAssemblerState, value: string | number): number {
-  return state.memPos + state.outIndex;
-};
+fns.hi = hi;
+fns.lo = lo;
+fns.org = org;
