@@ -165,29 +165,104 @@ function processLabelsOnCurrentLine(state: IAssemblerState): string {
 
 function normalizeInput(input: string | string[]) {
   let arr = _ensureArray(input);
-  arr = arr.filter(s => { return typeof s === "string"; });
+  arr = arr.filter(s => typeof s === "string");
   arr = _stripComments(arr);
-  arr = arr.map(s => { return s.trim(); });
+  arr = arr.map(s => s.trim());
   arr = arr.filter(Boolean);
   return arr;
 }
 
-/** Strips single line ; or // comments. */
+/**
+ * Strips single line ; or // comments.
+ * This isn't perfect, but it does try to detect cases where the comment
+ * characters are within a quoted string.
+ */
 function _stripComments(input: string[]): string[] {
-  return input.map(line => {
-    const semicolonIndex = line.indexOf(";");
-    const slashesIndex = line.indexOf("//");
-    if (semicolonIndex === -1 && slashesIndex === -1)
-      return line; // No comments
+  let withinBlockComment = false;
 
-    let removalIndex = semicolonIndex;
-    if (removalIndex === -1)
-      removalIndex = slashesIndex;
-    else if (slashesIndex !== -1)
-      removalIndex = Math.min(semicolonIndex, slashesIndex);
+  const lines = input.map(line => {
+    if (withinBlockComment) {
+      // The only thing that can break us out is the closing block comment.
+      const blockCommentEndIndex = line.indexOf("*/");
+      if (blockCommentEndIndex >= 0) {
+        line = line.substr(blockCommentEndIndex + 2);
+        withinBlockComment = false;
+      }
+    }
 
-    return line.substr(0, removalIndex);
+    if (withinBlockComment) {
+      return "";
+    }
+
+    let blockCommentIndex = line.indexOf("/*");
+    while (blockCommentIndex >= 0) {
+      if (!_appearsSurroundedByQuotes(line, blockCommentIndex)) {
+        const blockCommentEndIndex = line.indexOf("*/", blockCommentIndex + 2);
+        if (blockCommentEndIndex >= 0) {
+          line = line.substr(0, blockCommentIndex) + line.substr(blockCommentEndIndex + 2);
+        }
+        else {
+          line = line.substr(0, blockCommentIndex);
+          withinBlockComment = true;
+          break;
+        }
+      }
+      else {
+        blockCommentIndex++; // Avoid infinite loop
+      }
+      blockCommentIndex = line.indexOf("/*", blockCommentIndex);
+    }
+
+    let semicolonIndex = line.indexOf(";");
+    while (semicolonIndex >= 0) {
+      if (!_appearsSurroundedByQuotes(line, semicolonIndex)) {
+        line = line.substr(0, semicolonIndex);
+
+        // This invalidates any block comment we found earlier this iteration.
+        withinBlockComment = false;
+        break;
+      }
+      semicolonIndex = line.indexOf(";", semicolonIndex + 1);
+    }
+
+    let slashesIndex = line.indexOf("//");
+    while (slashesIndex >= 0) {
+      if (!_appearsSurroundedByQuotes(line, slashesIndex)) {
+        line = line.substr(0, slashesIndex);
+
+        // This invalidates any block comment we found earlier this iteration.
+        withinBlockComment = false;
+        break;
+      }
+      slashesIndex = line.indexOf("//", slashesIndex + 2);
+    }
+
+    return line;
   });
+
+  if (withinBlockComment) {
+    throw new Error("Unclosed block comment detected.");
+  }
+
+  return lines;
+}
+
+function _appearsSurroundedByQuotes(line: string, position: number): boolean {
+  return _appearsSurroundedByCharacter(line, position, "\"")
+    || _appearsSurroundedByCharacter(line, position, "'");
+}
+
+function _appearsSurroundedByCharacter(line: string, position: number, char: string): boolean {
+  const firstCharIndex = line.indexOf(char);
+  if (firstCharIndex === -1)
+    return false;
+  if (firstCharIndex > position)
+    return false;
+
+  const afterPosCharIndex = line.indexOf(char, position);
+  if (afterPosCharIndex === -1)
+    return false;
+  return true; // Position seems to be surrounded by character.
 }
 
 function _ensureArray(input: string | string[]): string[] {

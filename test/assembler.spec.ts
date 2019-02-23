@@ -71,34 +71,195 @@ describe("Assembler", () => {
     ]);
   });
 
-  it("strips comments", () => {
-    expect(assemble(`
-      ; my initial comment
-      // Another one
-      .org 0x80004000
-      main: ;why not here?
-      ADDIU SP SP -0x20 ; Trailing an instruction
-      SW RA 24(SP)// store RA
-      loop:
-      JAL 0x80023456
-      NOP
-      BEQ V0 R0 loop
-      NOP
-      LW RA 24(SP)
-      JR RA
-      ADDIU SP SP 0x20
-      ; end comment
-    `, { text: true })).to.deep.equal([
-      "ADDIU SP SP -0x20",
-      "SW RA 24(SP)",
-      "JAL 0x80023456",
-      "NOP",
-      "BEQ V0 R0 -0x3",
-      "NOP",
-      "LW RA 24(SP)",
-      "JR RA",
-      "ADDIU SP SP 0x20",
-    ]);
+  describe("strips comments", () => {
+    it("strips semicolon comments", () => {
+      expect(assemble(`
+        ; my initial comment
+; Another one
+        .org 0x80004000
+        main: ;why not here?
+        ADDIU SP SP -0x20 ; Trailing an instruction
+        SW RA 24(SP); store RA
+        loop:
+        JAL 0x80023456
+        NOP
+        BEQ V0 R0 loop ;; love it ;
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 0x20
+        ; end comment
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -0x20",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -0x3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 0x20",
+      ]);
+    });
+
+    it("strips double slash comments", () => {
+      expect(assemble(`
+        // my initial comment
+// Another one
+        .org 0x80004000
+        main: //why not here?
+        ADDIU SP SP -0x20 // Trailing an instruction
+        SW RA 24(SP)// store RA
+        loop:
+        JAL 0x80023456
+        NOP
+        BEQ V0 R0 loop //// great stuff
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 0x20
+        // end comment
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -0x20",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -0x3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 0x20",
+      ]);
+    });
+
+    it("strips block comments", () => {
+      expect(assemble(`
+        /* my initial comment */
+/* Another one */
+        .org 0x80004000
+        main: /*why not here?*/
+        ADDIU SP SP -0x20 /* Trailing an instruction */
+        SW RA 24(SP)/* store RA*/
+        loop:
+        JAL 0x80023456 /**/
+        /* NOP */ NOP
+        BEQ V0 R0 loop /* A loop! */ /* Not done yet, more comments! */
+        NOP
+        LW RA 24(SP)
+        JR /* return!*/ RA
+        ADDIU SP SP 0x20
+        /* end comment */
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -0x20",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -0x3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 0x20",
+      ]);
+    });
+
+    it("strips multi-line block comments", () => {
+      expect(assemble(`
+        /* my initial comment
+Continues on... */
+        .org 0x80004000
+        main:
+        ADDIU SP SP -0x20 /* Don't store RA lol
+        SW RA 24(SP)/* store RA*/
+        loop:
+        JAL 0x80023456
+        NOP
+        BEQ V0 R0 loop
+        /*
+         * Elaborate comment about delay slots
+         */
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 0x20
+        /*
+         * Even though my code is done,
+         * I feel compelled to write more here.
+         */
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -0x20",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -0x3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 0x20",
+      ]);
+    });
+
+    it("handles semicolon characters within strings", () => {
+      const buffer = new ArrayBuffer(12);
+      assemble(`
+        .ascii "t;st"
+        .ascii ';bcdefg;' ; trailing
+      `, { buffer });
+
+      const dataView = new DataView(buffer);
+      expect(dataView.getUint32(0)).to.equal(0x743B7374); // "t;st"
+      expect(dataView.getUint32(4)).to.equal(0x3B626364); // ";bcd"
+      expect(dataView.getUint32(8)).to.equal(0x6566673B); // "efg;"
+    });
+
+    it("handles slash characters within strings", () => {
+      const buffer = new ArrayBuffer(12);
+      assemble(`
+        .ascii "t//t"
+        .ascii '//cdefgh' // trailing
+      `, { buffer });
+
+      const dataView = new DataView(buffer);
+      expect(dataView.getUint32(0)).to.equal(0x742F2F74); // "t//t"
+      expect(dataView.getUint32(4)).to.equal(0x2F2F6364); // "//cd"
+      expect(dataView.getUint32(8)).to.equal(0x65666768); // "efgh"
+    });
+
+    it("handles block comments characters within strings", () => {
+      const buffer = new ArrayBuffer(12);
+      assemble(`
+        .ascii "/**/"
+        .ascii '/*cdefgh' /* trailing */
+      `, { buffer });
+
+      const dataView = new DataView(buffer);
+      expect(dataView.getUint32(0)).to.equal(0x2F2A2A2F); // "/**/"
+      expect(dataView.getUint32(4)).to.equal(0x2F2A6364); // "//cd"
+      expect(dataView.getUint32(8)).to.equal(0x65666768); // "efgh"
+    });
+
+    it("block quote can obscure ascii directive parameters", () => {
+      const buffer = new ArrayBuffer(12);
+      assemble(`
+        .ascii /*"test"*/ "abcd"
+        .ascii 'abcdefgh'
+      `, { buffer });
+
+      const dataView = new DataView(buffer);
+      expect(dataView.getUint32(0)).to.equal(0x61626364); // "abcd"
+      expect(dataView.getUint32(4)).to.equal(0x61626364); // "abcd"
+      expect(dataView.getUint32(8)).to.equal(0x65666768); // "efgh"
+    });
+
+    // Until quote check is more robust, this fails.
+    xit("handles block quotes nestled between ascii parameters", () => {
+      const buffer = new ArrayBuffer(8);
+      assemble(`
+        .ascii "test" /* then comes...*/ "abcd"
+      `, { buffer });
+
+      const dataView = new DataView(buffer);
+      expect(dataView.getUint32(0)).to.equal(0x74657374); // "test"
+      expect(dataView.getUint32(4)).to.equal(0x61626364); // "abcd"
+    });
   });
 
   it("handles hi/lo", () => {
