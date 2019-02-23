@@ -269,7 +269,7 @@ These functions can be used in place of immediates, and can be passed symbols/la
 
 ### Comments
 
-Comments can be specified with either `;` or `//`.
+Both `;` and `//` single-line comments are supported. `/* */` block comments are also supported.
 
 Development
 -----------
