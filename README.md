@@ -269,6 +269,13 @@ li reg,value
 
 Loads the `value` into the specified register using the appropriate combination of `lui`, `addiu`, or `ori`.
 
+#### Branch macros
+
+```
+bnez  reg,dest
+bnezl reg,dest
+```
+
 ### Built-in functions
 
 These functions can be used in place of immediates, and can be passed symbols/labels instead of just immediates.
