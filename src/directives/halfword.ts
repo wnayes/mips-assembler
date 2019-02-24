@@ -1,10 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
-import { makeNumericExprListRegExp } from "./directiveHelpers";
+import { basicDirectiveMatcher } from "./directiveHelpers";
 import { throwError } from "../errors";
-
-const regexHalfword = makeNumericExprListRegExp("halfword");
-const regexDh = makeNumericExprListRegExp("dh");
 
 /**
  * Writes 16-bit values.
@@ -13,13 +10,6 @@ const regexDh = makeNumericExprListRegExp("dh");
  * @param state Current assembler state.
  */
 export default function halfword(state: IAssemblerState): boolean {
-  let results = state.line.match(regexHalfword);
-  if (!results) {
-    results = state.line.match(regexDh);
-    if (!results)
-      return false;
-  }
-
   if (state.currentPass === AssemblerPhase.secondPass) {
     if (!state.evaluatedLineExpressions.length) {
       throwError(".halfword directive requires arguments", state);
@@ -42,3 +32,10 @@ export default function halfword(state: IAssemblerState): boolean {
 
   return true;
 }
+
+const hwMatcher = basicDirectiveMatcher("halfword");
+const dhMatcher = basicDirectiveMatcher("dh");
+
+halfword.matches = (state: IAssemblerState) => {
+  return hwMatcher(state) || dhMatcher(state);
+};

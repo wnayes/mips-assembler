@@ -1,18 +1,13 @@
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 import { throwError } from "../errors";
-
-const regex = /^\.skip\s+/i;
+import { basicDirectiveMatcher } from "./directiveHelpers";
 
 /**
  * .skip passes over a given amout of bytes without overwriting them.
  * @param state Current assembler state.
  */
 export default function skip(state: IAssemblerState): boolean {
-  const results = state.line.match(regex);
-  if (results === null)
-    return false;
-
   if (state.lineExpressions.length !== 1) {
     throwError(".skip directive requires one numeric argument", state);
   }
@@ -28,3 +23,4 @@ export default function skip(state: IAssemblerState): boolean {
   state.outIndex += imm;
   return true;
 }
+skip.matches = basicDirectiveMatcher("skip");

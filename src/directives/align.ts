@@ -2,8 +2,7 @@ import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 import { throwError } from "../errors";
-
-const alignRegex = /^\.align\s+/i;
+import { basicDirectiveMatcher } from "./directiveHelpers";
 
 /**
  * .align pads zeroes until the output position is aligned
@@ -11,10 +10,6 @@ const alignRegex = /^\.align\s+/i;
  * @param state Current assembler state.
  */
 export default function align(state: IAssemblerState): boolean {
-  const results = state.line.match(alignRegex);
-  if (results === null)
-    return false; // Not .align
-
   if (state.lineExpressions.length !== 1) {
     throwError(".align requires one power of two number argument", state);
   }
@@ -41,3 +36,4 @@ export default function align(state: IAssemblerState): boolean {
 
   return true;
 }
+align.matches = basicDirectiveMatcher("align");

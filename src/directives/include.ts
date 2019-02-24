@@ -1,10 +1,8 @@
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
-import { makeBasicDirectiveRegExp } from "./directiveHelpers";
+import { basicDirectiveMatcher } from "./directiveHelpers";
 import { AssemblerPhase } from "../types";
 import { throwError } from "../errors";
-
-const regexInclude = makeBasicDirectiveRegExp("include");
 
 /**
  * .include FileName
@@ -14,10 +12,6 @@ const regexInclude = makeBasicDirectiveRegExp("include");
  * @param state Current assembler state.
  */
 export default function include(state: IAssemblerState): boolean {
-  if (!state.line.match(regexInclude)) {
-    return false;
-  }
-
   if (!state.lineExpressions.length)
     throwError("A file name must be passed to an include directive", state);
   if (state.lineExpressions.length > 1)
@@ -46,3 +40,4 @@ ${file}
 
   return true;
 }
+include.matches = basicDirectiveMatcher("include");

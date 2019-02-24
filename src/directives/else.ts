@@ -1,9 +1,7 @@
 import { IAssemblerState } from "../state";
-import { makeBasicDirectiveRegExp } from "./directiveHelpers";
+import { basicDirectiveMatcher } from "./directiveHelpers";
 import { setIfElseBlockState, IfElseStateFlags, IfElseBlockStateMask } from "../conditionals";
 import { throwError } from "../errors";
-
-const regexElse = makeBasicDirectiveRegExp("else", true);
 
 /**
  * .else
@@ -11,10 +9,6 @@ const regexElse = makeBasicDirectiveRegExp("else", true);
  * @param state Current assembler state.
  */
 export default function elseblock(state: IAssemblerState): boolean {
-  if (!state.line.match(regexElse)) {
-    return false;
-  }
-
   if (state.lineExpressions.length)
     throwError("The else directive cannot take a condition or parameters", state);
 
@@ -45,3 +39,5 @@ export default function elseblock(state: IAssemblerState): boolean {
 
   return true;
 }
+
+elseblock.matches = basicDirectiveMatcher("else", true);

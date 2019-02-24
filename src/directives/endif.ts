@@ -1,8 +1,6 @@
 import { IAssemblerState } from "../state";
-import { makeBasicDirectiveRegExp } from "./directiveHelpers";
+import { basicDirectiveMatcher } from "./directiveHelpers";
 import { throwError } from "../errors";
-
-const regexEndIf = makeBasicDirectiveRegExp("endif", true);
 
 /**
  * .endif
@@ -11,10 +9,6 @@ const regexEndIf = makeBasicDirectiveRegExp("endif", true);
  * @param state Current assembler state.
  */
 export default function endif(state: IAssemblerState): boolean {
-  if (!state.line.match(regexEndIf)) {
-    return false;
-  }
-
   if (state.lineExpressions.length)
     throwError("The endif directive cannot take a condition or parameters", state);
 
@@ -25,3 +19,4 @@ export default function endif(state: IAssemblerState): boolean {
 
   return true;
 }
+endif.matches = basicDirectiveMatcher("endif", true);

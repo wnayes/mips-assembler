@@ -1,10 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
-import { makeNumericExprListRegExp } from "./directiveHelpers";
+import { basicDirectiveMatcher } from "./directiveHelpers";
 import { throwError } from "../errors";
-
-const regexWord = makeNumericExprListRegExp("word");
-const regexDw = makeNumericExprListRegExp("dw");
 
 /**
  * Writes 32-bit values.
@@ -13,13 +10,6 @@ const regexDw = makeNumericExprListRegExp("dw");
  * @param state Current assembler state.
  */
 export default function word(state: IAssemblerState): boolean {
-  let results = state.line.match(regexWord);
-  if (!results) {
-    results = state.line.match(regexDw);
-    if (!results)
-      return false;
-  }
-
   if (state.currentPass === AssemblerPhase.secondPass) {
     if (!state.evaluatedLineExpressions.length) {
       throwError(".word directive requires arguments", state);
@@ -42,3 +32,10 @@ export default function word(state: IAssemblerState): boolean {
 
   return true;
 }
+
+const wMatcher = basicDirectiveMatcher("word");
+const dwMatcher = basicDirectiveMatcher("dw");
+
+word.matches = (state: IAssemblerState) => {
+  return wMatcher(state) || dwMatcher(state);
+};

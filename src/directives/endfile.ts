@@ -1,9 +1,7 @@
 import { IAssemblerState } from "../state";
-import { makeBasicDirectiveRegExp } from "./directiveHelpers";
+import { basicDirectiveMatcher } from "./directiveHelpers";
 import { popStaticLabelStateLevel } from "../symbols";
 import { throwError } from "../errors";
-
-const regexEndFile = makeBasicDirectiveRegExp("endfile", true);
 
 /**
  * .endfile
@@ -11,10 +9,6 @@ const regexEndFile = makeBasicDirectiveRegExp("endfile", true);
  * @param state Current assembler state.
  */
 export default function beginfile(state: IAssemblerState): boolean {
-  if (!state.line.match(regexEndFile)) {
-    return false;
-  }
-
   if (state.lineExpressions.length)
     throwError("The endfile directive takes no arguments", state);
 
@@ -22,3 +16,4 @@ export default function beginfile(state: IAssemblerState): boolean {
 
   return true;
 }
+beginfile.matches = basicDirectiveMatcher("endfile", true);

@@ -1,18 +1,13 @@
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 import { throwError } from "../errors";
-
-const orgaRegex = /^\.orga\s+/i;
+import { basicDirectiveMatcher } from "./directiveHelpers";
 
 /**
  * .orga updates the current output buffer index.
  * @param state Current assembler state.
  */
 export default function orga(state: IAssemblerState): boolean {
-  const results = state.line.match(orgaRegex);
-  if (results === null)
-    return false; // Not .orga
-
   if (state.lineExpressions.length !== 1) {
     throwError(".orga directive requires one numeric argument", state);
   }
@@ -28,3 +23,4 @@ export default function orga(state: IAssemblerState): boolean {
   state.outIndex = imm >>> 0; // Better be 32-bit
   return true;
 }
+orga.matches = basicDirectiveMatcher("orga");

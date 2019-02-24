@@ -1,7 +1,7 @@
 import { parse } from "mips-inst";
 
 import { AssemblerPhase } from "./types";
-import { handleDirective, isConditionalDirective } from "./directives";
+import { handleDirective, isConditionalDirective, getDirectiveToRun } from "./directives";
 import { parseGlobalLabel } from "./labels";
 import { getSymbolByValue } from "./symbols";
 import { evaluateExpressionsOnCurrentLine, parseExpressionsOnCurrentLine } from "./expressions";
@@ -69,9 +69,10 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
 
     line = processLabelsOnCurrentLine(state);
 
-    if (line[0] === ".") {
+    const directive = getDirectiveToRun(state);
+    if (directive) {
       parseExpressionsOnCurrentLine(state);
-      handleDirective(state);
+      handleDirective(state, directive);
       line = state.line; // Directive may change the line.
     }
     else {
@@ -109,9 +110,10 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
     if (shouldSkipCurrentInstruction(state))
       return line;
 
-    if (line[0] === ".") {
+    const directive = getDirectiveToRun(state);
+    if (directive) {
       evaluateExpressionsOnCurrentLine(state);
-      handleDirective(state);
+      handleDirective(state, directive);
       return;
     }
 

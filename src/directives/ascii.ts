@@ -2,11 +2,21 @@ import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 import { throwError } from "../errors";
-
-const regexAscii = /^\.ascii\s+/i;
-const regexAsciiZ = /^\.asciiz\s+/i;
+import { basicDirectiveMatcher } from "./directiveHelpers";
 
 /**
+ * Writes ascii bytes with a trailing zero.
+ *
+ * @param state Current assembler state.
+ */
+export function asciiz(state: IAssemblerState): boolean {
+  return ascii(state, true);
+}
+asciiz.matches = basicDirectiveMatcher("asciiz");
+
+/**
+ * Writes ascii bytes.
+ *
  * .ascii value[,...]
  * .asciiz value[,...]
  *
@@ -17,16 +27,7 @@ const regexAsciiZ = /^\.asciiz\s+/i;
  *
  * @param state Current assembler state.
  */
-export default function ascii(state: IAssemblerState): boolean {
-  let appendZero = false;
-  let results = state.line.match(regexAscii);
-  if (!results) {
-    results = state.line.match(regexAsciiZ);
-    if (!results)
-      return false;
-    appendZero = true;
-  }
-
+export function ascii(state: IAssemblerState, appendZero?: boolean): boolean {
   const numbers: number[] = [];
 
   const lineExps = state.lineExpressions;
@@ -60,3 +61,4 @@ export default function ascii(state: IAssemblerState): boolean {
 
   return true;
 }
+ascii.matches = basicDirectiveMatcher("ascii");

@@ -1,10 +1,7 @@
 import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
-import { makeNumericExprListRegExp } from "./directiveHelpers";
+import { basicDirectiveMatcher } from "./directiveHelpers";
 import { throwError } from "../errors";
-
-const regexByte = makeNumericExprListRegExp("byte");
-const regexDb = makeNumericExprListRegExp("db");
 
 /**
  * .byte value[,...]
@@ -12,13 +9,6 @@ const regexDb = makeNumericExprListRegExp("db");
  * @param state Current assembler state.
  */
 export default function byte(state: IAssemblerState): boolean {
-  let results = state.line.match(regexByte);
-  if (!results) {
-    results = state.line.match(regexDb);
-    if (!results)
-      return false;
-  }
-
   if (state.currentPass === AssemblerPhase.secondPass) {
     if (!state.evaluatedLineExpressions.length) {
       throwError(".byte directive requires arguments", state);
@@ -41,3 +31,10 @@ export default function byte(state: IAssemblerState): boolean {
 
   return true;
 }
+
+const byteMatcher = basicDirectiveMatcher("byte");
+const dbMatcher = basicDirectiveMatcher("db");
+
+byte.matches = (state: IAssemblerState) => {
+  return byteMatcher(state) || dbMatcher(state);
+};

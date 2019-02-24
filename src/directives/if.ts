@@ -1,10 +1,8 @@
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
-import { makeBasicDirectiveRegExp } from "./directiveHelpers";
+import { basicDirectiveMatcher } from "./directiveHelpers";
 import { IfElseStateFlags } from "../conditionals";
 import { throwError } from "../errors";
-
-const regexIf = makeBasicDirectiveRegExp("if");
 
 /**
  * .if cond
@@ -14,10 +12,6 @@ const regexIf = makeBasicDirectiveRegExp("if");
  * @param state Current assembler state.
  */
 export default function ifcond(state: IAssemblerState): boolean {
-  if (!state.line.match(regexIf)) {
-    return false;
-  }
-
   if (!state.lineExpressions.length)
     throwError("A condition must be passed to an if directive", state);
   if (state.lineExpressions.length > 1)
@@ -38,3 +32,4 @@ export default function ifcond(state: IAssemblerState): boolean {
 
   return true;
 }
+ifcond.matches = basicDirectiveMatcher("if");

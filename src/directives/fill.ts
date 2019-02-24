@@ -2,18 +2,13 @@ import { AssemblerPhase } from "../types";
 import { IAssemblerState } from "../state";
 import { runFunction } from "../functions";
 import { throwError } from "../errors";
-
-const regex = /^\.fill\s+/i;
+import { basicDirectiveMatcher } from "./directiveHelpers";
 
 /**
  * .fill length[,value]
  * @param state Current assembler state.
  */
 export default function fill(state: IAssemblerState): boolean {
-  const results = state.line.match(regex);
-  if (results === null)
-    return false;
-
   if (!state.lineExpressions.length || state.lineExpressions.length > 2) {
     throw new Error(".fill directive takes a length and optional value");
   }
@@ -46,3 +41,4 @@ export default function fill(state: IAssemblerState): boolean {
 
   return true;
 }
+fill.matches = basicDirectiveMatcher("fill");
