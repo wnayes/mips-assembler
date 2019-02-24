@@ -11,7 +11,7 @@ import { throwError } from "../errors";
  *
  * @param state Current assembler state.
  */
-export default function include(state: IAssemblerState): boolean {
+export default function include(state: IAssemblerState): void {
   if (!state.lineExpressions.length)
     throwError("A file name must be passed to an include directive", state);
   if (state.lineExpressions.length > 1)
@@ -22,22 +22,22 @@ export default function include(state: IAssemblerState): boolean {
     throwError("Could not parse .include file name", state);
   if (typeof filename !== "string") {
     throwError("File name of include directive must evaluate to a string, saw: " + filename, state);
-    return false;
+    return;
   }
 
   const file = state.files[filename];
   if (typeof file !== "string")
     throwError(`The ${filename} file was not a string`, state);
 
-  if (state.currentPass !== AssemblerPhase.firstPass)
-    throw Error("The `include` directive shouldn't be present after the first assembly phase");
+  if (state.currentPass !== AssemblerPhase.firstPass) {
+    throwError("The `include` directive shouldn't be present after the first assembly phase", state);
+    return;
+  }
 
   state.linesToInsert =
 `.beginfile
 ${file}
 .endfile`;
   state.line = ""; // Delete this directive.
-
-  return true;
 }
 include.matches = basicDirectiveMatcher("include");

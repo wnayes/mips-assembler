@@ -19,6 +19,8 @@ import include from "./directives/include";
 import beginfile from "./directives/beginfile";
 import endfile from "./directives/endfile";
 
+import li from "./macros/li";
+
 interface IDirectiveFunction {
   (state: IAssemblerState): void;
   matches: (state: IAssemblerState) => boolean;
@@ -46,6 +48,10 @@ const directives: IDirectiveFunction[] = [
   endfile,
 ];
 
+const macros: IDirectiveFunction[] = [
+  li,
+];
+
 /**
  * Returns a directive function to run for the given state/line.
  * @param state Current assembler state.
@@ -54,6 +60,11 @@ export function getDirectiveToRun(state: IAssemblerState): IDirectiveFunction | 
   for (const directive of directives) {
     if (directive.matches(state)) {
       return directive;
+    }
+  }
+  for (const macro of macros) {
+    if (macro.matches(state)) {
+      return macro;
     }
   }
   return null;

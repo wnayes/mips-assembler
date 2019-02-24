@@ -50,6 +50,7 @@ An `opts` object can be passed as the second parameter. It can contain various p
 | Option | Description |
 |---|---|
 | `buffer` | (ArrayBuffer) When passed, assembly will be performed on the given buffer, rather than creating a new buffer. |
+| `files` | (Object) Used with the `include` file directive, see below. |
 | `text` | (String) Output will be instructions in text format, similar to the format shown beside the ArrayBuffer above. |
 | `symbolOutputMap` | (Object) If you pass an object on this property, it will be filled with a map from symbol name to the output location of that symbol.<br /><br />For example, if you labeled a `.word` as `my_number` and that number was output to buffer offset `0x100`, the `symbolOutputMap` would be `{ "my_number": 0x100 }`. |
 
@@ -255,6 +256,18 @@ The else block is used if the condition of the condition of the if block was not
 ```
 
 Ends the last open if or else block.
+
+### Macros
+
+Also known as "pseudo-instructions."
+
+#### Immediate macros
+
+```
+li reg,value
+```
+
+Loads the `value` into the specified register using the appropriate combination of `lui`, `addiu`, or `ori`.
 
 ### Built-in functions
 
