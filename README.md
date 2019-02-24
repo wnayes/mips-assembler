@@ -269,6 +269,14 @@ li reg,value
 
 Loads the `value` into the specified register using the appropriate combination of `lui`, `addiu`, or `ori`.
 
+#### Register macros
+
+```
+move dest,reg
+```
+
+Copies the contents of `reg` into `dest` using an `addu`.
+
 #### Branch macros
 
 ```

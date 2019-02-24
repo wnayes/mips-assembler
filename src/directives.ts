@@ -22,6 +22,7 @@ import endfile from "./directives/endfile";
 import li from "./macros/li";
 import bnez from "./macros/bnez";
 import bnezl from "./macros/bnezl";
+import move from "./macros/move";
 
 interface IDirectiveFunction {
   (state: IAssemblerState): void;
@@ -54,6 +55,7 @@ const macros: IDirectiveFunction[] = [
   bnez,
   bnezl,
   li,
+  move,
 ];
 
 /**
