@@ -17,6 +17,7 @@ module.exports = {
   },
   output: {
     libraryTarget: "umd",
+    globalObject: "this",
     library: "MIPSAssem",
     filename: "mipsassem.min.js",
     path: path.resolve(__dirname, "dist")
