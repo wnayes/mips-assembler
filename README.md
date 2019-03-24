@@ -280,6 +280,7 @@ Copies the contents of `reg` into `dest` using an `addu`.
 #### Branch macros
 
 ```
+beqz  reg,dest
 bnez  reg,dest
 bnezl reg,dest
 ```

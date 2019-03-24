@@ -19,9 +19,10 @@ import include from "./directives/include";
 import beginfile from "./directives/beginfile";
 import endfile from "./directives/endfile";
 
-import li from "./macros/li";
+import beqz from "./macros/beqz";
 import bnez from "./macros/bnez";
 import bnezl from "./macros/bnezl";
+import li from "./macros/li";
 import move from "./macros/move";
 
 interface IDirectiveFunction {
@@ -52,6 +53,7 @@ const directives: IDirectiveFunction[] = [
 ];
 
 const macros: IDirectiveFunction[] = [
+  beqz,
   bnez,
   bnezl,
   li,
