@@ -593,4 +593,12 @@ Continues on... */
       expect(opts.symbolOutputMap).to.be.undefined;
     });
   });
+
+  it("handles negative relative offset from register", () => {
+    expect(assemble(`
+      SH R0, -6(V0)
+    `, { text: true })).to.deep.equal([
+      "SH R0 -6(V0)",
+    ]);
+  })
 });

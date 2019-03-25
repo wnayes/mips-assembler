@@ -7,6 +7,7 @@ import { getSymbolByValue } from "./symbols";
 import { evaluateExpressionsOnCurrentLine, parseExpressionsOnCurrentLine } from "./expressions";
 import { IfElseStateFlags } from "./conditionals";
 import { makeNewAssemblerState, IAssemblerState } from "./state";
+import { throwError } from "./errors";
 
 /**
  * Optional parameters used to configure assembly.
@@ -130,16 +131,25 @@ export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayB
       outStrs.push(line);
 
     // At this point, we should be able to parse the instruction.
-    const inst = parse(line);
+    let inst: number;
+    try {
+      inst = parse(line);
+    }
+    catch (e) {
+      throwError(e, state);
+      return;
+    }
     state.dataView!.setUint32(state.outIndex, inst);
 
     state.outIndex += 4;
   });
 
-  if (state.ifElseStack.length)
-    throw new Error("An if directive was used without an endif directive");
-  if (state.staticSymbolIndices[0] !== 0)
-    throw new Error("A beginfile directive was used without an endfile directive");
+  if (state.ifElseStack.length) {
+    throwError("An if directive was used without an endif directive", state);
+  }
+  if (state.staticSymbolIndices[0] !== 0) {
+    throwError("A beginfile directive was used without an endfile directive", state);
+  }
 
   if (opts.text)
     return outStrs;

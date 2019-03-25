@@ -14,7 +14,7 @@ export function runFunction(value: string, state: IAssemblerState): string | num
   return _runFunction(value, state);
 }
 
-const fnRegex = new RegExp(`^(\\w+)\\(([\\(\\),-\\w${LABEL_CHARS}]*)\\)$`, "i");
+const fnRegex = new RegExp(`^([-\\w]+)\\(([\\(\\),-\\w${LABEL_CHARS}]*)\\)$`, "i");
 
 function _runFunction(value: string, state: IAssemblerState): string | number | null {
   const results = fnRegex.exec(value);
