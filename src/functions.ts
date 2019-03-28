@@ -8,6 +8,7 @@ import { abs } from "./functions/abs";
 import { hi } from "./functions/hi";
 import { lo } from "./functions/lo";
 import { org } from "./functions/org";
+import { throwError } from "./errors";
 
 /** Runs any built-in functions, and also resolves symbols. */
 export function runFunction(value: string, state: IAssemblerState): string | number | null {
@@ -71,16 +72,27 @@ function _runFunction(value: string, state: IAssemblerState): string | number | 
       fnArgs += char;
     }
 
-    let extraStr: string | undefined;
+    let extraStr = "";
     if (i < value.length - 1) {
       // There was extra content after the end of the function,
       // like the (VO) of lo(label)(V0)
       extraStr = value.substring(i, value.length);
-      return fns[fn](state, _runFunction(fnArgs, state)!) + extraStr;
     }
 
     // TODO: Doesn't support nested calls, multiple arguments.
-    return fns[fn](state, _runFunction(fnArgs, state)!);
+    let arg: string | number | null = 0;
+    if (fnArgs) {
+      arg = _runFunction(fnArgs, state);
+    }
+    if (arg === null) {
+      throwError(`Could not evaluate ${fnArgs}`, state);
+      return null;
+    }
+    let result: number | string = fns[fn](state, arg);
+    if (extraStr) {
+      result = result + extraStr;
+    }
+    return result;
   }
 }
 
