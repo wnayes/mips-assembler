@@ -18,6 +18,6 @@ export default function move(state: IAssemblerState): void {
     throwError("The `move` macro must take two registers", state);
 
   state.line = ""; // Delete this line.
-  state.linesToInsert = `ADDU ${state.lineExpressions[0]} R0 ${state.lineExpressions[1]}`;
+  state.linesToInsert = `ADDU ${state.lineExpressions[0]} ${state.lineExpressions[1]} R0`;
 }
 move.matches = basicMacroMatcher("move");
