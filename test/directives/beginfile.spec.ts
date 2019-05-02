@@ -165,4 +165,46 @@ describe(".beginfile", () => {
       LW S6 0(S0)
     `)).to.throw();
   });
+
+  it("scopes labels correctly", () => {
+    expect(assemble(`
+      .definelabel @static,1
+      .beginfile
+      .definelabel @static,0
+      .if @static
+      JAL 0x80023456
+      .endif
+      .endfile
+      .if @static
+      JAL 0x80012345
+      .endif
+      NOP
+    `, { text: true })).to.deep.equal([
+      "JAL 0x80012345",
+      "NOP",
+    ]);
+  });
+
+  it("deeply nested label scoping", () => {
+    expect(assemble(`
+      .definelabel @static,1
+      .beginfile
+      .definelabel @static,0
+      .beginfile
+      .definelabel @static,1
+      .if @static
+      JAL 0x80023456
+      .endif
+      .endfile
+      .endfile
+      .if @static
+      JAL 0x80012345
+      .endif
+      NOP
+    `, { text: true })).to.deep.equal([
+      "JAL 0x80023456",
+      "JAL 0x80012345",
+      "NOP",
+    ]);
+  });
 });

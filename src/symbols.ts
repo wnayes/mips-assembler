@@ -1,4 +1,4 @@
-import { IAssemblerState } from "./state";
+import { IAssemblerState, ISymbolTable } from "./state";
 import { isLocalLabel, isStaticLabel } from "./labels";
 import { AssemblerPhase } from "./types";
 
@@ -82,6 +82,15 @@ export function popStaticLabelStateLevel(state: IAssemblerState): void {
   }
 }
 
+function getCurrentStaticSymbols(state: IAssemblerState): ISymbolTable {
+  if (state.currentPass === AssemblerPhase.firstPass) {
+    return state.staticSymbols[state.staticSymbolIndices[state.staticSymbolIndices.length - 1]];
+  }
+  else {
+    return state.staticSymbols[state.staticSymbolIndices[0]];
+  }
+}
+
 /**
  * Retrieves a symbol by name. Works for all: global, static, or local.
  */
@@ -99,7 +108,7 @@ export function getSymbolValue(state: IAssemblerState, name: string): number | n
   }
 
   if (isStaticLabel(name)) {
-    const staticTable = state.staticSymbols[state.staticSymbolIndices[0]];
+    const staticTable = getCurrentStaticSymbols(state);
     if (Object.prototype.hasOwnProperty.call(staticTable, name)) {
       return staticTable[name];
     }

@@ -27,6 +27,8 @@ export function makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
   };
 }
 
+export type ISymbolTable = { [label: string]: number };
+
 type IStaticSymbolIndices = number[] & { before: { [index: number]: number }}
 
 export type IAssemblerState = IAssemblerStateFirstPass | IAssemblerStateSecondPass;
@@ -76,7 +78,7 @@ interface IAssemblerStateBase {
   outIndex: number;
 
   /** Symbol table. Populated by .definelabel directives. */
-  symbols: { [name: string]: number };
+  symbols: ISymbolTable;
 
   /** Symbol table of values */
   symbolsByValue: { [value: number]: string };
@@ -85,7 +87,7 @@ interface IAssemblerStateBase {
    * When requested, is populated with the memory locations of symbols after
    * assembly.
    */
-  symbolOutputMap?: { [name: string]: number } | null | undefined;
+  symbolOutputMap?: ISymbolTable | null | undefined;
 
   /** The last global label that was passed during the assembly. */
   currentLabel: string | null;
@@ -98,7 +100,7 @@ interface IAssemblerStateBase {
   }
 
   /** Symbol table(s) for static labels. */
-  staticSymbols: { [staticLabelName: string]: number }[];
+  staticSymbols: ISymbolTable[];
 
   /** Index of the current array in `staticSymbols`. */
   staticSymbolIndices: IStaticSymbolIndices;
