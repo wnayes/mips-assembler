@@ -476,6 +476,33 @@ Continues on... */
         "ADDIU SP SP 0x20",
       ]);
     });
+
+    it("handles labels with leading numbers", () => {
+      expect(assemble(`
+        .org 0x80004000
+        main_2:
+        ADDIU SP SP -0x20
+        SW RA 24(SP)
+        123lbl: JAL 0x80023456
+        NOP
+        BEQ V0 R0 123lbl
+        NOP
+        LW RA 24(SP)
+        JR RA
+        ADDIU SP SP 0x20
+        end:
+      `, { text: true })).to.deep.equal([
+        "ADDIU SP SP -0x20",
+        "SW RA 24(SP)",
+        "JAL 0x80023456",
+        "NOP",
+        "BEQ V0 R0 -0x3",
+        "NOP",
+        "LW RA 24(SP)",
+        "JR RA",
+        "ADDIU SP SP 0x20",
+      ]);
+    });
   });
 
   describe("local labels", () => {
@@ -600,5 +627,24 @@ Continues on... */
     `, { text: true })).to.deep.equal([
       "SH R0 -6(V0)",
     ]);
-  })
+  });
+
+  it("throws if a branch is misaligned", () => {
+    expect(() => assemble(`
+      .org 0x80004000
+      main:
+      ADDIU SP SP -0x20
+      SW RA 24(SP)
+      .byte 1
+      loop:
+      JAL 0x80023456
+      .align 4
+      NOP
+      BEQ V0 R0 loop
+      NOP
+      LW RA 24(SP)
+      JR RA
+      ADDIU SP SP 0x20
+    `)).to.throw();
+  });
 });

@@ -20,6 +20,12 @@ const fnRegex = new RegExp(`^([-\\w]+)\\(([\\(\\),-\\w${LABEL_CHARS}]*)\\)$`, "i
 function _runFunction(value: string, state: IAssemblerState): string | number | null {
   const results = fnRegex.exec(value);
   if (results === null) { // Not a function
+    // Symbol?
+    const symbolValue = getSymbolValue(state, value);
+    if (symbolValue !== null) {
+      return symbolValue;
+    }
+
     // Number?
     let imm = parseImmediate(value);
     if (imm !== null) {
@@ -30,11 +36,6 @@ function _runFunction(value: string, state: IAssemblerState): string | number | 
     let str = unescapeQuotes(value);
     if (typeof str === "string") {
       return str;
-    }
-
-    const symbolValue = getSymbolValue(state, value);
-    if (symbolValue !== null) {
-      return symbolValue;
     }
 
     return null;

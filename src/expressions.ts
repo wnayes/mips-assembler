@@ -2,6 +2,7 @@ import { IAssemblerState } from "./state";
 import { runFunction } from "./functions";
 import { formatImmediate } from "./immediates";
 import { LABEL_CHARS } from "./labels";
+import { throwError } from "./errors";
 
 export const EXPR_CHARS = ",-\\w\\s\\(\\)" + LABEL_CHARS;
 
@@ -64,7 +65,11 @@ function _formatEvaluatedExprs(values: (string | number | null)[], originalValue
 function _fixBranch(inst: string, offset: number, state: IAssemblerState): number {
   if (_instIsBranch(inst)) {
     const memOffset = state.memPos + state.outIndex;
-    const diff = ((offset - memOffset) / 4) - 1;
+    const offsetDiff = offset - memOffset;
+    if (offsetDiff % 4 !== 0) {
+      throwError("Misaligned branch instruction detected", state);
+    }
+    const diff = (offsetDiff / 4) - 1;
     return diff;
   }
 
