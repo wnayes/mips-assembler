@@ -46,10 +46,16 @@ describe("li", () => {
     expect(assemble(`
       LI A0 0x00010001
       LI A0 0x0FFFFFFF
+      LI A0 0x80706050
+      LI A0 0xFFFEFFFF
     `, { text: true })).to.deep.equal([
       "LUI A0 0x1",
       "ADDIU A0 A0 0x1",
       "LUI A0 0x1000",
+      "ADDIU A0 A0 0xFFFF",
+      "LUI A0 0x8070",
+      "ADDIU A0 A0 0x6050",
+      "LUI A0 0xFFFF",
       "ADDIU A0 A0 0xFFFF",
     ]);
   });

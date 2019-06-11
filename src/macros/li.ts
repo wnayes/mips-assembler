@@ -38,10 +38,10 @@ export default function li(state: IAssemblerState): void {
   else if ((value & 0xFFFF) === 0) {
     state.linesToInsert = `LUI ${dest}, ${value >> 16}`;
   }
-  else if (value >= -0x80000000 && value <= 0x7FFFFFFF) {
+  else if (value >= -0xFFFFFFFF && value <= 0xFFFEFFFF) {
     const needsSignAdjust = (value & 0x8000) !== 0;
     state.linesToInsert =
-`LUI ${dest}, ${(value >> 16) + (needsSignAdjust ? 1 : 0)}
+`LUI ${dest}, ${(value >>> 16) + (needsSignAdjust ? 1 : 0)}
 ADDIU ${dest}, ${dest}, ${value & 0xFFFF}`;
   }
   else {
