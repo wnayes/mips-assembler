@@ -37,6 +37,30 @@ describe(".ascii", () => {
     expect(dataView.getUint32(0)).to.equal(0x0A0B0000);
   });
 
+  it("handles strings with spaces", () => {
+    const buffer = new ArrayBuffer(12);
+    assemble(`
+      .ascii "Hello World"
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0x48656C6C);
+    expect(dataView.getUint32(4)).to.equal(0x6F20576F);
+    expect(dataView.getUint32(8)).to.equal(0x726C6400);
+  });
+
+  it("handles strings with tabs", () => {
+    const buffer = new ArrayBuffer(12);
+    assemble(`
+      .ascii	"Hello	World"
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0x48656C6C);
+    expect(dataView.getUint32(4)).to.equal(0x6F09576F);
+    expect(dataView.getUint32(8)).to.equal(0x726C6400);
+  });
+
   it("can write multiple input values", () => {
     const buffer = new ArrayBuffer(20);
     assemble(`

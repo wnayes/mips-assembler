@@ -8,25 +8,25 @@ export const EXPR_CHARS = ",-\\w\\s\\(\\)" + LABEL_CHARS;
 
 export function parseExpressionsOnCurrentLine(state: IAssemblerState): void {
   let line = state.line;
-  const firstSpaceIndex = line.indexOf(" ");
-  if (firstSpaceIndex === -1) {
+  const firstWhitespaceIndex = firstIndexOf(line, " ", "\t");
+  if (firstWhitespaceIndex === -1) {
     state.lineExpressions = [];
-    return; // Must not have any arguments, there would need to be a space for those.
+    return; // Must not have any arguments, there would need to be whitespace for those.
   }
 
-  const exprList = line.substr(firstSpaceIndex + 1);
+  const exprList = line.substr(firstWhitespaceIndex + 1);
   const exprs = splitExpressionList(exprList);
   state.lineExpressions = exprs;
 }
 
 export function evaluateExpressionsOnCurrentLine(state: IAssemblerState): string {
   let line = state.line;
-  const firstSpaceIndex = line.indexOf(" ");
-  if (firstSpaceIndex === -1)
-    return line; // Must not have any arguments, there would need to be a space for those.
+  const firstWhitespaceIndex = firstIndexOf(line, " ", "\t");
+  if (firstWhitespaceIndex === -1)
+    return line; // Must not have any arguments, there would need to be whitespace for those.
 
-  const firstPiece = line.substring(0, firstSpaceIndex);
-  const exprList = line.substr(firstSpaceIndex + 1);
+  const firstPiece = line.substring(0, firstWhitespaceIndex);
+  const exprList = line.substr(firstWhitespaceIndex + 1);
   const exprs = splitExpressionList(exprList);
   state.lineExpressions = exprs;
 
@@ -213,4 +213,21 @@ function charSplitsExpressions(char: string): boolean {
 
 function charIsWhitespace(char: string): boolean {
   return char === " " || char === "\t";
+}
+
+function firstIndexOf(str: string, ...searchTokens: string[]): number {
+  const results = [];
+
+  for (const token of searchTokens) {
+    const index = str.indexOf(token);
+    if (index >= 0) {
+      results.push(index);
+    }
+  }
+
+  if (results.length === 0) {
+    return -1; // Didn't find any search token.
+  }
+
+  return Math.min(...results);
 }
