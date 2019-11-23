@@ -61,6 +61,38 @@ describe(".ascii", () => {
     expect(dataView.getUint32(8)).to.equal(0x726C6400);
   });
 
+  it("handles strings with escaped tabs", () => {
+    const buffer = new ArrayBuffer(12);
+    assemble(`
+      .ascii "Hello\tWorld"
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0x48656C6C);
+    expect(dataView.getUint32(4)).to.equal(0x6F09576F);
+    expect(dataView.getUint32(8)).to.equal(0x726C6400);
+  });
+
+  it("handles basic escaped values", () => {
+    const buffer = new ArrayBuffer(4);
+    assemble(`
+      .ascii "\\n\\t\\r"
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0x0A090D00);
+  });
+
+  it("handles escaped octal values", () => {
+    const buffer = new ArrayBuffer(4);
+    assemble(`
+      .ascii "\\377"
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0xFF000000);
+  });
+
   it("can write multiple input values", () => {
     const buffer = new ArrayBuffer(20);
     assemble(`

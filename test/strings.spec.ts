@@ -1,25 +1,35 @@
 import "mocha";
 import { expect } from "chai";
 
-import { unescapeQuotes } from "../src/strings";
+import { unescapeString } from "../src/strings";
 
 describe("unescapeQuotes", () => {
   it("correctly unescapes strings", () => {
-    expect(unescapeQuotes("\"\"")).to.equal("");
-    expect(unescapeQuotes("''")).to.equal("");
-    expect(unescapeQuotes("\"'\"")).to.equal("'");
-    expect(unescapeQuotes("'\"'")).to.equal("\"");
-    expect(unescapeQuotes("\"test\"")).to.equal("test");
-    expect(unescapeQuotes("\"test \\\\ test\"")).to.equal("test \\ test");
+    expect(unescapeString("\"\"")).to.equal("");
+    expect(unescapeString("''")).to.equal("");
+    expect(unescapeString("\"'\"")).to.equal("'");
+    expect(unescapeString("'\"'")).to.equal("\"");
+    expect(unescapeString("\"test\"")).to.equal("test");
+    expect(unescapeString("\"test \\\\ test\"")).to.equal("test \\ test");
   });
 
   it("returns null for non-string things", () => {
-    expect(unescapeQuotes("null")).to.equal(null);
-    expect(unescapeQuotes("")).to.equal(null);
-    expect(unescapeQuotes("label")).to.equal(null);
-    expect(unescapeQuotes("'almost")).to.equal(null);
-    expect(unescapeQuotes("almost'")).to.equal(null);
-    expect(unescapeQuotes("\"almost")).to.equal(null);
-    expect(unescapeQuotes("almost\"")).to.equal(null);
+    expect(unescapeString("null")).to.equal(null);
+    expect(unescapeString("")).to.equal(null);
+    expect(unescapeString("label")).to.equal(null);
+    expect(unescapeString("'almost")).to.equal(null);
+    expect(unescapeString("almost'")).to.equal(null);
+    expect(unescapeString("\"almost")).to.equal(null);
+    expect(unescapeString("almost\"")).to.equal(null);
+  });
+
+  it("handles escape sequences inside", () => {
+    expect(unescapeString("\"\\n\"")).to.equal("\n");
+    expect(unescapeString("\"\\r\"")).to.equal("\r");
+    expect(unescapeString("\"\\t\"")).to.equal("\t");
+    expect(unescapeString("\"\\?\"")).to.equal("\?");
+    expect(unescapeString("\"\\377\"")).to.equal("\xFF");
+    expect(unescapeString("\"\\xFF\"")).to.equal("\xFF");
+    expect(unescapeString("\"\\xA\"")).to.equal("\n");
   });
 });

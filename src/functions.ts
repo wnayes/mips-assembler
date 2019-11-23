@@ -1,7 +1,7 @@
 import { IAssemblerState } from "./state";
 import { parseImmediate } from "./immediates";
 import { getSymbolValue } from "./symbols";
-import { unescapeQuotes } from "./strings";
+import { unescapeString } from "./strings";
 import { LABEL_CHARS } from "./labels";
 
 import { abs } from "./functions/abs";
@@ -33,7 +33,7 @@ function _runFunction(value: string, state: IAssemblerState): string | number | 
     }
 
     // String?
-    let str = unescapeQuotes(value);
+    let str = unescapeString(value);
     if (typeof str === "string") {
       return str;
     }
