@@ -59,4 +59,29 @@ describe("li", () => {
       "ADDIU A0 A0 0xFFFF",
     ]);
   });
+
+  it("resolves labels if they are defined in the first pass", () => {
+    expect(assemble(`
+      .definelabel testlbl,-1
+      LI A0 testlbl
+    `, { text: true })).to.deep.equal([
+      "ADDIU A0 R0 -0x1",
+    ]);
+  });
+
+  it("can handle labels not seen yet, but with less efficient code", () => {
+    expect(assemble(`
+      LI A0 testlbl1
+      LI A0 testlbl2
+      NOP
+      .definelabel testlbl1,10
+      .definelabel testlbl2,0x8012EFAE
+    `, { text: true })).to.deep.equal([
+      "LUI A0 0",
+      "ADDIU A0 A0 0xA",
+      "LUI A0 0x8013",
+      "ADDIU A0 A0 0xEFAE",
+      "NOP",
+    ]);
+  });
 });

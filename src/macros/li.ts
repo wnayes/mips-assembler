@@ -20,8 +20,15 @@ export default function li(state: IAssemblerState): void {
 
   const dest = state.lineExpressions[0];
   const value = runFunction(state.lineExpressions[1], state);
-  if (value === null)
-    throwError("Could not parse `li` immediate value", state);
+  if (value === null) {
+    // Most likely a label is not yet defined in the first pass.
+    // We can try to salvage this situation with "worst case" handling.
+    state.line = ""; // Delete this line.
+    state.linesToInsert =
+`LUI ${dest}, hi(${state.lineExpressions[1]})
+ADDIU ${dest}, ${dest}, lo(${state.lineExpressions[1]})`;
+    return;
+  }
   if (typeof value !== "number") {
     throwError("Immediate value of `li` macro must evaluate to a number, saw: " + value, state);
     return;
