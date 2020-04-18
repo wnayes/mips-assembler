@@ -47,6 +47,10 @@ export function unescapeString(str: string): string | null {
           output += "\t";
           i++;
           continue;
+        case "b":
+          output += "\b";
+          i++;
+          continue;
 
         case "x":
           if (!isHexDigit(charTwoOver)) {

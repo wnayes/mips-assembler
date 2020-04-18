@@ -27,9 +27,11 @@ describe("unescapeQuotes", () => {
     expect(unescapeString("\"\\n\"")).to.equal("\n");
     expect(unescapeString("\"\\r\"")).to.equal("\r");
     expect(unescapeString("\"\\t\"")).to.equal("\t");
+    expect(unescapeString("\"\\b\"")).to.equal("\b");
     expect(unescapeString("\"\\?\"")).to.equal("\?");
     expect(unescapeString("\"\\377\"")).to.equal("\xFF");
     expect(unescapeString("\"\\xFF\"")).to.equal("\xFF");
     expect(unescapeString("\"\\xA\"")).to.equal("\n");
+    expect(unescapeString("\"\\\\\"")).to.equal("\\");
   });
 });

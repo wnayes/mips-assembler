@@ -150,12 +150,6 @@ function splitExpressionList(str: string): string[] {
     endPieceIfApplicable();
 
     switch (char) {
-      case "\\":
-        if (!escaped) {
-          escaped = true;
-        }
-        break;
-
       case "(":
         if (!escaped && !currentStrQuoteChar) {
           currentParenLevel++;
@@ -189,7 +183,10 @@ function splitExpressionList(str: string): string[] {
 
     writeToCurrentPiece(char);
 
-    if (char !== "\\") {
+    if (!escaped && char === "\\") {
+      escaped = true;
+    }
+    else {
       escaped = false;
     }
 

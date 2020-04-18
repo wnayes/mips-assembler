@@ -83,6 +83,26 @@ describe(".ascii", () => {
     expect(dataView.getUint32(0)).to.equal(0x0A090D00);
   });
 
+  it("handles escaped backslash in middle", () => {
+    const buffer = new ArrayBuffer(4);
+    assemble(`
+      .ascii "a\\\\b"
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0x615C6200);
+  });
+
+  it("handles escaped backslash at end", () => {
+    const buffer = new ArrayBuffer(4);
+    assemble(`
+      .ascii "a\\\\"
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0x615C0000);
+  });
+
   it("handles escaped octal values", () => {
     const buffer = new ArrayBuffer(4);
     assemble(`
@@ -140,6 +160,30 @@ describe(".ascii", () => {
 
     const dataView = new DataView(buffer);
     expect(dataView.getUint32(0)).to.equal(0x27220000);
+  });
+
+  it("handles multiple mixed quote characters", () => {
+    const buffer = new ArrayBuffer(16);
+    assemble(`
+      .ascii "It's dog's toy"
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0x49742773);
+    expect(dataView.getUint32(4)).to.equal(0x20646F67);
+    expect(dataView.getUint32(8)).to.equal(0x27732074);
+    expect(dataView.getUint32(12)).to.equal(0x6F790000);
+  });
+
+  it("handles parenthesis in quotes", () => {
+    const buffer = new ArrayBuffer(8);
+    assemble(`
+      .ascii ":) :("
+    `, { buffer });
+
+    const dataView = new DataView(buffer);
+    expect(dataView.getUint32(0)).to.equal(0x3A29203A);
+    expect(dataView.getUint32(4)).to.equal(0x28000000);
   });
 
   it("preserves signed numbers", () => {
