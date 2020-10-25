@@ -1,3 +1,4 @@
 node_modules
 dist/src
 dist/test
+dist/mipsassem.min.js.LICENSE.txt
