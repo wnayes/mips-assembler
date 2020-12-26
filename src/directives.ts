@@ -1,6 +1,7 @@
 import { IAssemblerState } from "./state";
 
 import definelabel from "./directives/definelabel";
+import equ from "./directives/equ";
 import org from "./directives/org";
 import orga from "./directives/orga";
 import align from "./directives/align";
@@ -32,6 +33,7 @@ interface IDirectiveFunction {
 
 const directives: IDirectiveFunction[] = [
   definelabel,
+  equ,
   org,
   orga,
   align,

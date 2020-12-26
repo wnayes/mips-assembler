@@ -10,14 +10,16 @@ import { lo } from "./functions/lo";
 import { org } from "./functions/org";
 import { throwError } from "./errors";
 
+export type FunctionResult = string | number | null;
+
 /** Runs any built-in functions, and also resolves symbols. */
-export function runFunction(value: string, state: IAssemblerState): string | number | null {
+export function runFunction(value: string, state: IAssemblerState): FunctionResult {
   return _runFunction(value, state);
 }
 
 const fnRegex = new RegExp(`^([-\\w]+)\\(([\\(\\),-\\w${LABEL_CHARS}]*)\\)$`, "i");
 
-function _runFunction(value: string, state: IAssemblerState): string | number | null {
+function _runFunction(value: string, state: IAssemblerState): FunctionResult {
   const results = fnRegex.exec(value);
   if (results === null) { // Not a function
     // Symbol?
@@ -81,7 +83,7 @@ function _runFunction(value: string, state: IAssemblerState): string | number | 
     }
 
     // TODO: Doesn't support nested calls, multiple arguments.
-    let arg: string | number | null = 0;
+    let arg: FunctionResult = 0;
     if (fnArgs) {
       arg = _runFunction(fnArgs, state);
     }

@@ -1,6 +1,7 @@
 import { IfElseStateFlags } from "./conditionals";
 import { AssemblerPhase } from "./types";
 import { IAssembleOpts } from "./assembler";
+import { FunctionResult } from "./functions";
 
 export function makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
   const staticSymbolIndices: any = [0];
@@ -27,7 +28,9 @@ export function makeNewAssemblerState(opts: IAssembleOpts): IAssemblerState {
   };
 }
 
-export type ISymbolTable = { [label: string]: number };
+export type ISymbolTable = { [label: string]: number | string };
+
+type ISymbolValueTable = { [K in string | number]: string };
 
 type IStaticSymbolIndices = number[] & { before: { [index: number]: number }}
 
@@ -62,7 +65,7 @@ interface IAssemblerStateSecondPass extends IAssemblerStateBase {
   dataView: DataView;
 
   /** Evaluated results of an expression list on the line. */
-  evaluatedLineExpressions: (string | number | null)[];
+  evaluatedLineExpressions: FunctionResult[];
 }
 
 interface IAssemblerStateBase {
@@ -81,7 +84,7 @@ interface IAssemblerStateBase {
   symbols: ISymbolTable;
 
   /** Symbol table of values */
-  symbolsByValue: { [value: number]: string };
+  symbolsByValue: ISymbolValueTable;
 
   /**
    * When requested, is populated with the memory locations of symbols after
@@ -95,7 +98,7 @@ interface IAssemblerStateBase {
   /** Symbol table for local labels. */
   localSymbols: {
     [globalLabelName: string]: {
-      [localLabelName: string]: number
+      [localLabelName: string]: number | string
     }
   }
 

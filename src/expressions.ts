@@ -1,8 +1,9 @@
 import { IAssemblerState } from "./state";
-import { runFunction } from "./functions";
+import { FunctionResult, runFunction } from "./functions";
 import { formatImmediate } from "./immediates";
 import { LABEL_CHARS } from "./labels";
 import { throwError } from "./errors";
+import { firstIndexOf } from "./strings";
 
 export const EXPR_CHARS = ",-\\w\\s\\(\\)" + LABEL_CHARS;
 
@@ -31,7 +32,9 @@ export function evaluateExpressionsOnCurrentLine(state: IAssemblerState): string
   state.lineExpressions = exprs;
 
   if (exprs.length > 0) {
-    const evaluatedExprs = exprs.map((expr, i) => {
+    const evaluatedExprs: FunctionResult[] = [];
+
+    exprs.forEach((expr, i) => {
       let evaluated = runFunction(expr, state);
 
       // For the last piece, do extra logic to fix branch values.
@@ -39,7 +42,7 @@ export function evaluateExpressionsOnCurrentLine(state: IAssemblerState): string
         evaluated = _fixBranch(firstPiece, evaluated, state);
       }
 
-      return evaluated;
+      evaluatedExprs.push(evaluated);
     });
 
     state.evaluatedLineExpressions = evaluatedExprs;
@@ -49,7 +52,7 @@ export function evaluateExpressionsOnCurrentLine(state: IAssemblerState): string
   return line;
 }
 
-function _formatEvaluatedExprs(values: (string | number | null)[], originalValues: string[]): string[] {
+function _formatEvaluatedExprs(values: FunctionResult[], originalValues: string[]): string[] {
   return values.map((value, i) => {
     if (typeof value === "number") {
       return formatImmediate(value);
@@ -210,21 +213,4 @@ function charSplitsExpressions(char: string): boolean {
 
 function charIsWhitespace(char: string): boolean {
   return char === " " || char === "\t";
-}
-
-function firstIndexOf(str: string, ...searchTokens: string[]): number {
-  const results = [];
-
-  for (const token of searchTokens) {
-    const index = str.indexOf(token);
-    if (index >= 0) {
-      results.push(index);
-    }
-  }
-
-  if (results.length === 0) {
-    return -1; // Didn't find any search token.
-  }
-
-  return Math.min(...results);
 }

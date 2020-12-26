@@ -15,16 +15,17 @@ export default function word(state: IAssemblerState): boolean {
       throwError(".word directive requires arguments", state);
     }
 
-    if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
-      throwError(".word directive requires numeric arguments", state);
-    }
-
-    const numbers = state.evaluatedLineExpressions as number[];
+    const numbers = state.evaluatedLineExpressions;
     for (let i = 0; i < numbers.length; i++) {
-      if (numbers[i] < 0)
-        state.dataView.setInt32(state.outIndex + (i * 4), numbers[i]);
+      const num = numbers[i];
+      if (typeof num !== "number") {
+        throwError(`.word directive requires numeric arguments, saw: ${num}`, state);
+      }
+
+      if (num < 0)
+        state.dataView.setInt32(state.outIndex + (i * 4), num);
       else
-        state.dataView.setUint32(state.outIndex + (i * 4), numbers[i]);
+        state.dataView.setUint32(state.outIndex + (i * 4), num);
     }
   }
 

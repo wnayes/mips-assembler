@@ -14,16 +14,17 @@ export default function byte(state: IAssemblerState): boolean {
       throwError(".byte directive requires arguments", state);
     }
 
-    if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
-      throwError(".byte directive requires numeric arguments", state);
-    }
-
-    const numbers = state.evaluatedLineExpressions as number[];
+    const numbers = state.evaluatedLineExpressions;
     for (let i = 0; i < numbers.length; i++) {
-      if (numbers[i] < 0)
-        state.dataView.setInt8(state.outIndex + i, numbers[i]);
+      const num = numbers[i];
+      if (typeof num !== "number") {
+        throwError(`.byte directive requires numeric arguments, saw: ${num}`, state);
+      }
+
+      if (num < 0)
+        state.dataView.setInt8(state.outIndex + i, num);
       else
-        state.dataView.setUint8(state.outIndex + i, numbers[i]);
+        state.dataView.setUint8(state.outIndex + i, num);
     }
   }
 

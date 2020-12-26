@@ -15,16 +15,17 @@ export default function halfword(state: IAssemblerState): boolean {
       throwError(".halfword directive requires arguments", state);
     }
 
-    if (state.evaluatedLineExpressions.some(v => typeof v !== "number")) {
-      throwError(".halfword directive requires numeric arguments", state);
-    }
-
-    const numbers = state.evaluatedLineExpressions as number[];
+    const numbers = state.evaluatedLineExpressions;
     for (let i = 0; i < numbers.length; i++) {
-      if (numbers[i] < 0)
-        state.dataView.setInt16(state.outIndex + (i * 2), numbers[i]);
+      const num = numbers[i];
+      if (typeof num !== "number") {
+        throwError(`.halfword directive requires numeric arguments, saw: ${num}`, state);
+      }
+
+      if (num < 0)
+        state.dataView.setInt16(state.outIndex + (i * 2), num);
       else
-        state.dataView.setUint16(state.outIndex + (i * 2), numbers[i]);
+        state.dataView.setUint16(state.outIndex + (i * 2), num);
     }
   }
 

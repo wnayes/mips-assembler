@@ -8,7 +8,7 @@ import { AssemblerPhase } from "./types";
  * @param name Symbol name
  * @param value Symbol value
  */
-export function addSymbol(state: IAssemblerState, name: string, value: number): void {
+export function addSymbol(state: IAssemblerState, name: string, value: number | string): void {
   if (isLocalLabel(name)) {
     if (!state.currentLabel) {
       throw new Error(`Local label ${name} (starts with @@) cannot be used before a global label`);
@@ -30,7 +30,7 @@ export function addSymbol(state: IAssemblerState, name: string, value: number): 
  * @param name Symbol name
  * @param value Symbol value
  */
-export function addGlobalSymbol(state: IAssemblerState, name: string, value: number): void {
+export function addGlobalSymbol(state: IAssemblerState, name: string, value: number | string): void {
   state.symbols[name] = value;
   state.symbolsByValue[value] = name;
   if (state.symbolOutputMap) {
@@ -46,7 +46,7 @@ export function addGlobalSymbol(state: IAssemblerState, name: string, value: num
  *
  * Assumes !!state.currentLabel
  */
-export function addLocalSymbol(state: IAssemblerState, name: string, value: number): void {
+export function addLocalSymbol(state: IAssemblerState, name: string, value: number | string): void {
   let localTable = state.localSymbols[state.currentLabel!];
   if (!localTable) {
     localTable = state.localSymbols[state.currentLabel!] = Object.create(null);
@@ -54,7 +54,7 @@ export function addLocalSymbol(state: IAssemblerState, name: string, value: numb
   localTable[name] = value;
 }
 
-export function addStaticLabel(state: IAssemblerState, name: string, value: number): void {
+export function addStaticLabel(state: IAssemblerState, name: string, value: number | string): void {
   const staticsTable = state.staticSymbols[state.staticSymbols.length - 1];
   staticsTable[name] = value;
 }
@@ -94,7 +94,7 @@ function getCurrentStaticSymbols(state: IAssemblerState): ISymbolTable {
 /**
  * Retrieves a symbol by name. Works for all: global, static, or local.
  */
-export function getSymbolValue(state: IAssemblerState, name: string): number | null {
+export function getSymbolValue(state: IAssemblerState, name: string): number | string | null {
   if (isLocalLabel(name)) {
     if (!state.currentLabel) {
       throw new Error(`Local label ${name} cannot be referenced in the current scope`);

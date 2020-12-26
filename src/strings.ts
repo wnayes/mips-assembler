@@ -135,3 +135,20 @@ function isHexDigit(chr: string): boolean {
   }
   return false;
 }
+
+export function firstIndexOf(str: string, ...searchTokens: string[]): number {
+  const results = [];
+
+  for (const token of searchTokens) {
+    const index = str.indexOf(token);
+    if (index >= 0) {
+      results.push(index);
+    }
+  }
+
+  if (results.length === 0) {
+    return -1; // Didn't find any search token.
+  }
+
+  return Math.min(...results);
+}
