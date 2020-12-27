@@ -56,7 +56,7 @@ An `opts` object can be passed as the second parameter. It can contain various p
 | `text` | (String) Output will be instructions in text format, similar to the format shown beside the ArrayBuffer above. |
 | `symbolOutputMap` | (Object) If you pass an object on this property, it will be filled with a map from symbol name to the output location of that symbol.<br /><br />For example, if you labeled a `.word` as `my_number` and that number was output to buffer offset `0x100`, the `symbolOutputMap` would be `{ "my_number": 0x100 }`. |
 
-The bundled UMD module can export a `MIPSAssem` global.
+The UMD module in `dist/umd` exports a `MIPSAssem` global.
 
 Features
 --------

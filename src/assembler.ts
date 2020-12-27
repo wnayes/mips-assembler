@@ -42,8 +42,8 @@ export interface IAssembleOpts {
 
 /**
  * Assembles the given input instructions.
- * @param input
- * @param opts
+ * @param input Assembly text or lines.
+ * @param opts Optional parameters.
  */
 export function assemble(input: string | string[], opts?: IAssembleOpts): ArrayBuffer | string[] {
   opts = opts || {};
