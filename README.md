@@ -1,6 +1,8 @@
 mips-assembler
 ==============
 
+[![npm version](https://badge.fury.io/js/mips-assembler.svg)](https://www.npmjs.com/package/mips-assembler)
+
 Simple MIPS IV assembler for JavaScript.
 
 The features that are included are compatible with [armips](https://github.com/Kingcom/armips), when possible. `armips` is much more sophisticated currently though.
