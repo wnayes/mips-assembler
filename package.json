@@ -1,6 +1,6 @@
 {
   "name": "mips-assembler",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "JavaScript MIPS assembler",
   "main": "dist/js/src/index.js",
   "types": "./mipsassem.d.ts",
