@@ -1,6 +1,7 @@
 import { IAssemblerState, ISymbolTable } from "./state";
 import { isLocalLabel, isStaticLabel } from "./labels";
 import { AssemblerPhase } from "./types";
+import { throwError } from "./errors";
 
 /**
  * Adds a symbol to the symbol table.
@@ -11,7 +12,7 @@ import { AssemblerPhase } from "./types";
 export function addSymbol(state: IAssemblerState, name: string, value: number | string): void {
   if (isLocalLabel(name)) {
     if (!state.currentLabel) {
-      throw new Error(`Local label ${name} (starts with @@) cannot be used before a global label`);
+      throwError(`Local label ${name} (starts with @@) cannot be used before a global label`, state);
     }
 
     addLocalSymbol(state, name, value);
@@ -97,7 +98,7 @@ function getCurrentStaticSymbols(state: IAssemblerState): ISymbolTable {
 export function getSymbolValue(state: IAssemblerState, name: string): number | string | null {
   if (isLocalLabel(name)) {
     if (!state.currentLabel) {
-      throw new Error(`Local label ${name} cannot be referenced in the current scope`);
+      throwError(`Local label ${name} cannot be referenced in the current scope`, state);
     }
 
     const localTable = state.localSymbols[state.currentLabel];

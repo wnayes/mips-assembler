@@ -1,3 +1,4 @@
+import { throwError } from "../errors";
 import { IAssemblerState } from "../state";
 
 /**
@@ -5,7 +6,7 @@ import { IAssemblerState } from "../state";
  */
 export function abs(state: IAssemblerState, value: string | number): number {
   if (typeof value === "string")
-    throw new Error(`Assembler function abs cannot be called with string "${value}", value must be a number.`);
+    throwError(`Assembler function abs cannot be called with string "${value}", value must be a number.`, state);
 
   return Math.abs(value);
 };

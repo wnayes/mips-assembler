@@ -1,3 +1,4 @@
+import { throwError } from "../errors";
 import { IAssemblerState } from "../state";
 
 /**
@@ -6,7 +7,7 @@ import { IAssemblerState } from "../state";
  */
 export function hi(state: IAssemblerState, value: string | number): number {
   if (typeof value === "string")
-    throw new Error(`Assembler function hi cannot be called with string "${value}", value must be a number.`);
+    throwError(`Assembler function hi cannot be called with string "${value}", value must be a number.`, state);
 
   let lower = value & 0x0000FFFF;
   let upper = value >>> 16;

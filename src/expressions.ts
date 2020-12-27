@@ -4,6 +4,7 @@ import { formatImmediate } from "./immediates";
 import { LABEL_CHARS } from "./labels";
 import { throwError } from "./errors";
 import { firstIndexOf } from "./strings";
+import { getSymbolValue } from "./symbols";
 
 export const EXPR_CHARS = ",-\\w\\s\\(\\)" + LABEL_CHARS;
 
@@ -16,7 +17,8 @@ export function parseExpressionsOnCurrentLine(state: IAssemblerState): void {
   }
 
   const exprList = line.substr(firstWhitespaceIndex + 1);
-  const exprs = splitExpressionList(exprList);
+  let exprs: string[] = [];
+  splitExpressionList(exprList, exprs, state);
   state.lineExpressions = exprs;
 }
 
@@ -28,7 +30,8 @@ export function evaluateExpressionsOnCurrentLine(state: IAssemblerState): string
 
   const firstPiece = line.substring(0, firstWhitespaceIndex);
   const exprList = line.substr(firstWhitespaceIndex + 1);
-  const exprs = splitExpressionList(exprList);
+  let exprs: string[] = [];
+  splitExpressionList(exprList, exprs, state);
   state.lineExpressions = exprs;
 
   if (exprs.length > 0) {
@@ -110,9 +113,7 @@ function _instIsBranch(inst: string): boolean {
   return false;
 }
 
-function splitExpressionList(str: string): string[] {
-  const pieces: string[] = [];
-
+function splitExpressionList(str: string, pieces: string[], state: IAssemblerState): string[] {
   let currentPiece = "";
   let currentStrQuoteChar = ""; // When set, we're writing a string
   let currentParenLevel = 0; // When > 0, we're inside a parenthesis grouper
@@ -133,7 +134,17 @@ function splitExpressionList(str: string): string[] {
     if (!currentPiece)
       return;
 
-    pieces.push(currentPiece);
+    // If this piece directly evaluates to an equ replacement symbol,
+    // then handle the replacement here.
+    // This is what makes equ work, in a limited capacity.
+    const symValue = getSymbolValue(state, currentPiece);
+    if (typeof symValue === "string") {
+      splitExpressionList(symValue, pieces, state);
+    }
+    else {
+      pieces.push(currentPiece);
+    }
+
     currentPiece = "";
   }
 
@@ -162,7 +173,7 @@ function splitExpressionList(str: string): string[] {
       case ")":
         if (!escaped && !currentStrQuoteChar) {
           if (currentParenLevel <= 0) {
-            throw new Error("Imbalanced parenthesis in expression: " + str);
+            throwError("Imbalanced parenthesis in expression: " + str, state);
           }
           currentParenLevel--;
         }
@@ -197,10 +208,10 @@ function splitExpressionList(str: string): string[] {
   }
 
   if (currentParenLevel > 0)
-    throw new Error("Imbalanced parenthesis in expression: " + str);
+    throwError("Imbalanced parenthesis in expression: " + str, state);
 
   if (currentStrQuoteChar)
-    throw new Error("Unterminated string: " + currentPiece);
+    throwError("Unterminated string: " + currentPiece, state);
 
   endCurrentPiece();
 

@@ -158,6 +158,19 @@ assemble(`
 If you want to achieve file scoping without actually having separate assembly in the `files` opt object, you can surround assembly with `.beginfile` and `.endfile`. This would enable usage of static labels for example.
 
 
+##### `equ`
+
+Limited support is available for `equ` direct text replacements.
+
+```
+NumList equ 1,2,3,4
+
+.word NumList
+```
+
+As with regular symbols, these are global replacements by default. A single leading `@` creates a static replacement, and two leading `@@` creates a local replacement.
+
+
 ####  Text and data directives
 
 ##### Align the output position

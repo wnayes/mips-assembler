@@ -10,7 +10,7 @@ import { basicDirectiveMatcher } from "./directiveHelpers";
  */
 export default function fill(state: IAssemblerState): boolean {
   if (!state.lineExpressions.length || state.lineExpressions.length > 2) {
-    throw new Error(".fill directive takes a length and optional value");
+    throwError(".fill directive takes a length and optional value", state);
   }
 
   let length, value;
