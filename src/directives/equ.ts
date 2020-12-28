@@ -5,7 +5,7 @@ import { throwError } from "../errors";
 import { firstIndexOf } from "../strings";
 
 const equRegex = new RegExp(
-  `^\\s*(${LABEL_REGEX_STR})\\s+equ\\s+(.+)$`,
+  `^\\s*(${LABEL_REGEX_STR})\\s+equ(?:$|(?:\\s+(.+)$))`,
   "i"
 );
 
@@ -21,7 +21,7 @@ export default function equ(state: IAssemblerState): boolean {
 
   // lineExpressions only has ["equ", value] and might split the value, so use regex.
   const name = match[1];
-  const value = match[2];
+  const value = match[2] || "";
 
   addSymbol(state, name, value);
 

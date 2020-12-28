@@ -76,4 +76,11 @@ describe("equ", function () {
         expect(dataView.getUint32(0)).to.equal(0x61626364); // "abcd"
         expect(dataView.getUint32(4)).to.equal(0x65666768); // "efgh"
     });
+    it("can handle empty value", function () {
+        var buffer = new ArrayBuffer(8);
+        var dataView = new DataView(buffer);
+        assemble("\n      nothing equ\n      .ascii \"abcd\" \"efgh\" nothing\n    ", { buffer: buffer });
+        expect(dataView.getUint32(0)).to.equal(0x61626364); // "abcd"
+        expect(dataView.getUint32(4)).to.equal(0x65666768); // "efgh"
+    });
 });
